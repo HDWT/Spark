@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E40362AC-536A-4D92-932D-CA5846CC50E0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Spark</RootNamespace>
+    <AssemblyName>Spark</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Spark.ArrayTypeHelper.cs" />
+    <Compile Include="Spark.Attributes.cs" />
+    <Compile Include="Spark.BasicTypeHelper.cs" />
+    <Compile Include="Spark.cs" />
+    <Compile Include="Spark.DataMember.cs" />
+    <Compile Include="Spark.DataType.cs" />
+    <Compile Include="Spark.EnumTypeHelper.cs" />
+    <Compile Include="Spark.ListTypeHelper.cs" />
+    <Compile Include="Spark.LowLevelType.cs" />
+    <Compile Include="Spark.SizeCalculator.cs" />
+    <Compile Include="Spark.Test.cs" />
+    <Compile Include="Spark.Writer.cs" />
+    <Compile Include="TypeHelpers\BoolType.cs" />
+    <Compile Include="TypeHelpers\ByteType.cs" />
+    <Compile Include="TypeHelpers\CharType.cs" />
+    <Compile Include="TypeHelpers\DecimalType.cs" />
+    <Compile Include="TypeHelpers\DoubleType.cs" />
+    <Compile Include="TypeHelpers\FloatType.cs" />
+    <Compile Include="TypeHelpers\IntType.cs" />
+    <Compile Include="TypeHelpers\LongType.cs" />
+    <Compile Include="TypeHelpers\SByteType.cs" />
+    <Compile Include="TypeHelpers\ShortType.cs" />
+    <Compile Include="TypeHelpers\TypeHelper.cs" />
+    <Compile Include="TypeHelpers\UIntType.cs" />
+    <Compile Include="TypeHelpers\ULongType.cs" />
+    <Compile Include="TypeHelpers\UShortType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <Compile Include="Spark.Reader.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
