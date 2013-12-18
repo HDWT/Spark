@@ -239,8 +239,17 @@ public static partial class Spark
 
 		public static int Evaluate<T>(T value)
 		{
+			if (!IsLowLevelType(typeof(T)))
+				return EvaluateClass(value);
+
+			if (typeof(T).BaseType == typeof(Enum))
+				return EvaluateEnum(value);
+
 			if (typeof(T).BaseType == typeof(Array))
-				return Evaluate((Array)(object)value);
+				return EvaluateArray(value);
+
+			if (IsGenericList(typeof(T)))
+				return EvaluateList(value);
 
 			return LowLevelType<T>.GetSize(value);
 		}

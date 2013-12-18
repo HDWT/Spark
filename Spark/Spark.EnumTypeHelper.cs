@@ -18,42 +18,42 @@ public static partial class Spark
 
 		public void Register(Type enumType)
 		{
-			if (!enumType.IsEnum)
-				throw new System.ArgumentException();
+			if (enumType.BaseType != typeof(Enum))
+				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
 
 			Type underlyingType = Enum.GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
-				m_intValues.Register(underlyingType);
+				m_intValues.Register(enumType);
 
 			else if (underlyingType == typeof(short))
-				m_shortValues.Register(underlyingType);
+				m_shortValues.Register(enumType);
 
 			else if (underlyingType == typeof(byte))
-				m_byteValues.Register(underlyingType);
+				m_byteValues.Register(enumType);
 
 			else if (underlyingType == typeof(long))
-				m_longValues.Register(underlyingType);
+				m_longValues.Register(enumType);
 
 			else if (underlyingType == typeof(uint))
-				m_uintValues.Register(underlyingType);
+				m_uintValues.Register(enumType);
 
 			else if (underlyingType == typeof(ushort))
-				m_ushortValues.Register(underlyingType);
+				m_ushortValues.Register(enumType);
 
 			else if (underlyingType == typeof(sbyte))
-				m_sbyteValues.Register(underlyingType);
+				m_sbyteValues.Register(enumType);
 
 			else if (underlyingType == typeof(ulong))
-				m_ulongValues.Register(underlyingType);
+				m_ulongValues.Register(enumType);
 
-			else throw new System.ArgumentException("Enum type " + underlyingType + " not supported");
+			else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
 		}
 
 		public WriteDataDelegate GetWriter(Type enumType)
 		{
-			if (!enumType.IsEnum)
-				throw new System.ArgumentException();
+			if (enumType.BaseType != typeof(Enum))
+				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
 
 			Type underlyingType = Enum.GetUnderlyingType(enumType);
 
@@ -81,13 +81,13 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.Write;
 
-			throw new System.ArgumentException("Enum type " + underlyingType + " not supported");
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
 		}
 
 		public ReadDataDelegate GetReader(Type enumType)
 		{
-			if (!enumType.IsEnum)
-				throw new System.ArgumentException();
+			if (enumType.BaseType != typeof(Enum))
+				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
 
 			Type underlyingType = Enum.GetUnderlyingType(enumType);
 
@@ -115,15 +115,15 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.Read;
 
-			throw new System.ArgumentException("Enum type " + underlyingType + " not supported");
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
 		}
 
 		public int GetSize(object value)
 		{
 			Type enumType = value.GetType();
 
-			if (!enumType.IsEnum)
-				throw new System.ArgumentException();
+			if (enumType.BaseType != typeof(Enum))
+				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
 
 			Type underlyingType = Enum.GetUnderlyingType(enumType);
 
@@ -151,92 +151,82 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.GetSize((ulong)value);
 
-			throw new System.ArgumentException("Enum type " + underlyingType + " not supported");
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
 		}
 
 		private class Values<T> where T : IComparable<T>, IEquatable<T>
 		{
-			private readonly Dictionary<Type, T[]> m_values = new Dictionary<Type, T[]>();
-			private readonly Dictionary<Type, int[]> m_sizes = new Dictionary<Type, int[]>();
+			private readonly Dictionary<Type, EnumInfo> m_enumsInfo = new Dictionary<Type, EnumInfo>();
 
-			private readonly WriteDataDelegate m_writeData = null;
-			private readonly ReadDataDelegate m_readData = null;
-			private readonly Func<T, int> m_getSize = null;
+			private readonly WriteDataDelegate	m_writeData = null;
+			private readonly ReadDataDelegate	m_readData	= null;
+			private readonly Func<T, int>		m_getSize	= null;
 
 			public WriteDataDelegate Write { get { return m_writeData; } }
-			//public ReadDataDelegate Read	{ get { return m_readData; } }
+
+			private class EnumInfo
+			{
+				private Array	m_values			= null;
+				private T[]		m_underlyingValues	= null;
+				private int[]	m_sizes				= null;
+
+				public EnumInfo(Type enumType, Func<T, int> getSize)
+				{
+					m_values = Enum.GetValues(enumType);
+
+					m_underlyingValues = new T[m_values.Length];
+					m_sizes = new int[m_values.Length];
+
+					int index = 0;
+					foreach (T value in m_values)
+					{
+						m_underlyingValues[index] = value;
+						m_sizes[index] = getSize(value);
+
+						index++;
+					}
+				}
+
+				public object GetValue(T underlyingValue)
+				{
+					for (int index = 0; index < m_underlyingValues.Length; ++index)
+					{
+						if (m_underlyingValues[index].CompareTo(underlyingValue) == 0)
+							return m_values.GetValue(index);
+					}
+
+					return m_values.GetValue(0);
+				}
+			}
 
 			public Values(WriteDataDelegate writeData, ReadDataDelegate readData, Func<T, int> getSize)
 			{
 				m_writeData = writeData;
-				m_readData = readData;
-				m_getSize = getSize;
+				m_readData	= readData;
+				m_getSize	= getSize;
 			}
 
 			public void Register(Type enumType)
 			{
-				if (m_values.ContainsKey(enumType))
+				if (m_enumsInfo.ContainsKey(enumType))
 					return;
 
-				Array enumValue = Enum.GetValues(enumType);
-
-				T[] underlyingTypeValues = new T[enumValue.Length];
-				int[] sizes = new int[underlyingTypeValues.Length];
-
-				int index = 0;
-				foreach (T value in Enum.GetValues(enumType))
-				{
-					underlyingTypeValues[index] = value;
-					sizes[index] = m_getSize(value);
-
-					index++;
-				}
-
-				m_values[enumType] = underlyingTypeValues;
-				m_sizes[enumType] = sizes;
+				m_enumsInfo[enumType] = new EnumInfo(enumType, m_getSize);
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)
 			{
-				T value = (T)m_readData(enumType, data, ref startIndex);
+				T underlyingValue = (T)m_readData(enumType, data, ref startIndex);
 
-				int index = IndexOf(enumType, value);
+				EnumInfo enumInfo = null;
 
-				if (index != -1)
-					return Enum.GetValues(enumType).GetValue(index);
-
-				return GetDefaultValue(enumType);
-			}
-
-			private int IndexOf(Type enumType, T value)
-			{
-				T[] values = GetValues(enumType);
-
-				for (int index = 0; index < values.Length; ++index)
+				if (!m_enumsInfo.TryGetValue(enumType, out enumInfo))
 				{
-					if (values[index].CompareTo(value) == 0)
-						return index;
+					enumInfo = new EnumInfo(enumType, m_getSize);
+					m_enumsInfo[enumType] = enumInfo;
 				}
 
-				return -1;
-			}
-
-			private T[] GetValues(Type enumType)
-			{
-				T[] values;
-
-				if (!m_values.TryGetValue(enumType, out values))
-				{
-					Register(enumType);
-					values = m_values[enumType];
-				}
-
-				return values;
-			}
-
-			public T GetDefaultValue(Type enumType)
-			{
-				return GetValues(enumType)[0];
+				return enumInfo.GetValue(underlyingValue);
 			}
 
 			public int GetSize(T value)
