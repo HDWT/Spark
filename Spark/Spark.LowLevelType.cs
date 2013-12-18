@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
+	private const byte IgnoreDataSizeBlockMark = 128;
+
 	private class LowLevelType<T>
 	{
 		private static GetSizeDelegate<T> m_getSize = null;

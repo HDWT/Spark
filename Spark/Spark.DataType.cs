@@ -129,11 +129,22 @@ public static partial class Spark
 		public void ReadValues(object instance, byte[] data, ref int startIndex, int endIndex)
 		{
 			if (endIndex < startIndex)
-				throw new ArgumentException("StartIndex = " + startIndex + ", EndIndex = " + endIndex);
+				throw new ArgumentException(string.Format("Read values failed. StartIndex = {0}, EndIndex = {1}", startIndex, endIndex));
 
 			while (startIndex != endIndex)
 			{
-				ushort memberId = (ushort)(data[startIndex++] + (data[startIndex++] << 8));
+				bool ignoreDataSizeBlock = false;
+
+				byte memberIdL = data[startIndex++];
+				byte memberIdH = data[startIndex++];
+
+				if (memberIdH >= IgnoreDataSizeBlockMark)
+				{
+					ignoreDataSizeBlock = true;
+					memberIdH -= IgnoreDataSizeBlockMark;
+				}
+
+				ushort memberId = (ushort)(memberIdL + (memberIdH << 8));
 				int memberIndex = GetMemberIndex(memberId);
 
 				if (memberIndex == InvalidMemberIndex)
@@ -144,10 +155,18 @@ public static partial class Spark
 					{
 						int dataSize = 0;
 
-						for (int i = 0; i < dataSizeBlock; ++i)
-							dataSize = (dataSize << 8) + data[startIndex + i];
+						if (ignoreDataSizeBlock)
+						{
+							dataSize = dataSizeBlock;
+							startIndex += dataSize;
+						}
+						else
+						{
+							for (int i = 0; i < dataSizeBlock; ++i)
+								dataSize += data[startIndex + i] << (8 * i);
 
-						startIndex += dataSize - 1; // 1 прибавили при чтении dataSizeBlock
+							startIndex += dataSize - 1; // 1 прибавили при чтении dataSizeBlock
+						}
 					}
 				}
 				else

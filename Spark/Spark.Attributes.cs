@@ -23,6 +23,10 @@ public static partial class Spark
 				continue;
 
 			memberId = (ushort)attributeType.GetField("Id").GetValue(attribute);
+
+			if (memberId >= 32768)
+				throw new System.ArgumentException("Invalid MemberId");
+
 			return true;
 		}
 

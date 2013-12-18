@@ -22,6 +22,8 @@ public static partial class Spark
 		protected const int HeaderSize = sizeof(ushort);
 
 		private ushort m_id = 0;
+		private bool m_ignoreDataSizeBlock = false;
+
 		private Type m_type = null;
 		private ConstructorInfo m_constructor = null;
 
@@ -51,6 +53,8 @@ public static partial class Spark
 		private DataMember(ushort id, Type type)
 		{
 			m_id = id;
+			m_ignoreDataSizeBlock = (type.BaseType == typeof(ValueType) || type.BaseType == typeof(Enum));
+
 			m_type = type;
 			m_constructor = m_type.GetConstructor(Type.EmptyTypes);
 
@@ -102,6 +106,9 @@ public static partial class Spark
 		{
 			data[startIndex++] = (byte)(m_id);
 			data[startIndex++] = (byte)(m_id >> 8);
+
+			if (m_ignoreDataSizeBlock)
+				data[startIndex - 1] += IgnoreDataSizeBlockMark; 
 		}
 
 		protected ushort ReadHeader(byte[] data, ref int startIndex)
