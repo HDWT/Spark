@@ -25,7 +25,7 @@ public static partial class Spark
 			memberId = (ushort)attributeType.GetField("Id").GetValue(attribute);
 
 			if (memberId >= 32768)
-				throw new System.ArgumentException("Invalid MemberId");
+				throw new System.ArgumentException("Member identifier must be less then 32768");
 
 			return true;
 		}

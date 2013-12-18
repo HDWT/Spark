@@ -54,6 +54,12 @@ public static partial class Spark
 				if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
 					continue;
 
+				foreach (var member in members)
+				{
+					if (member.Id == memberId)
+						throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId));
+				}
+
 				if (FullAot)
 				{
 					members.Add(new DataMember(memberId, field));
@@ -78,6 +84,12 @@ public static partial class Spark
 			{
 				if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
 					continue;
+
+				foreach (var member in members)
+				{
+					if (member.Id == memberId)
+						throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId));
+				}
 
 				if (FullAot)
 				{
