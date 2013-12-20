@@ -168,73 +168,6 @@ public static partial class Spark
 
 				throw new System.ArgumentException();
 			}
-
-			/*
-			if (type.IsValueType)
-			{
-				if (type == typeof(int))
-					return Evaluate((int)value);
-
-				if (type == typeof(float))
-					return Evaluate((float)value);
-
-				if (type == typeof(bool))
-					return Evaluate((bool)value);
-
-				if (type.IsEnum)
-					return Evaluate((Enum)value);
-
-				if (type == typeof(DateTime))
-					return Evaluate((DateTime)value);
-
-				if (type == typeof(short))
-					return Evaluate((short)value);
-
-				if (type == typeof(long))
-					return Evaluate((long)value);
-
-				if (type == typeof(double))
-					return Evaluate((double)value);
-
-				if (type == typeof(byte))
-					return Evaluate((byte)value);
-
-				if (type == typeof(char))
-					return Evaluate((char)value);
-
-				if (type == typeof(uint))
-					return Evaluate((uint)value);
-
-				if (type == typeof(ushort))
-					return Evaluate((ushort)value);
-
-				if (type == typeof(ulong))
-					return Evaluate((ulong)value);
-
-				if (type == typeof(decimal))
-					return Evaluate((decimal)value);
-
-				if (type == typeof(sbyte))
-					return Evaluate((sbyte)value);
-
-				throw new NotImplementedException("Type '" + type + "' is not suppoerted");
-			}
-			else
-			{
-				if (type == typeof(string))
-					return Evaluate((string)value);
-
-				if (type.IsArray)
-					return Evaluate((Array)value);
-
-				if (type.IsGenericList())
-					return Evaluate((IList)value);
-
-				if (type.IsClass)
-					return EvaluateClass(value);
-
-				throw new NotImplementedException("Type '" + type + "' is not suppoerted");
-			}*/
 		}
 
 		public static int Evaluate<T>(T value)
@@ -256,32 +189,32 @@ public static partial class Spark
 
 		public static int Evaluate(bool value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Bool.GetSize(value);
 		}
 
 		public static int Evaluate(byte value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Byte.GetSize(value);
 		}
 
 		public static int Evaluate(sbyte value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Int.GetSize(value);
 		}
 
 		public static int Evaluate(char value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Char.GetSize(value);
 		}
 
 		public static int Evaluate(short value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Short.GetSize(value);
 		}
 
 		public static int Evaluate(ushort value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.UShort.GetSize(value);
 		}
 
 		public static int Evaluate(int value)
@@ -292,32 +225,32 @@ public static partial class Spark
 
 		public static int Evaluate(uint value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.UInt.GetSize(value);
 		}
 
 		public static int Evaluate(long value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Long.GetSize(value);
 		}
 
 		public static int Evaluate(ulong value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.ULong.GetSize(value);
 		}
 
 		public static int Evaluate(float value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Float.GetSize(value);
 		}
 
 		public static int Evaluate(double value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Double.GetSize(value);
 		}
 
 		public static int Evaluate(decimal value)
 		{
-			return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
+			return MinDataSize + TypeHelper.Decimal.GetSize(value);
 		}
 
 		public static int Evaluate(string value)

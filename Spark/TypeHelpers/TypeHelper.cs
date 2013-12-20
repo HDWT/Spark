@@ -1,9 +1,15 @@
-﻿
+﻿using System;
+
 public static partial class Spark
 {
 	private interface ITypeHelper<T>
 	{
 		int GetSize(T value);
+
+		object ReadObject(Type type, byte[] data, ref int startIndex);
+		T Read(byte[] data, ref int startIndex);
+		
+		void WriteObject(object value, byte[] data, ref int startIndex);
 		void Write(T value, byte[] data, ref int startIndex);
 	}
 
@@ -47,18 +53,18 @@ public static partial class Spark
 		private static byte fifteen		= 15;
 		private static byte sixteen		= 16;
 
-		public static readonly ITypeHelper<bool> Bool = new BoolType();
-		public static readonly ITypeHelper<byte> Byte = new ByteType();
-		public static readonly ITypeHelper<sbyte> SByte = new SByteType();
-		public static readonly ITypeHelper<char> Char = new CharType();
-		public static readonly ITypeHelper<short> Short = new ShortType();
-		public static readonly ITypeHelper<ushort> UShort = new UShortType();
-		public static readonly ITypeHelper<int> Int = new IntType();
-		public static readonly ITypeHelper<uint> UInt = new UIntType();
-		public static readonly ITypeHelper<long> Long = new LongType();
-		public static readonly ITypeHelper<ulong> ULong = new ULongType();
-		public static readonly ITypeHelper<float> Float = new FloatType();
-		public static readonly ITypeHelper<double> Double = new DoubleType();
-		public static readonly ITypeHelper<decimal> Decimal = new DecimalType();
+		public static readonly ITypeHelper<bool>		Bool		= new BoolType();
+		public static readonly ITypeHelper<byte>		Byte		= new ByteType();
+		public static readonly ITypeHelper<sbyte>		SByte		= new SByteType();
+		public static readonly ITypeHelper<char>		Char		= new CharType();
+		public static readonly ITypeHelper<short>		Short		= new ShortType();
+		public static readonly ITypeHelper<ushort>		UShort		= new UShortType();
+		public static readonly ITypeHelper<int>			Int			= new IntType();
+		public static readonly ITypeHelper<uint>		UInt		= new UIntType();
+		public static readonly ITypeHelper<long>		Long		= new LongType();
+		public static readonly ITypeHelper<ulong>		ULong		= new ULongType();
+		public static readonly ITypeHelper<float>		Float		= new FloatType();
+		public static readonly ITypeHelper<double>		Double		= new DoubleType();
+		public static readonly ITypeHelper<decimal>		Decimal		= new DecimalType();
 	}
 }

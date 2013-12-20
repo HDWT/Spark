@@ -16,49 +16,49 @@ public static partial class Spark
 			if (type.IsValueType)
 			{
 				if (type == typeof(int))
-					return BasicTypeHelper.Instance.ReadInt;
+					return TypeHelper.Int.ReadObject;
 
 				if (type == typeof(float))
-					return BasicTypeHelper.Instance.ReadFloat;
+					return TypeHelper.Float.ReadObject;
 
 				if (type == typeof(bool))
-					return BasicTypeHelper.Instance.ReadBool;
+					return TypeHelper.Bool.ReadObject;
 
 				if (type.IsEnum)
 					return EnumTypeHelper.Instance.GetReader(type);
 
 				if (type == typeof(char))
-					return BasicTypeHelper.Instance.ReadChar;
+					return TypeHelper.Char.ReadObject;
 
 				if (type == typeof(long))
-					return BasicTypeHelper.Instance.ReadLong;
+					return TypeHelper.Long.ReadObject;
 
 				if (type == typeof(short))
-					return BasicTypeHelper.Instance.ReadShort;
+					return TypeHelper.Short.ReadObject;
 
 				if (type == typeof(byte))
-					return BasicTypeHelper.Instance.ReadByte;
+					return TypeHelper.Byte.ReadObject;
 
 				if (type == typeof(DateTime))
 					return ReadDateTime;
 
 				if (type == typeof(double))
-					return BasicTypeHelper.Instance.ReadDouble;
+					return TypeHelper.Double.ReadObject;
 
 				if (type == typeof(uint))
-					return BasicTypeHelper.Instance.ReadUInt;
+					return TypeHelper.UInt.ReadObject;
 
 				if (type == typeof(ushort))
-					return BasicTypeHelper.Instance.ReadUShort;
+					return TypeHelper.UShort.ReadObject;
 
 				if (type == typeof(ulong))
-					return BasicTypeHelper.Instance.ReadULong;
+					return TypeHelper.ULong.ReadObject;
 
 				if (type == typeof(sbyte))
-					return BasicTypeHelper.Instance.ReadSByte;
+					return TypeHelper.SByte.ReadObject; 
 
 				if (type == typeof(decimal))
-					return BasicTypeHelper.Instance.ReadDecimal;
+					return TypeHelper.Decimal.ReadObject; 
 
 				throw new NotImplementedException();
 			}
@@ -80,7 +80,7 @@ public static partial class Spark
 
 		public static object ReadDateTime(Type type, byte[] data, ref int startIndex)
 		{
-			long ticks = (long)BasicTypeHelper.Instance.ReadLong(type, data, ref startIndex);
+			long ticks = TypeHelper.Long.Read(data, ref startIndex);
 
 			return new DateTime(ticks);
 		}

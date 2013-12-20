@@ -14,35 +14,113 @@ public static partial class Spark
 
 		public static WriteDataDelegate Get(Type type)
 		{
-			//if (type.IsValueType)
+			Type baseType = type.BaseType;
+
+			if (baseType != typeof(object))
 			{
-				WriteDataDelegate writer = null;
+				if (baseType == typeof(ValueType))
+				{
+					if (type == typeof(int))
+						return TypeHelper.Int.WriteObject;
 
-				if (type.IsEnum)
+					if (type == typeof(float))
+						return TypeHelper.Float.WriteObject;
+
+					if (type == typeof(bool))
+						return TypeHelper.Bool.WriteObject;
+
+					if (type == typeof(char))
+						return TypeHelper.Char.WriteObject;
+
+					if (type == typeof(long))
+						return TypeHelper.Long.WriteObject;
+
+					if (type == typeof(short))
+						return TypeHelper.Short.WriteObject;
+
+					if (type == typeof(byte))
+						return TypeHelper.Byte.WriteObject;
+
+					if (type == typeof(DateTime))
+						return WriteDateTime;
+
+					if (type == typeof(double))
+						return TypeHelper.Double.WriteObject;
+
+					if (type == typeof(uint))
+						return TypeHelper.UInt.WriteObject;
+
+					if (type == typeof(ushort))
+						return TypeHelper.UShort.WriteObject;
+
+					if (type == typeof(ulong))
+						return TypeHelper.ULong.WriteObject;
+
+					if (type == typeof(sbyte))
+						return TypeHelper.SByte.WriteObject;
+
+					if (type == typeof(decimal))
+						return TypeHelper.Decimal.WriteObject;
+
+					throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+				}
+				else if (baseType == typeof(Enum))
+				{
 					return EnumTypeHelper.Instance.GetWriter(type);
+				}
+				else if (baseType == typeof(Array))
+				{
+					return WriteArray;
+				}
+				else
+				{
+					throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+				}
+			}
+			else
+			{
+				if (type == typeof(string))
+					return WriteString;
 
-				if (type == typeof(DateTime))
-					return WriteDateTime;
+				if (type.IsGenericList())
+					return WriteList;
 
-				if (BasicTypeHelper.TryGetWriter(type, out writer))
-					return writer;
+				if (type.IsClass)
+					return WriteClass;
 
-				//throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+				throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
 			}
 
-			if (type == typeof(string))
-				return WriteString;
 
-			if (type.IsArray)
-				return WriteArray;
 
-			if (type.IsGenericList())
-				return WriteList;
+			//if (type.IsValueType)
+			//{
+			//	WriteDataDelegate writer = null;
 
-			if (type.IsClass)
-				return WriteClass;
+			//	if (type.IsEnum)
+			//		return EnumTypeHelper.Instance.GetWriter(type);
 
-			throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+			//	if (type == typeof(DateTime))
+			//		return WriteDateTime;
+
+			//	if (BasicTypeHelper.TryGetWriter(type, out writer))
+			//		return writer;
+
+			//	//throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+			//}
+
+			//if (type == typeof(string))
+			//	return WriteString;
+
+			//if (type.IsArray)
+			//	return WriteArray;
+
+			//if (type.IsGenericList())
+			//	return WriteList;
+
+
+
+			//throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
 		}
 
 		public static void Write(object value, byte[] data, ref int startIndex)
@@ -149,7 +227,8 @@ public static partial class Spark
 
 		public static void Write(DateTime value, byte[] data, ref int startIndex)
 		{
-			BasicTypeHelper.Instance.WriteLong(value.Ticks, data, ref startIndex);
+			TypeHelper.Long.Write(value.Ticks, data, ref startIndex);
+			//BasicTypeHelper.Instance.WriteLong(value.Ticks, data, ref startIndex);
 		}
 
 		private static void WriteDateTime(object value, byte[] data, ref int startIndex)

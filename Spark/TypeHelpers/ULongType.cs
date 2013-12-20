@@ -1,141 +1,207 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 public static partial class Spark
 {
 	private static partial class TypeHelper
 	{
 		[StructLayout(LayoutKind.Explicit)]
-		private class ULongType : ITypeHelper<ulong>
+		private struct ULongTypeMapper
 		{
 			[FieldOffset(0)]
-			private ulong m_value;
+			public ulong value;
 
 			[FieldOffset(0)]
-			private byte m_byte1;
+			public byte byte1;
 
 			[FieldOffset(1)]
-			private byte m_byte2;
+			public byte byte2;
 
 			[FieldOffset(2)]
-			private byte m_byte3;
+			public byte byte3;
 
 			[FieldOffset(3)]
-			private byte m_byte4;
+			public byte byte4;
 
 			[FieldOffset(4)]
-			private byte m_byte5;
+			public byte byte5;
 
 			[FieldOffset(5)]
-			private byte m_byte6;
+			public byte byte6;
 
 			[FieldOffset(6)]
-			private byte m_byte7;
+			public byte byte7;
 
 			[FieldOffset(7)]
-			private byte m_byte8;
+			public byte byte8;
+		}
 
+		private class ULongType : ITypeHelper<ulong>
+		{
 			public int GetSize(ulong value)
 			{
-				m_value = value;
+				ULongTypeMapper mapper = new ULongTypeMapper();
+				mapper.value = value;
 
-				if (m_byte8 != zero)
+				if (mapper.byte8 != zero)
 					return 9;
 
-				if (m_byte7 != zero)
+				if (mapper.byte7 != zero)
 					return 8;
 
-				if (m_byte6 != zero)
+				if (mapper.byte6 != zero)
 					return 7;
 
-				if (m_byte5 != zero)
+				if (mapper.byte5 != zero)
 					return 6;
 
-				if (m_byte4 != zero)
+				if (mapper.byte4 != zero)
 					return 5;
 
-				if (m_byte3 != zero)
+				if (mapper.byte3 != zero)
 					return 4;
 
-				if (m_byte2 != zero)
+				if (mapper.byte2 != zero)
 					return 3;
 
-				if (m_byte1 != zero)
+				if (mapper.byte1 != zero)
 					return 2;
 
 				return 1;
 			}
 
+			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			{
+				return Read(data, ref startIndex);
+			}
+
+			public ulong Read(byte[] data, ref int startIndex)
+			{
+				ULongTypeMapper mapper = new ULongTypeMapper();
+
+				int dataSize = data[startIndex++];
+
+				if ((dataSize < 0) || (dataSize > 8))
+					throw new System.ArgumentException("Invalid data size");
+
+				if (dataSize < 5)
+				{
+					if (dataSize < 3)
+					{
+						if (dataSize >= 1)
+							mapper.byte1 = data[startIndex++];
+
+						if (dataSize == 2)
+							mapper.byte2 = data[startIndex++];
+					}
+					else
+					{
+						mapper.byte1 = data[startIndex++];
+						mapper.byte2 = data[startIndex++];
+						mapper.byte3 = data[startIndex++];
+
+						if (dataSize == 4)
+							mapper.byte4 = data[startIndex++];
+					}
+				}
+				else
+				{
+					mapper.byte1 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte5 = data[startIndex++];
+
+					if (dataSize >= 6)
+						mapper.byte6 = data[startIndex++];
+
+					if (dataSize >= 7)
+						mapper.byte7 = data[startIndex++];
+
+					if (dataSize == 8)
+						mapper.byte8 = data[startIndex++];
+				}
+
+				return mapper.value;
+			}
+
+			public void WriteObject(object value, byte[] data, ref int startIndex)
+			{
+				Write((ulong)value, data, ref startIndex);
+			}
+
 			public void Write(ulong value, byte[] data, ref int startIndex)
 			{
-				m_value = value;
+				ULongTypeMapper mapper = new ULongTypeMapper();
+				mapper.value = value;
 
-				if (m_byte8 != zero)
+				if (mapper.byte8 != zero)
 				{
 					data[startIndex++] = eight;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
-					data[startIndex++] = m_byte4;
-					data[startIndex++] = m_byte5;
-					data[startIndex++] = m_byte6;
-					data[startIndex++] = m_byte7;
-					data[startIndex++] = m_byte8;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
+					data[startIndex++] = mapper.byte4;
+					data[startIndex++] = mapper.byte5;
+					data[startIndex++] = mapper.byte6;
+					data[startIndex++] = mapper.byte7;
+					data[startIndex++] = mapper.byte8;
 				}
-				else if (m_byte7 != zero)
+				else if (mapper.byte7 != zero)
 				{
 					data[startIndex++] = seven;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
-					data[startIndex++] = m_byte4;
-					data[startIndex++] = m_byte5;
-					data[startIndex++] = m_byte6;
-					data[startIndex++] = m_byte7;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
+					data[startIndex++] = mapper.byte4;
+					data[startIndex++] = mapper.byte5;
+					data[startIndex++] = mapper.byte6;
+					data[startIndex++] = mapper.byte7;
 				}
-				else if (m_byte6 != zero)
+				else if (mapper.byte6 != zero)
 				{
 					data[startIndex++] = six;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
-					data[startIndex++] = m_byte4;
-					data[startIndex++] = m_byte5;
-					data[startIndex++] = m_byte6;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
+					data[startIndex++] = mapper.byte4;
+					data[startIndex++] = mapper.byte5;
+					data[startIndex++] = mapper.byte6;
 				}
-				else if (m_byte5 != zero)
+				else if (mapper.byte5 != zero)
 				{
 					data[startIndex++] = five;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
-					data[startIndex++] = m_byte4;
-					data[startIndex++] = m_byte5;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
+					data[startIndex++] = mapper.byte4;
+					data[startIndex++] = mapper.byte5;
 				}
-				else if (m_byte4 != zero)
+				else if (mapper.byte4 != zero)
 				{
 					data[startIndex++] = four;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
-					data[startIndex++] = m_byte4;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
+					data[startIndex++] = mapper.byte4;
 				}
-				else if (m_byte3 != zero)
+				else if (mapper.byte3 != zero)
 				{
 					data[startIndex++] = three;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
-					data[startIndex++] = m_byte3;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+					data[startIndex++] = mapper.byte3;
 				}
-				else if (m_byte2 != zero)
+				else if (mapper.byte2 != zero)
 				{
 					data[startIndex++] = two;
-					data[startIndex++] = m_byte1;
-					data[startIndex++] = m_byte2;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
 				}
-				else if (m_byte1 != zero)
+				else if (mapper.byte1 != zero)
 				{
 					data[startIndex++] = one;
-					data[startIndex++] = m_byte1;
+					data[startIndex++] = mapper.byte1;
 				}
 				else
 				{

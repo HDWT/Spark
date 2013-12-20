@@ -5,7 +5,6 @@ using System.Reflection.Emit;
 public static partial class Spark
 {
 	public static bool FullAot = false;
-	private static byte[] StaticArray = null;
 
 	static Spark()
 	{
@@ -23,13 +22,7 @@ public static partial class Spark
 		if (IsLowLevelType(type))
 		{
 			int dataSize = SizeCalculator.Evaluate(instance);
-
-			if (StaticArray == null)
-				StaticArray = new byte[dataSize];
-			else if (StaticArray.Length != dataSize)
-				Array.Resize(ref StaticArray, dataSize);
-
-			byte[] data = StaticArray; //new byte[dataSize];
+			byte[] data = new byte[dataSize];
 
 			Writer.Write(instance, data, ref index);
 
@@ -41,13 +34,7 @@ public static partial class Spark
 			DataType dataType = DataType.Get(type);
 
 			int dataSize = dataType.GetDataSize(instance);
-
-			if (StaticArray == null)
-				StaticArray = new byte[dataSize];
-			else if (StaticArray.Length != dataSize)
-				Array.Resize(ref StaticArray, dataSize);
-
-			byte[] data = StaticArray;//new byte[dataSize];
+			byte[] data = new byte[dataSize];
 
 			dataType.WriteValues(instance, data, ref index);
 
