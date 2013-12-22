@@ -70,7 +70,7 @@ public static partial class Spark
 				if (type.IsArray)
 					return EvaluateArray;
 
-				if (type.IsGenericList())
+				if (IsGenericList(type))
 					return EvaluateList;
 
 				if (type.IsClass)
@@ -82,8 +82,8 @@ public static partial class Spark
 
 		public static GetSizeDelegate<T> Get<T>()
 		{
-			if (typeof(T).BaseType == typeof(Array))
-				return Evaluate<T>;
+			//if (typeof(T).BaseType == typeof(Array))
+			//	return Evaluate<T>;
 
 			return LowLevelType<T>.GetSize;
 		}
@@ -160,7 +160,7 @@ public static partial class Spark
 				if (type == typeof(string))
 					return Evaluate((string)value);
 
-				if (type.IsGenericList())
+				if (IsGenericList(type))
 					return Evaluate((IList)value);
 
 				if (type.IsClass)
@@ -172,17 +172,17 @@ public static partial class Spark
 
 		public static int Evaluate<T>(T value)
 		{
-			if (!IsLowLevelType(typeof(T)))
-				return EvaluateClass(value);
+			//if (!IsLowLevelType(typeof(T)))
+			//	return EvaluateClass(value);
 
-			if (typeof(T).BaseType == typeof(Enum))
-				return EvaluateEnum(value);
+			//if (typeof(T).BaseType == typeof(Enum))
+			//	return EvaluateEnum(value);
 
-			if (typeof(T).BaseType == typeof(Array))
-				return EvaluateArray(value);
+			//if (typeof(T).BaseType == typeof(Array))
+			//	return EvaluateArray(value);
 
-			if (IsGenericList(typeof(T)))
-				return EvaluateList(value);
+			//if (IsGenericList(typeof(T)))
+			//	return EvaluateList(value);
 
 			return LowLevelType<T>.GetSize(value);
 		}

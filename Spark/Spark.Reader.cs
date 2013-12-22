@@ -69,7 +69,7 @@ public static partial class Spark
 			if (type.IsArray)
 				return ReadArray;
 
-			if (type.IsGenericList())
+			if (IsGenericList(type))
 				return ReadList;
 
 			if (type.IsClass)

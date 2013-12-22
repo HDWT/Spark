@@ -53,12 +53,14 @@ public static partial class Spark
 		private DataMember(ushort id, Type type)
 		{
 			m_id = id;
-			m_ignoreDataSizeBlock = (type.BaseType == typeof(ValueType) || type.BaseType == typeof(Enum));
+
+			TypeFlags typeFlags = GetTypeFlags(type);
+			m_ignoreDataSizeBlock = ((typeFlags & TypeFlags.Value) == TypeFlags.Value) && (typeFlags != TypeFlags.Value);
 
 			m_type = type;
 			m_constructor = m_type.GetConstructor(Type.EmptyTypes);
 
-			if (type.IsEnum)
+			if ((typeFlags & TypeFlags.Enum) == TypeFlags.Enum)
 				EnumTypeHelper.Instance.Register(type);
 
 			getSize = SizeCalculator.Get(m_type);
@@ -125,7 +127,7 @@ public static partial class Spark
 		private delegate T DynamicGetValueDelegate(object instance);
 		private DynamicGetValueDelegate dynamicGetValue = null;
 
-		private bool m_isLowLevelType = false;
+		private TypeFlags m_typeFlags = TypeFlags.Reference;
 
 		public DataMember(ushort id, FieldInfo fieldInfo)
 			: base(id, fieldInfo)
@@ -140,13 +142,13 @@ public static partial class Spark
 
 			dynamicGetValue = (DynamicGetValueDelegate)dynamicMethod.CreateDelegate(typeof(DynamicGetValueDelegate));
 
-			m_isLowLevelType = IsLowLevelType(typeof(T));
+			m_typeFlags = GetTypeFlags(typeof(T));
 		}
 
 		public DataMember(ushort id, PropertyInfo propertyInfo)
 			: base(id, propertyInfo)
 		{
-			m_isLowLevelType = IsLowLevelType(typeof(T));
+			m_typeFlags = GetTypeFlags(typeof(T));
 		}
 
 		private T GetValue(object instance)
@@ -156,11 +158,11 @@ public static partial class Spark
 
 		public override int GetSize(object instance)
 		{
-			if (m_isLowLevelType)
+			if ((m_typeFlags & TypeFlags.Basic) == TypeFlags.Basic)
 			{
 				T value = GetValue(instance);
 
-				return HeaderSize + SizeCalculator.Evaluate<T>(value);
+				return HeaderSize + SizeCalculator.Evaluate(value);
 			}
 			else
 			{
@@ -170,7 +172,7 @@ public static partial class Spark
 
 		public override void WriteValue(object instance, byte[] data, ref int startIndex)
 		{
-			if (m_isLowLevelType)
+			if ((m_typeFlags & TypeFlags.Basic) == TypeFlags.Basic)
 			{
 				T value = GetValue(instance);
 

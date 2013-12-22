@@ -64,7 +64,7 @@ public static partial class Spark
 				if (elementType == typeof(string))
 					return GetListSize<string>(list);
 
-				if (elementType.IsArray || elementType.IsGenericList() || elementType.IsClass)
+				if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
 					return GetListSize(list, elementType);
 
 				throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
@@ -152,7 +152,7 @@ public static partial class Spark
 				if (elementType == typeof(string))
 					WriteList<string>(list, elementType, data, ref startIndex);
 
-				else if (elementType.IsArray || elementType.IsGenericList() || elementType.IsClass)
+				else if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
 					WriteList(list, elementType, data, ref startIndex);
 
 				else throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));

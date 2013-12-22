@@ -82,7 +82,7 @@ public static partial class Spark
 				if (type == typeof(string))
 					return WriteString;
 
-				if (type.IsGenericList())
+				if (IsGenericList(type))
 					return WriteList;
 
 				if (type.IsClass)
@@ -194,7 +194,7 @@ public static partial class Spark
 				if (type == typeof(string))
 					Write((string)value, data, ref startIndex);
 
-				else if (type.IsGenericList())
+				else if (IsGenericList(type))
 					WriteList(value, data, ref startIndex);
 
 				else throw new System.ArgumentException();
@@ -215,7 +215,7 @@ public static partial class Spark
 			{
 				WriteArray(value, data, ref startIndex);
 			}
-			else if (typeof(T).IsGenericList())
+			else if (IsGenericList(typeof(T)))
 			{
 				WriteList(value, data, ref startIndex);
 			}

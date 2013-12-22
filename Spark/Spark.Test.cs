@@ -6,7 +6,7 @@ public static partial class Spark
 	public static class TestLowLevel
 	{
 		private static System.Random random = new Random(DateTime.Now.Millisecond);
-		private static byte[] data = null;
+		//private static byte[] data = null;
 		private static Color[] colorValues = (Color[])Enum.GetValues(typeof(Color));
 
 		private enum Color : int
@@ -32,9 +32,9 @@ public static partial class Spark
 		{
 			TestSingle();
 			TestArray();
-			//TestList();
+			TestList();
 
-			//TestGenericClass();
+			TestGenericClass();
 		}
 
 		public static void TestSingle()
@@ -177,7 +177,7 @@ public static partial class Spark
 		{
 			foreach (var value in values)
 			{
-				data = Serialize(value);
+				byte[] data = Serialize(value);
 				T newValue = Deserialize<T>(data);
 
 				//Console.WriteLine(value + " / " + newValue);
@@ -189,7 +189,7 @@ public static partial class Spark
 
 		private static void TestArray<T>(System.Func<T, T, bool> elementComparer, T[] array)
 		{
-			data = Serialize(array);
+			byte[] data = Serialize(array);
 			T[] newArray = Deserialize<T[]>(data);
 
 			if (array == null && newArray == null)
@@ -206,7 +206,7 @@ public static partial class Spark
 
 		private static void TestList<T>(System.Func<T, T, bool> elementComparer, List<T> list)
 		{
-			data = Serialize(list);
+			byte[] data = Serialize(list);
 			List<T> newList = Deserialize<List<T>>(data);
 
 			if (list == null && newList == null)

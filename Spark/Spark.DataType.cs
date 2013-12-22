@@ -27,8 +27,11 @@ public static partial class Spark
 
 			if (!DataTypes.TryGetValue(type, out dataType))
 			{
-				dataType = new DataType(type);
-				DataTypes[type] = dataType;
+				lock (DataTypes)
+				{
+					dataType = new DataType(type);
+					DataTypes[type] = dataType;
+				}
 			}
 
 			return dataType;
@@ -36,8 +39,11 @@ public static partial class Spark
 
 		public static void Register(Type type)
 		{
-			if (!DataTypes.ContainsKey(type))
-				DataTypes[type] = new DataType(type);
+			lock (DataTypes)
+			{
+				if (!DataTypes.ContainsKey(type))
+					DataTypes[type] = new DataType(type);
+			}
 		}
 
 		public DataType(Type type)
@@ -113,7 +119,7 @@ public static partial class Spark
 
 			m_members = members.ToArray();
 
-			if (type.IsGenericList())
+			if (IsGenericList(type))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);
@@ -134,8 +140,11 @@ public static partial class Spark
 
 		public object CreateInstance(object parameter)
 		{
-			ConstructorParameter[0] = parameter;
-			return m_constructor.Invoke(ConstructorParameter);
+			lock (ConstructorParameter)
+			{
+				ConstructorParameter[0] = parameter;
+				return m_constructor.Invoke(ConstructorParameter);
+			}
 		}
 
 		public void ReadValues(object instance, byte[] data, ref int startIndex, int endIndex)

@@ -208,10 +208,13 @@ public static partial class Spark
 
 			public void Register(Type enumType)
 			{
-				if (m_enumsInfo.ContainsKey(enumType))
-					return;
+				lock (m_enumsInfo)
+				{
+					if (m_enumsInfo.ContainsKey(enumType))
+						return;
 
-				m_enumsInfo[enumType] = new EnumInfo(enumType, m_getSize);
+					m_enumsInfo[enumType] = new EnumInfo(enumType, m_getSize);
+				}
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)
@@ -222,8 +225,11 @@ public static partial class Spark
 
 				if (!m_enumsInfo.TryGetValue(enumType, out enumInfo))
 				{
-					enumInfo = new EnumInfo(enumType, m_getSize);
-					m_enumsInfo[enumType] = enumInfo;
+					lock (m_enumsInfo)
+					{
+						enumInfo = new EnumInfo(enumType, m_getSize);
+						m_enumsInfo[enumType] = enumInfo;
+					}
 				}
 
 				return enumInfo.GetValue(underlyingValue);
