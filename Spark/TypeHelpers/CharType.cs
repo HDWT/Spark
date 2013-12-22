@@ -6,7 +6,7 @@ public static partial class Spark
 	private static partial class TypeHelper
 	{
 		[StructLayout(LayoutKind.Explicit)]
-		private struct CharTypeMapper
+		public struct CharMapper
 		{
 			[FieldOffset(0)]
 			public char value;
@@ -22,7 +22,7 @@ public static partial class Spark
 		{
 			public int GetSize(char value)
 			{
-				CharTypeMapper mapper = new CharTypeMapper();
+				CharMapper mapper = new CharMapper();
 				mapper.value = value;
 
 				if (mapper.byte2 != zero)
@@ -41,7 +41,7 @@ public static partial class Spark
 
 			public char Read(byte[] data, ref int startIndex)
 			{
-				CharTypeMapper mapper = new CharTypeMapper();
+				CharMapper mapper = new CharMapper();
 
 				int dataSize = data[startIndex++];
 
@@ -68,7 +68,7 @@ public static partial class Spark
 
 			public void Write(char value, byte[] data, ref int startIndex)
 			{
-				CharTypeMapper mapper = new CharTypeMapper();
+				CharMapper mapper = new CharMapper();
 				mapper.value = value;
 
 				if (mapper.byte2 != zero)

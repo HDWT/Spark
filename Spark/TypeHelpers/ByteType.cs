@@ -1,9 +1,20 @@
-﻿
-using System;
+﻿using System;
+using System.Runtime.InteropServices;
+
 public static partial class Spark
 {
 	private static partial class TypeHelper
 	{
+		[StructLayout(LayoutKind.Explicit)]
+		public struct ArrayMapper
+		{
+			[FieldOffset(0)]
+			public byte[] byteArray;
+
+			[FieldOffset(0)]
+			public char[] charArray;
+		}
+
 		private class ByteType : ITypeHelper<byte>
 		{
 			public int GetSize(byte value)

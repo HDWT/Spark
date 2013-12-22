@@ -104,19 +104,46 @@ public static partial class Spark
 			// Длина строки
 			int stringLength = (dataSize - dataSizeBlock - SizeCalculator.MinDataSize) / sizeof(char);
 
-			char[] chars = new char[stringLength];
 
-			// Читаем все символы в строке
-			for (int i = 0; i < chars.Length; ++i)
-				chars[i] = (char)(data[startIndex++] + (data[startIndex++] << 8));
-
-			if (startIndex != index + dataSize)
+			if (startIndex % 2 == 0)
 			{
-				//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
-				startIndex = index + dataSize;
-			}
+				TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
+				mapper.byteArray = data;
 
-			return new string(chars);
+				string str = new string(mapper.charArray, startIndex / 2, stringLength);
+				startIndex += stringLength * sizeof(char);
+
+				if (startIndex != index + dataSize)
+				{
+					//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
+					startIndex = index + dataSize;
+				}
+
+				return str;
+			}
+			else
+			{
+				TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
+
+				char[] chars = new char[stringLength];
+				
+				// Читаем все символы в строке
+				for (int i = 0; i < stringLength; ++i)
+				{
+					mapper.byte1 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+
+					chars[i] = mapper.value;
+				}
+
+				if (startIndex != index + dataSize)
+				{
+					//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
+					startIndex = index + dataSize;
+				}
+
+				return new string(chars);
+			}
 		}
 
 		private static object ReadArray(Type type, byte[] data, ref int startIndex)

@@ -207,22 +207,22 @@ public static partial class Spark
 			//{
 			//	Write(value, data, ref startIndex);
 			//}
-			if (typeof(T).BaseType == typeof(Enum))
-			{
-				EnumTypeHelper.Instance.GetWriter(typeof(T))(value, data, ref startIndex);
-			}
-			else if (typeof(T).BaseType == typeof(Array))
-			{
-				WriteArray(value, data, ref startIndex);
-			}
-			else if (IsGenericList(typeof(T)))
-			{
-				WriteList(value, data, ref startIndex);
-			}
-			else
-			{
+			//if (typeof(T).BaseType == typeof(Enum))
+			//{
+			//	EnumTypeHelper.Instance.GetWriter(typeof(T))(value, data, ref startIndex);
+			//}
+			//else if (typeof(T).BaseType == typeof(Array))
+			//{
+			//	WriteArray(value, data, ref startIndex);
+			//}
+			//else if (IsGenericList(typeof(T)))
+			//{
+			//	WriteList(value, data, ref startIndex);
+			//}
+			//else
+			//{
 				LowLevelType<T>.Write(value, data, ref startIndex);
-			}
+			//}
 		}
 
 		public static void Write(DateTime value, byte[] data, ref int startIndex)
@@ -257,11 +257,15 @@ public static partial class Spark
 				dataSize >>= 8;
 			}
 
+			TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
+
 			// Записываем все символы в строке
 			foreach (char ch in value)
 			{
-				data[startIndex++] = (byte)(ch);
-				data[startIndex++] = (byte)(ch >> 8);
+				mapper.value = ch;
+
+				data[startIndex++] = mapper.byte1;
+				data[startIndex++] = mapper.byte2;
 			}
 		}
 
