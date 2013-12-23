@@ -189,68 +189,67 @@ public static partial class Spark
 
 		public static int Evaluate(bool value)
 		{
-			return MinDataSize + TypeHelper.Bool.GetSize(value);
+			return TypeHelper.Bool.GetSize(value);
 		}
 
 		public static int Evaluate(byte value)
 		{
-			return MinDataSize + TypeHelper.Byte.GetSize(value);
+			return TypeHelper.Byte.GetSize(value);
 		}
 
 		public static int Evaluate(sbyte value)
 		{
-			return MinDataSize + TypeHelper.Int.GetSize(value);
+			return TypeHelper.Int.GetSize(value);
 		}
 
 		public static int Evaluate(char value)
 		{
-			return MinDataSize + TypeHelper.Char.GetSize(value);
+			return TypeHelper.Char.GetSize(value);
 		}
 
 		public static int Evaluate(short value)
 		{
-			return MinDataSize + TypeHelper.Short.GetSize(value);
+			return TypeHelper.Short.GetSize(value);
 		}
 
 		public static int Evaluate(ushort value)
 		{
-			return MinDataSize + TypeHelper.UShort.GetSize(value);
+			return TypeHelper.UShort.GetSize(value);
 		}
 
 		public static int Evaluate(int value)
 		{
 			return TypeHelper.Int.GetSize(value);
-			//return MinDataSize + BasicTypeHelper.Instance.GetMinSize(value);
 		}
 
 		public static int Evaluate(uint value)
 		{
-			return MinDataSize + TypeHelper.UInt.GetSize(value);
+			return TypeHelper.UInt.GetSize(value);
 		}
 
 		public static int Evaluate(long value)
 		{
-			return MinDataSize + TypeHelper.Long.GetSize(value);
+			return TypeHelper.Long.GetSize(value);
 		}
 
 		public static int Evaluate(ulong value)
 		{
-			return MinDataSize + TypeHelper.ULong.GetSize(value);
+			return TypeHelper.ULong.GetSize(value);
 		}
 
 		public static int Evaluate(float value)
 		{
-			return MinDataSize + TypeHelper.Float.GetSize(value);
+			return TypeHelper.Float.GetSize(value);
 		}
 
 		public static int Evaluate(double value)
 		{
-			return MinDataSize + TypeHelper.Double.GetSize(value);
+			return TypeHelper.Double.GetSize(value);
 		}
 
 		public static int Evaluate(decimal value)
 		{
-			return MinDataSize + TypeHelper.Decimal.GetSize(value);
+			return TypeHelper.Decimal.GetSize(value);
 		}
 
 		public static int Evaluate(string value)
@@ -258,7 +257,7 @@ public static partial class Spark
 			if (value == null)
 				return MinDataSize;
 
-			int dataSize = MinDataSize + value.Length * sizeof(char);
+			int dataSize = MinDataSize + value.Length * sizeof(char) + 1; // +1 for padding
 
 			return dataSize + GetMinSize(dataSize + GetMinSize(dataSize));
 		}

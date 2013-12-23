@@ -248,6 +248,7 @@ public static partial class Spark
 			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 			// Сколько байт занимает поле dataSize
+			int dataSizeBlockIndex = startIndex;
 			data[startIndex++] = dataSizeBlock;
 
 			// Записываем длину строки
@@ -256,6 +257,14 @@ public static partial class Spark
 				data[startIndex++] = (byte)dataSize;
 				dataSize >>= 8;
 			}
+
+			bool forwardPadding = (startIndex % 2 != 0);
+
+			if (forwardPadding)
+				data[dataSizeBlockIndex] += ForwardPaddingMark;
+
+			if (forwardPadding)
+				data[startIndex++] = PaddingValue;
 
 			TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
 
@@ -267,6 +276,9 @@ public static partial class Spark
 				data[startIndex++] = mapper.byte1;
 				data[startIndex++] = mapper.byte2;
 			}
+
+			if (!forwardPadding)
+				data[startIndex++] = PaddingValue;
 		}
 
 		private static void WriteString(object value, byte[] data, ref int startIndex)

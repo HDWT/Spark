@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public static partial class Spark
 {
 	private const byte IgnoreDataSizeBlockMark = 128;
+	private const byte ForwardPaddingMark = 128;
+	private const byte PaddingValue = 0;
 
 	private class LowLevelType<T>
 	{

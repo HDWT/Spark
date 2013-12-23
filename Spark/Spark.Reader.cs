@@ -95,55 +95,42 @@ public static partial class Spark
 			if (dataSizeBlock == NullReference)
 				return null;
 
+			bool forwardPadding = false;
+
+			if (dataSizeBlock >= ForwardPaddingMark)
+			{
+				dataSizeBlock -= ForwardPaddingMark;
+				forwardPadding = true;
+			}
+
 			// Читаем длину строки
 			int dataSize = 0;
 
 			for (int i = 0; i < dataSizeBlock; ++i)
 				dataSize += (data[startIndex++] << 8 * i);
 
+			if (forwardPadding)
+				startIndex++;
+
 			// Длина строки
-			int stringLength = (dataSize - dataSizeBlock - SizeCalculator.MinDataSize) / sizeof(char);
+			int stringLength = (dataSize - 1 - dataSizeBlock - SizeCalculator.MinDataSize) / sizeof(char);
 
+			TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
+			mapper.byteArray = data;
 
-			if (startIndex % 2 == 0)
+			string str = new string(mapper.charArray, startIndex / 2, stringLength);
+			startIndex += stringLength * sizeof(char);
+
+			if (!forwardPadding)
+				startIndex++;
+
+			if (startIndex != index + dataSize)
 			{
-				TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
-				mapper.byteArray = data;
-
-				string str = new string(mapper.charArray, startIndex / 2, stringLength);
-				startIndex += stringLength * sizeof(char);
-
-				if (startIndex != index + dataSize)
-				{
-					//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
-					startIndex = index + dataSize;
-				}
-
-				return str;
+				//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
+				startIndex = index + dataSize;
 			}
-			else
-			{
-				TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
 
-				char[] chars = new char[stringLength];
-				
-				// Читаем все символы в строке
-				for (int i = 0; i < stringLength; ++i)
-				{
-					mapper.byte1 = data[startIndex++];
-					mapper.byte2 = data[startIndex++];
-
-					chars[i] = mapper.value;
-				}
-
-				if (startIndex != index + dataSize)
-				{
-					//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
-					startIndex = index + dataSize;
-				}
-
-				return new string(chars);
-			}
+			return str;
 		}
 
 		private static object ReadArray(Type type, byte[] data, ref int startIndex)
