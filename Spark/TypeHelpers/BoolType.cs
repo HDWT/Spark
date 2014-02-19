@@ -19,10 +19,7 @@ public static partial class Spark
 		{
 			public int GetSize(bool value)
 			{
-				BoolTypeMapper mapper = new BoolTypeMapper();
-				mapper.value = value;
-
-				return (mapper.byte1 != zero) ? 2 : 1;
+				return 1;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -33,14 +30,7 @@ public static partial class Spark
 			public bool Read(byte[] data, ref int startIndex)
 			{
 				BoolTypeMapper mapper = new BoolTypeMapper();
-
-				int dataSize = data[startIndex++];
-
-				if ((dataSize < 0) || (dataSize > 1))
-					throw new System.ArgumentException("Invalid data size");
-
-				if (dataSize == 1)
-					mapper.byte1 = data[startIndex++];
+				mapper.byte1 = data[startIndex++];
 
 				return mapper.value;
 			}
@@ -55,15 +45,7 @@ public static partial class Spark
 				BoolTypeMapper mapper = new BoolTypeMapper();
 				mapper.value = value;
 
-				if (mapper.byte1 != zero)
-				{
-					data[startIndex++] = one;
-					data[startIndex++] = mapper.byte1;
-				}
-				else
-				{
-					data[startIndex++] = zero;
-				}
+				data[startIndex++] = mapper.byte1;
 			}
 		}
 	}

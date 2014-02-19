@@ -22,16 +22,7 @@ public static partial class Spark
 		{
 			public int GetSize(char value)
 			{
-				CharMapper mapper = new CharMapper();
-				mapper.value = value;
-
-				if (mapper.byte2 != zero)
-					return 3;
-
-				if (mapper.byte1 != zero)
-					return 2;
-
-				return 1;
+				return 2;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -43,20 +34,8 @@ public static partial class Spark
 			{
 				CharMapper mapper = new CharMapper();
 
-				int dataSize = data[startIndex++];
-
-				if ((dataSize < 0) || (dataSize > 2))
-					throw new System.ArgumentException("Invalid data size");
-
-				if (dataSize == 1)
-				{
-					mapper.byte1 = data[startIndex++];
-				}
-				else if (dataSize == 2)
-				{
-					mapper.byte1 = data[startIndex++];
-					mapper.byte2 = data[startIndex++];
-				}
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
 
 				return mapper.value;
 			}
@@ -71,21 +50,8 @@ public static partial class Spark
 				CharMapper mapper = new CharMapper();
 				mapper.value = value;
 
-				if (mapper.byte2 != zero)
-				{
-					data[startIndex++] = two;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-				}
-				else if (mapper.byte1 != zero)
-				{
-					data[startIndex++] = one;
-					data[startIndex++] = mapper.byte1;
-				}
-				else
-				{
-					data[startIndex++] = zero;
-				}
+				data[startIndex++] = mapper.byte1;
+				data[startIndex++] = mapper.byte2;
 			}
 		}
 	}

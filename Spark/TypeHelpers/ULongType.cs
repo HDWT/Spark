@@ -38,36 +38,64 @@ public static partial class Spark
 
 		private class ULongType : ITypeHelper<ulong>
 		{
+			const int  UnionSize	= 0x07;		// 0 0000 111
+
+			const int  InvertMask	= 0x80;		// 1 0000 000
+			const byte Invert		= 0x80;		// 1 0000 000
+
+			const int  SizeMask		= 0x78;		// 0 1111 000
+			const byte Size9		= 0x70;		// 0 1110 000
+			const byte Size8		= 0x68;		// 0 1101 000
+			const byte Size7		= 0x60;		// 0 1100 000
+			const byte Size6		= 0x58;		// 0 1011 000
+			const byte Size5		= 0x50;		// 0 1010 000
+			const byte Size4		= 0x48;		// 0 1001 000
+			const byte Size3		= 0x40;		// 0 1000 000
+			const byte Size2		= 0x38;		// 0 0111 000
+			const byte Size1		= 0x30;		// 0 0110 000
+
 			public int GetSize(ulong value)
 			{
+				if (value > 0xFFFFFFFF00000000UL)
+					value = ~value;
+
 				ULongTypeMapper mapper = new ULongTypeMapper();
 				mapper.value = value;
 
-				if (mapper.byte8 != zero)
-					return 9;
+				if (value <= 0x00000000FFFFFFFFUL)
+				{
+					if (value <= 0x000000000000FFFFUL)
+					{
+						if (mapper.byte2 > UnionSize)
+							return 3;
 
-				if (mapper.byte7 != zero)
-					return 8;
+						return (mapper.byte2 != 0 || mapper.byte1 > UnionSize) ? (2) : (1);
+					}
+					else
+					{
+						if (mapper.byte4 > UnionSize)
+							return 5;
 
-				if (mapper.byte6 != zero)
-					return 7;
+						return (mapper.byte4 != 0 || mapper.byte3 > UnionSize) ? (4) : (3);
+					}
+				}
+				else
+				{
+					if (value <= 0x0000FFFFFFFFFFFFUL)
+					{
+						if (mapper.byte6 > UnionSize)
+							return 7;
 
-				if (mapper.byte5 != zero)
-					return 6;
+						return (mapper.byte6 != 0 || mapper.byte5 > UnionSize) ? (6) : (5);
+					}
+					else
+					{
+						if (mapper.byte8 > UnionSize)
+							return 9;
 
-				if (mapper.byte4 != zero)
-					return 5;
-
-				if (mapper.byte3 != zero)
-					return 4;
-
-				if (mapper.byte2 != zero)
-					return 3;
-
-				if (mapper.byte1 != zero)
-					return 2;
-
-				return 1;
+						return (mapper.byte8 != 0 || mapper.byte7 > UnionSize) ? (8) : (7);
+					}
+				}
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -79,50 +107,95 @@ public static partial class Spark
 			{
 				ULongTypeMapper mapper = new ULongTypeMapper();
 
-				int dataSize = data[startIndex++];
+				int dataSize = (data[startIndex] & SizeMask);
+				data[startIndex] -= (byte)dataSize;
 
-				if ((dataSize < 0) || (dataSize > 8))
-					throw new System.ArgumentException("Invalid data size");
+				bool invert = false;
 
-				if (dataSize < 5)
+				if ((data[startIndex] & InvertMask) == InvertMask)
 				{
-					if (dataSize < 3)
-					{
-						if (dataSize >= 1)
-							mapper.byte1 = data[startIndex++];
+					invert = true;
+					data[startIndex] -= (byte)InvertMask;
+				}
 
-						if (dataSize == 2)
-							mapper.byte2 = data[startIndex++];
-					}
-					else
-					{
-						mapper.byte1 = data[startIndex++];
-						mapper.byte2 = data[startIndex++];
-						mapper.byte3 = data[startIndex++];
-
-						if (dataSize == 4)
-							mapper.byte4 = data[startIndex++];
-					}
+				if (dataSize == Size9)
+				{
+					startIndex++;
+					mapper.byte8 = data[startIndex++];
+					mapper.byte7 = data[startIndex++];
+					mapper.byte6 = data[startIndex++];
+					mapper.byte5 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size8)
+				{
+					mapper.byte8 = data[startIndex++];
+					mapper.byte7 = data[startIndex++];
+					mapper.byte6 = data[startIndex++];
+					mapper.byte5 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size7)
+				{
+					mapper.byte7 = data[startIndex++];
+					mapper.byte6 = data[startIndex++];
+					mapper.byte5 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size6)
+				{
+					mapper.byte6 = data[startIndex++];
+					mapper.byte5 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size5)
+				{
+					mapper.byte5 = data[startIndex++];
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size4)
+				{
+					mapper.byte4 = data[startIndex++];
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size3)
+				{
+					mapper.byte3 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size2)
+				{
+					mapper.byte2 = data[startIndex++];
+					mapper.byte1 = data[startIndex++];
+				}
+				else if (dataSize == Size1)
+				{
+					mapper.byte1 = data[startIndex++];
 				}
 				else
 				{
-					mapper.byte1 = data[startIndex++];
-					mapper.byte2 = data[startIndex++];
-					mapper.byte3 = data[startIndex++];
-					mapper.byte4 = data[startIndex++];
-					mapper.byte5 = data[startIndex++];
-
-					if (dataSize >= 6)
-						mapper.byte6 = data[startIndex++];
-
-					if (dataSize >= 7)
-						mapper.byte7 = data[startIndex++];
-
-					if (dataSize == 8)
-						mapper.byte8 = data[startIndex++];
+					throw new System.ArgumentException(string.Format("Invalid data size = {0}", dataSize));
 				}
 
-				return mapper.value;
+				return (invert) ? (~mapper.value) : (mapper.value);
 			}
 
 			public void WriteObject(object value, byte[] data, ref int startIndex)
@@ -132,80 +205,118 @@ public static partial class Spark
 
 			public void Write(ulong value, byte[] data, ref int startIndex)
 			{
+				if (value > 0xFFFFFFFF00000000UL)
+				{
+					value = ~value;
+					data[startIndex] = Invert;
+				}
+
 				ULongTypeMapper mapper = new ULongTypeMapper();
 				mapper.value = value;
 
-				if (mapper.byte8 != zero)
+				if (value <= 0x00000000FFFFFFFFUL)
 				{
-					data[startIndex++] = eight;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-					data[startIndex++] = mapper.byte4;
-					data[startIndex++] = mapper.byte5;
-					data[startIndex++] = mapper.byte6;
-					data[startIndex++] = mapper.byte7;
-					data[startIndex++] = mapper.byte8;
-				}
-				else if (mapper.byte7 != zero)
-				{
-					data[startIndex++] = seven;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-					data[startIndex++] = mapper.byte4;
-					data[startIndex++] = mapper.byte5;
-					data[startIndex++] = mapper.byte6;
-					data[startIndex++] = mapper.byte7;
-				}
-				else if (mapper.byte6 != zero)
-				{
-					data[startIndex++] = six;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-					data[startIndex++] = mapper.byte4;
-					data[startIndex++] = mapper.byte5;
-					data[startIndex++] = mapper.byte6;
-				}
-				else if (mapper.byte5 != zero)
-				{
-					data[startIndex++] = five;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-					data[startIndex++] = mapper.byte4;
-					data[startIndex++] = mapper.byte5;
-				}
-				else if (mapper.byte4 != zero)
-				{
-					data[startIndex++] = four;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-					data[startIndex++] = mapper.byte4;
-				}
-				else if (mapper.byte3 != zero)
-				{
-					data[startIndex++] = three;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-					data[startIndex++] = mapper.byte3;
-				}
-				else if (mapper.byte2 != zero)
-				{
-					data[startIndex++] = two;
-					data[startIndex++] = mapper.byte1;
-					data[startIndex++] = mapper.byte2;
-				}
-				else if (mapper.byte1 != zero)
-				{
-					data[startIndex++] = one;
-					data[startIndex++] = mapper.byte1;
+					if (value <= 0x000000000000FFFFUL)
+					{
+						if (mapper.byte2 > UnionSize)
+						{
+							data[startIndex]   += Size3;
+							data[startIndex++] += mapper.byte3;
+							data[startIndex++]  = mapper.byte2;
+							data[startIndex++]  = mapper.byte1;
+						}
+						else if (mapper.byte2 != 0 || mapper.byte1 > UnionSize)
+						{
+							data[startIndex]   += Size2;
+							data[startIndex++] += mapper.byte2;
+							data[startIndex++]  = mapper.byte1;
+						}
+						else
+						{
+							data[startIndex]   += Size1;
+							data[startIndex++] += mapper.byte1;
+						}
+					}
+					else
+					{
+						if (mapper.byte4 > UnionSize)
+						{
+							data[startIndex]   += Size5;
+							data[startIndex++] += mapper.byte5;
+							data[startIndex++]  = mapper.byte4;
+							data[startIndex++]  = mapper.byte3;
+						}
+						else if (mapper.byte4 != 0 || mapper.byte3 > UnionSize)
+						{
+							data[startIndex]   += Size4;
+							data[startIndex++] += mapper.byte4;
+							data[startIndex++]  = mapper.byte3;
+						}
+						else
+						{
+							data[startIndex]   += Size3;
+							data[startIndex++] += mapper.byte3;
+						}
+
+						data[startIndex++] = mapper.byte2;
+						data[startIndex++] = mapper.byte1;
+					}
 				}
 				else
 				{
-					data[startIndex++] = zero;
+					if (value <= 0x0000FFFFFFFFFFFFUL)
+					{
+						if (mapper.byte6 > UnionSize)
+						{
+							data[startIndex]   += Size7;
+							data[startIndex++] += mapper.byte7;
+							data[startIndex++]  = mapper.byte6;
+							data[startIndex++]  = mapper.byte5;
+						}
+						else if (mapper.byte6 != 0 || mapper.byte5 > UnionSize)
+						{
+							data[startIndex]   += Size6;
+							data[startIndex++] += mapper.byte6;
+							data[startIndex++]  = mapper.byte5;
+						}
+						else
+						{
+							data[startIndex]   += Size5;
+							data[startIndex++] += mapper.byte5;
+						}
+
+						data[startIndex++] = mapper.byte4;
+						data[startIndex++] = mapper.byte3;
+						data[startIndex++] = mapper.byte2;
+						data[startIndex++] = mapper.byte1;
+					}
+					else
+					{
+						if (mapper.byte8 > UnionSize)
+						{
+							data[startIndex++] += Size9;
+							data[startIndex++]  = mapper.byte8;
+							data[startIndex++]  = mapper.byte7;
+						}
+						else if (mapper.byte8 != 0 || mapper.byte7 > UnionSize)
+						{
+							data[startIndex]   += Size8;
+							data[startIndex++] += mapper.byte8;
+							data[startIndex++]  = mapper.byte7;
+						}
+						else
+						{
+							data[startIndex]   += Size7;
+							data[startIndex++] += mapper.byte7;
+						}
+
+						data[startIndex++] = mapper.byte6;
+						data[startIndex++] = mapper.byte5;
+						data[startIndex++] = mapper.byte4;
+						data[startIndex++] = mapper.byte3;
+						data[startIndex++] = mapper.byte2;
+						data[startIndex++] = mapper.byte1;
+					}
 				}
 			}
 		}
