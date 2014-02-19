@@ -56,6 +56,7 @@
     <Compile Include="TypeHelpers\BoolType.cs" />
     <Compile Include="TypeHelpers\ByteType.cs" />
     <Compile Include="TypeHelpers\CharType.cs" />
+    <Compile Include="TypeHelpers\DateTimeType.cs" />
     <Compile Include="TypeHelpers\DecimalType.cs" />
     <Compile Include="TypeHelpers\DoubleType.cs" />
     <Compile Include="TypeHelpers\FloatType.cs" />

@@ -40,7 +40,7 @@ public static partial class Spark
 					return TypeHelper.Byte.ReadObject;
 
 				if (type == typeof(DateTime))
-					return ReadDateTime;
+					return TypeHelper.DateTime.ReadObject;
 
 				if (type == typeof(double))
 					return TypeHelper.Double.ReadObject;
@@ -76,13 +76,6 @@ public static partial class Spark
 				return ReadClass;
 
 			throw new NotImplementedException("Reader for " + type.Name + " type not implemented");
-		}
-
-		public static object ReadDateTime(Type type, byte[] data, ref int startIndex)
-		{
-			long ticks = TypeHelper.Long.Read(data, ref startIndex);
-
-			return new DateTime(ticks);
 		}
 
 		private static object ReadArray(Type type, byte[] data, ref int startIndex)

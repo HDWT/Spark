@@ -42,7 +42,7 @@ public static partial class Spark
 						return TypeHelper.Byte.WriteObject;
 
 					if (type == typeof(DateTime))
-						return WriteDateTime;
+						return TypeHelper.DateTime.WriteObject;
 
 					if (type == typeof(double))
 						return TypeHelper.Double.WriteObject;
@@ -223,17 +223,6 @@ public static partial class Spark
 			//{
 				LowLevelType<T>.Write(value, data, ref startIndex);
 			//}
-		}
-
-		public static void Write(DateTime value, byte[] data, ref int startIndex)
-		{
-			TypeHelper.Long.Write(value.Ticks, data, ref startIndex);
-			//BasicTypeHelper.Instance.WriteLong(value.Ticks, data, ref startIndex);
-		}
-
-		private static void WriteDateTime(object value, byte[] data, ref int startIndex)
-		{
-			Write((DateTime)value, data, ref startIndex);
 		}
 
 		private static void WriteArray(object value, byte[] data, ref int startIndex)

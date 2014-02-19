@@ -45,7 +45,7 @@ public static partial class Spark
 		LowLevelType<char>.Create(TypeHelper.Char.GetSize, TypeHelper.Char.Write);
 		LowLevelType<short>.Create(TypeHelper.Short.GetSize, TypeHelper.Short.Write);
 		LowLevelType<ushort>.Create(TypeHelper.UShort.GetSize, TypeHelper.UShort.Write);
-		LowLevelType<int>.Create(TypeHelper.Int.GetSize, TypeHelper.Int.Write);// BasicTypeHelper.Instance.Write);
+		LowLevelType<int>.Create(TypeHelper.Int.GetSize, TypeHelper.Int.Write);
 		LowLevelType<uint>.Create(TypeHelper.UInt.GetSize, TypeHelper.UInt.Write);
 		LowLevelType<long>.Create(TypeHelper.Long.GetSize, TypeHelper.Long.Write);
 		LowLevelType<ulong>.Create(TypeHelper.ULong.GetSize, TypeHelper.ULong.Write);
@@ -53,7 +53,7 @@ public static partial class Spark
 		LowLevelType<double>.Create(TypeHelper.Double.GetSize, TypeHelper.Double.Write);
 		LowLevelType<decimal>.Create(TypeHelper.Decimal.GetSize, TypeHelper.Decimal.Write);
 		LowLevelType<string>.Create(TypeHelper.String.GetSize, TypeHelper.String.Write);
-		LowLevelType<DateTime>.Create(SizeCalculator.Evaluate, Writer.Write);
+		LowLevelType<DateTime>.Create(TypeHelper.DateTime.GetSize, TypeHelper.DateTime.Write);
 		LowLevelType<Array>.Create(SizeCalculator.Evaluate, Writer.Write);
 	}
 }

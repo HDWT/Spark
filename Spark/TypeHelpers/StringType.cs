@@ -23,9 +23,9 @@ public static partial class Spark
 				if (value == null)
 					return MinDataSize;
 
-				int dataSize = MinDataSize + value.Length * sizeof(char) + 1; // +1 for padding
+				int dataSize = value.Length * sizeof(char) + 1; // +1 for padding
 
-				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+				return MinDataSize + dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)

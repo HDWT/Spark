@@ -16,49 +16,49 @@ public static partial class Spark
 			if (type.IsValueType)
 			{
 				if (type == typeof(int))
-					return EvaluateInt;
+					return TypeHelper.Int.GetSize;
 
 				if (type == typeof(float))
-					return EvaluateFloat;
+					return TypeHelper.Float.GetSize;;
 
 				if (type == typeof(bool))
-					return EvaluateBool;
+					return TypeHelper.Bool.GetSize;;
 
 				if (type.IsEnum)
 					return EvaluateEnum;
 
 				if (type == typeof(DateTime))
-					return EvaluateDateTime;
+					return TypeHelper.DateTime.GetSize;
 
 				if (type == typeof(short))
-					return EvaluateShort;
+					return TypeHelper.Short.GetSize;
 
 				if (type == typeof(long))
-					return EvaluateLong;
+					return TypeHelper.Long.GetSize;
 
 				if (type == typeof(double))
-					return EvaluateDouble;
+					return TypeHelper.Double.GetSize;
 
 				if (type == typeof(byte))
-					return EvaluateByte;
+					return TypeHelper.Byte.GetSize;
 
 				if (type == typeof(char))
-					return EvaluateChar;
+					return TypeHelper.Char.GetSize;
 
 				if (type == typeof(uint))
-					return EvaluateUInt;
+					return TypeHelper.UInt.GetSize;
 
 				if (type == typeof(ushort))
-					return EvaluateUShort;
+					return TypeHelper.UShort.GetSize;
 
 				if (type == typeof(ulong))
-					return EvaluateULong;
+					return TypeHelper.ULong.GetSize;
 
 				if (type == typeof(decimal))
-					return EvaluateDecimal;
+					return TypeHelper.Decimal.GetSize;
 
 				if (type == typeof(sbyte))
-					return EvaluateSByte;
+					return TypeHelper.SByte.GetSize;
 
 				throw new NotImplementedException("Type '" + type + "' is not suppoerted");
 			}
@@ -255,11 +255,6 @@ public static partial class Spark
 			return EnumTypeHelper.Instance.GetSize(value);
 		}
 
-		public static int Evaluate(DateTime value)
-		{
-			return Evaluate(value.Ticks);
-		}
-
 		public static int Evaluate(Array array)
 		{
 			if (array == null)
@@ -376,11 +371,6 @@ public static partial class Spark
 		private static int EvaluateEnum(object value)
 		{
 			return Evaluate((Enum)value);
-		}
-
-		private static int EvaluateDateTime(object value)
-		{
-			return Evaluate((DateTime)value);
 		}
 
 		private static int EvaluateArray(object value)

@@ -68,5 +68,6 @@ public static partial class Spark
 		public static readonly ITypeHelper<double>		Double		= new DoubleType();
 		public static readonly ITypeHelper<decimal>		Decimal		= new DecimalType();
 		public static readonly ITypeHelper<string>		String		= new StringType();
+		public static readonly ITypeHelper<DateTime>	DateTime	= new DateTimeType();
 	}
 }
