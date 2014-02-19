@@ -7,14 +7,14 @@ public static partial class Spark
 	{
 		public static readonly EnumTypeHelper Instance = new EnumTypeHelper();
 
-		private readonly Values<byte>	m_byteValues	= new Values<byte>	(Writer.Get(typeof(byte)),		Reader.Get(typeof(byte)),	SizeCalculator.Evaluate);
-		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>	(Writer.Get(typeof(sbyte)),		Reader.Get(typeof(sbyte)),	SizeCalculator.Evaluate);
-		private readonly Values<short>	m_shortValues	= new Values<short>	(Writer.Get(typeof(short)),		Reader.Get(typeof(short)),	SizeCalculator.Evaluate);
-		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(Writer.Get(typeof(ushort)),	Reader.Get(typeof(ushort)), SizeCalculator.Evaluate);
-		private readonly Values<int>	m_intValues		= new Values<int>	(Writer.Get(typeof(int)),		Reader.Get(typeof(int)),	SizeCalculator.Evaluate);
-		private readonly Values<uint>	m_uintValues	= new Values<uint>	(Writer.Get(typeof(uint)),		Reader.Get(typeof(uint)),	SizeCalculator.Evaluate);
-		private readonly Values<long>	m_longValues	= new Values<long>	(Writer.Get(typeof(long)),		Reader.Get(typeof(long)),	SizeCalculator.Evaluate);
-		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>	(Writer.Get(typeof(ulong)),		Reader.Get(typeof(ulong)),	SizeCalculator.Evaluate);
+		private readonly Values<byte>	m_byteValues	= new Values<byte>	(Writer.Get(typeof(byte)),		Reader.Get(typeof(byte)),	TypeHelper.Byte.GetSize);
+		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>	(Writer.Get(typeof(sbyte)),		Reader.Get(typeof(sbyte)),	TypeHelper.SByte.GetSize);
+		private readonly Values<short>	m_shortValues	= new Values<short>	(Writer.Get(typeof(short)),		Reader.Get(typeof(short)),	TypeHelper.Short.GetSize);
+		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(Writer.Get(typeof(ushort)),	Reader.Get(typeof(ushort)), TypeHelper.UShort.GetSize);
+		private readonly Values<int>	m_intValues		= new Values<int>	(Writer.Get(typeof(int)),		Reader.Get(typeof(int)),	TypeHelper.Int.GetSize);
+		private readonly Values<uint>	m_uintValues	= new Values<uint>	(Writer.Get(typeof(uint)),		Reader.Get(typeof(uint)),	TypeHelper.UInt.GetSize);
+		private readonly Values<long>	m_longValues	= new Values<long>	(Writer.Get(typeof(long)),		Reader.Get(typeof(long)),	TypeHelper.Long.GetSize);
+		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>	(Writer.Get(typeof(ulong)),		Reader.Get(typeof(ulong)),	TypeHelper.ULong.GetSize);
 
 		public void Register(Type enumType)
 		{

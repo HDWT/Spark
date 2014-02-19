@@ -54,6 +54,6 @@ public static partial class Spark
 		LowLevelType<decimal>.Create(TypeHelper.Decimal.GetSize, TypeHelper.Decimal.Write);
 		LowLevelType<string>.Create(TypeHelper.String.GetSize, TypeHelper.String.Write);
 		LowLevelType<DateTime>.Create(TypeHelper.DateTime.GetSize, TypeHelper.DateTime.Write);
-		LowLevelType<Array>.Create(SizeCalculator.Evaluate, Writer.Write);
+		LowLevelType<Array>.Create(TypeHelper.Array.GetSize, TypeHelper.Array.Write);
 	}
 }

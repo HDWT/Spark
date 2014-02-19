@@ -67,7 +67,7 @@ public static partial class Spark
 				return TypeHelper.String.ReadObject;
 
 			if (type.IsArray)
-				return ReadArray;
+				return TypeHelper.Array.ReadObject;
 
 			if (IsGenericList(type))
 				return ReadList;
@@ -78,6 +78,7 @@ public static partial class Spark
 			throw new NotImplementedException("Reader for " + type.Name + " type not implemented");
 		}
 
+		/*
 		private static object ReadArray(Type type, byte[] data, ref int startIndex)
 		{
 			// Сколько байт занимает поле dataSize
@@ -150,7 +151,7 @@ public static partial class Spark
 			}
 
 			return array;
-		}
+		}*/
 
 		private static object ReadList(Type type, byte[] data, ref int startIndex)
 		{

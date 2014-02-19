@@ -34,10 +34,13 @@ public static partial class Spark
 		}
 		else
 		{
-			int dataSize = SizeCalculator.Evaluate(instance);
+			var GetDataSize = SizeCalculator.Get(type);
+			int dataSize = GetDataSize(instance);
+
 			byte[] data = new byte[dataSize];
 
-			Writer.Write(instance, data, ref index);
+			var WriteData = Writer.Get(type);
+			WriteData(instance, data, ref index);
 
 			return data;
 		}

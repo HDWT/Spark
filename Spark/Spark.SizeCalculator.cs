@@ -68,7 +68,7 @@ public static partial class Spark
 					return TypeHelper.String.GetSize;
 
 				if (type.IsArray)
-					return EvaluateArray;
+					return TypeHelper.Array.GetSize;
 
 				if (IsGenericList(type))
 					return EvaluateList;
@@ -146,7 +146,7 @@ public static partial class Spark
 					return EnumTypeHelper.Instance.GetSize(value);
 
 				if (baseType == typeof(Array))
-					return Evaluate((Array)value);
+					TypeHelper.Array.GetSize(value);
 
 				if (type.IsClass)
 					return EvaluateClass(value);
@@ -185,90 +185,10 @@ public static partial class Spark
 			return LowLevelType<T>.GetSize(value);
 		}
 
-		public static int Evaluate(bool value)
-		{
-			return TypeHelper.Bool.GetSize(value);
-		}
-
-		public static int Evaluate(byte value)
-		{
-			return TypeHelper.Byte.GetSize(value);
-		}
-
-		public static int Evaluate(sbyte value)
-		{
-			return TypeHelper.Int.GetSize(value);
-		}
-
-		public static int Evaluate(char value)
-		{
-			return TypeHelper.Char.GetSize(value);
-		}
-
-		public static int Evaluate(short value)
-		{
-			return TypeHelper.Short.GetSize(value);
-		}
-
-		public static int Evaluate(ushort value)
-		{
-			return TypeHelper.UShort.GetSize(value);
-		}
-
-		public static int Evaluate(int value)
-		{
-			return TypeHelper.Int.GetSize(value);
-		}
-
-		public static int Evaluate(uint value)
-		{
-			return TypeHelper.UInt.GetSize(value);
-		}
-
-		public static int Evaluate(long value)
-		{
-			return TypeHelper.Long.GetSize(value);
-		}
-
-		public static int Evaluate(ulong value)
-		{
-			return TypeHelper.ULong.GetSize(value);
-		}
-
-		public static int Evaluate(float value)
-		{
-			return TypeHelper.Float.GetSize(value);
-		}
-
-		public static int Evaluate(double value)
-		{
-			return TypeHelper.Double.GetSize(value);
-		}
-
-		public static int Evaluate(decimal value)
-		{
-			return TypeHelper.Decimal.GetSize(value);
-		}
 
 		public static int Evaluate(Enum value)
 		{
 			return EnumTypeHelper.Instance.GetSize(value);
-		}
-
-		public static int Evaluate(Array array)
-		{
-			if (array == null)
-				return MinDataSize;
-
-			int dataSize = MinDataSize + ArrayTypeHelper.GetSize(array);
-
-			// 1 байт чтобы записать Rank - An array can have a maximum of 32 dimensions(MSDN)
-			dataSize += 1;
-
-			for (int i = 0; i < array.Rank; ++i)
-				dataSize += 1 + GetMinSize(array.GetLength(i));
-
-			return dataSize + GetMinSize(dataSize + GetMinSize(dataSize));
 		}
 
 		public static int Evaluate(IList list)
@@ -303,79 +223,9 @@ public static partial class Spark
 
 		// Private
 
-		private static int EvaluateBool(object value)
-		{
-			return Evaluate((bool)value);
-		}
-
-		private static int EvaluateByte(object value)
-		{
-			return Evaluate((byte)value);
-		}
-
-		private static int EvaluateSByte(object value)
-		{
-			return Evaluate((sbyte)value);
-		}
-
-		private static int EvaluateChar(object value)
-		{
-			return Evaluate((char)value);
-		}
-
-		private static int EvaluateShort(object value)
-		{
-			return Evaluate((short)value);
-		}
-
-		private static int EvaluateUShort(object value)
-		{
-			return Evaluate((ushort)value);
-		}
-
-		private static int EvaluateInt(object value)
-		{
-			return Evaluate((int)value);
-		}
-
-		private static int EvaluateUInt(object value)
-		{
-			return Evaluate((uint)value);
-		}
-
-		private static int EvaluateLong(object value)
-		{
-			return Evaluate((long)value);
-		}
-
-		private static int EvaluateULong(object value)
-		{
-			return Evaluate((ulong)value);
-		}
-
-		private static int EvaluateFloat(object value)
-		{
-			return Evaluate((float)value);
-		}
-
-		private static int EvaluateDouble(object value)
-		{
-			return Evaluate((double)value);
-		}
-
-		private static int EvaluateDecimal(object value)
-		{
-			return Evaluate((decimal)value);
-		}
-
 		private static int EvaluateEnum(object value)
 		{
 			return Evaluate((Enum)value);
-		}
-
-		private static int EvaluateArray(object value)
-		{
-			return Evaluate((Array)value);
 		}
 
 		private static int EvaluateList(object value)
