@@ -41,6 +41,11 @@ public static partial class Spark
 
 		private class LongType : ITypeHelper<long>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((long)value);
+			}
+
 			public int GetSize(long value)
 			{
 				LongTypeMapper mapper = new LongTypeMapper();

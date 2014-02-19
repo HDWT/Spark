@@ -65,7 +65,7 @@ public static partial class Spark
 			else
 			{
 				if (type == typeof(string))
-					return EvaluateString;
+					return TypeHelper.String.GetSize;
 
 				if (type.IsArray)
 					return EvaluateArray;
@@ -90,8 +90,6 @@ public static partial class Spark
 
 		public static int Evaluate(object value)
 		{
-			//return Get(value.GetType())(value);
-			
 			Type type = value.GetType();
 			Type baseType = type.BaseType;
 
@@ -158,7 +156,7 @@ public static partial class Spark
 			else
 			{
 				if (type == typeof(string))
-					return Evaluate((string)value);
+					return TypeHelper.String.GetSize(value);
 
 				if (IsGenericList(type))
 					return Evaluate((IList)value);
@@ -250,16 +248,6 @@ public static partial class Spark
 		public static int Evaluate(decimal value)
 		{
 			return TypeHelper.Decimal.GetSize(value);
-		}
-
-		public static int Evaluate(string value)
-		{
-			if (value == null)
-				return MinDataSize;
-
-			int dataSize = MinDataSize + value.Length * sizeof(char) + 1; // +1 for padding
-
-			return dataSize + GetMinSize(dataSize + GetMinSize(dataSize));
 		}
 
 		public static int Evaluate(Enum value)
@@ -383,11 +371,6 @@ public static partial class Spark
 		private static int EvaluateDecimal(object value)
 		{
 			return Evaluate((decimal)value);
-		}
-
-		private static int EvaluateString(object value)
-		{
-			return Evaluate((string)value);
 		}
 
 		private static int EvaluateEnum(object value)

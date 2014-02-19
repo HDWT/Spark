@@ -17,6 +17,11 @@ public static partial class Spark
 
 		private class SByteType : ITypeHelper<sbyte>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((sbyte)value);
+			}
+
 			public int GetSize(sbyte value)
 			{
 				SByteTypeMapper mapper = new SByteTypeMapper();

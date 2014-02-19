@@ -54,6 +54,11 @@ public static partial class Spark
 			const byte Size2		= 0x38;		// 0 0111 000
 			const byte Size1		= 0x30;		// 0 0110 000
 
+			public int GetSize(object value)
+			{
+				return GetSize((ulong)value);
+			}
+
 			public int GetSize(ulong value)
 			{
 				if (value > 0xFFFFFFFF00000000UL)

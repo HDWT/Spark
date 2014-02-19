@@ -20,6 +20,11 @@ public static partial class Spark
 
 		private class CharType : ITypeHelper<char>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((char)value);
+			}
+
 			public int GetSize(char value)
 			{
 				return 2;

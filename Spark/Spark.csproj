@@ -63,6 +63,7 @@
     <Compile Include="TypeHelpers\LongType.cs" />
     <Compile Include="TypeHelpers\SByteType.cs" />
     <Compile Include="TypeHelpers\ShortType.cs" />
+    <Compile Include="TypeHelpers\StringType.cs" />
     <Compile Include="TypeHelpers\TypeHelper.cs" />
     <Compile Include="TypeHelpers\UIntType.cs" />
     <Compile Include="TypeHelpers\ULongType.cs" />

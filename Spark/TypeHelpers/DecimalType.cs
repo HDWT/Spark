@@ -62,6 +62,11 @@ public static partial class Spark
 
 		private class DecimalType : ITypeHelper<decimal>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((decimal)value);
+			}
+
 			public int GetSize(decimal value)
 			{
 				DecimalTypeMapper mapper = new DecimalTypeMapper();

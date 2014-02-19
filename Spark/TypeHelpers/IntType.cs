@@ -29,6 +29,11 @@ public static partial class Spark
 
 		private class IntType : ITypeHelper<int>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((int)value);
+			}
+
 			public int GetSize(int value)
 			{
 				IntTypeMapper mapper = new IntTypeMapper();

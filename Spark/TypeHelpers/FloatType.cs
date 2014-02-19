@@ -29,6 +29,11 @@ public static partial class Spark
 
 		private class FloatType : ITypeHelper<float>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((float)value);
+			}
+
 			public int GetSize(float value)
 			{
 				FloatTypeMapper mapper = new FloatTypeMapper();

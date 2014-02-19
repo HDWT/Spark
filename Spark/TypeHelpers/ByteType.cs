@@ -17,6 +17,11 @@ public static partial class Spark
 
 		private class ByteType : ITypeHelper<byte>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((byte)value);
+			}
+
 			public int GetSize(byte value)
 			{
 				return 1;

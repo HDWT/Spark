@@ -20,11 +20,13 @@ public static partial class Spark
 
 		private class UShortType : ITypeHelper<ushort>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((ushort)value);
+			}
+
 			public int GetSize(ushort value)
 			{
-				UShortTypeMapper mapper = new UShortTypeMapper();
-				mapper.value = value;
-
 				return 2;
 			}
 

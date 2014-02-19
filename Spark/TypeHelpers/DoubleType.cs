@@ -41,6 +41,11 @@ public static partial class Spark
 
 		private class DoubleType : ITypeHelper<double>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((double)value);
+			}
+
 			public int GetSize(double value)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();

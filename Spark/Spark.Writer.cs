@@ -80,7 +80,7 @@ public static partial class Spark
 			else
 			{
 				if (type == typeof(string))
-					return WriteString;
+					return TypeHelper.String.WriteObject;
 
 				if (IsGenericList(type))
 					return WriteList;
@@ -234,56 +234,6 @@ public static partial class Spark
 		private static void WriteDateTime(object value, byte[] data, ref int startIndex)
 		{
 			Write((DateTime)value, data, ref startIndex);
-		}
-
-		public static void Write(string value, byte[] data, ref int startIndex)
-		{
-			if (value == null)
-			{
-				data[startIndex++] = NullReference;
-				return;
-			}
-
-			int dataSize = SizeCalculator.Evaluate(value);
-			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
-
-			// Сколько байт занимает поле dataSize
-			int dataSizeBlockIndex = startIndex;
-			data[startIndex++] = dataSizeBlock;
-
-			// Записываем длину строки
-			for (int i = 0; i < dataSizeBlock; ++i)
-			{
-				data[startIndex++] = (byte)dataSize;
-				dataSize >>= 8;
-			}
-
-			bool forwardPadding = (startIndex % 2 != 0);
-
-			if (forwardPadding)
-				data[dataSizeBlockIndex] += ForwardPaddingMark;
-
-			if (forwardPadding)
-				data[startIndex++] = PaddingValue;
-
-			TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
-
-			// Записываем все символы в строке
-			foreach (char ch in value)
-			{
-				mapper.value = ch;
-
-				data[startIndex++] = mapper.byte1;
-				data[startIndex++] = mapper.byte2;
-			}
-
-			if (!forwardPadding)
-				data[startIndex++] = PaddingValue;
-		}
-
-		private static void WriteString(object value, byte[] data, ref int startIndex)
-		{
-			Write((string)value, data, ref startIndex);
 		}
 
 		private static void WriteArray(object value, byte[] data, ref int startIndex)

@@ -64,7 +64,7 @@ public static partial class Spark
 			}
 
 			if (type == typeof(string))
-				return ReadString;
+				return TypeHelper.String.ReadObject;
 
 			if (type.IsArray)
 				return ReadArray;
@@ -83,54 +83,6 @@ public static partial class Spark
 			long ticks = TypeHelper.Long.Read(data, ref startIndex);
 
 			return new DateTime(ticks);
-		}
-
-		public static string ReadString(Type type, byte[] data, ref int startIndex)
-		{
-			int index = startIndex;
-
-			// Сколько байт занимает поле dataSize
-			byte dataSizeBlock = data[startIndex++];
-
-			if (dataSizeBlock == NullReference)
-				return null;
-
-			bool forwardPadding = false;
-
-			if (dataSizeBlock >= ForwardPaddingMark)
-			{
-				dataSizeBlock -= ForwardPaddingMark;
-				forwardPadding = true;
-			}
-
-			// Читаем длину строки
-			int dataSize = 0;
-
-			for (int i = 0; i < dataSizeBlock; ++i)
-				dataSize += (data[startIndex++] << 8 * i);
-
-			if (forwardPadding)
-				startIndex++;
-
-			// Длина строки
-			int stringLength = (dataSize - 1 - dataSizeBlock - SizeCalculator.MinDataSize) / sizeof(char);
-
-			TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
-			mapper.byteArray = data;
-
-			string str = new string(mapper.charArray, startIndex / 2, stringLength);
-			startIndex += stringLength * sizeof(char);
-
-			if (!forwardPadding)
-				startIndex++;
-
-			if (startIndex != index + dataSize)
-			{
-				//Console.WriteLine("Index error: " + startIndex + " / " + (index + dataSize));
-				startIndex = index + dataSize;
-			}
-
-			return str;
 		}
 
 		private static object ReadArray(Type type, byte[] data, ref int startIndex)

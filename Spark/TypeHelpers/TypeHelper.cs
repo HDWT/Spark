@@ -4,6 +4,7 @@ public static partial class Spark
 {
 	private interface ITypeHelper<T>
 	{
+		int GetSize(object value);
 		int GetSize(T value);
 
 		object ReadObject(Type type, byte[] data, ref int startIndex);
@@ -66,5 +67,6 @@ public static partial class Spark
 		public static readonly ITypeHelper<float>		Float		= new FloatType();
 		public static readonly ITypeHelper<double>		Double		= new DoubleType();
 		public static readonly ITypeHelper<decimal>		Decimal		= new DecimalType();
+		public static readonly ITypeHelper<string>		String		= new StringType();
 	}
 }

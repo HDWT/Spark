@@ -17,6 +17,11 @@ public static partial class Spark
 
 		private class BoolType : ITypeHelper<bool>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((bool)value);
+			}
+
 			public int GetSize(bool value)
 			{
 				return 1;

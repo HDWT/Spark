@@ -172,8 +172,11 @@ public static partial class Spark
 				{
 					byte dataSizeBlock = data[startIndex++];
 
-					if (dataSizeBlock >= ForwardPaddingMark)
-						dataSizeBlock -= ForwardPaddingMark;
+					// Erase reserved bytes
+					dataSizeBlock = (byte)(dataSizeBlock & ~0x0F);
+
+					//if (dataSizeBlock >= ForwardPaddingMark)
+					//	dataSizeBlock -= ForwardPaddingMark;
 
 					if (dataSizeBlock != 0)
 					{

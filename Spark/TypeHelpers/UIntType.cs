@@ -38,6 +38,11 @@ public static partial class Spark
 			const byte Size2		= 0x20;	// 0 010 0000
 			const byte Size1		= 0x10;	// 0 001 0000
 
+			public int GetSize(object value)
+			{
+				return GetSize((uint)value);
+			}
+
 			public int GetSize(uint value)
 			{
 				if (value > 0xFFFF0000U)

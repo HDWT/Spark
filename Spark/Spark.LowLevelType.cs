@@ -5,8 +5,6 @@ using System.Collections.Generic;
 public static partial class Spark
 {
 	private const byte IgnoreDataSizeBlockMark = 128;
-	private const byte ForwardPaddingMark = 128;
-	private const byte PaddingValue = 0;
 
 	private class LowLevelType<T>
 	{
@@ -54,7 +52,7 @@ public static partial class Spark
 		LowLevelType<float>.Create(TypeHelper.Float.GetSize, TypeHelper.Float.Write);
 		LowLevelType<double>.Create(TypeHelper.Double.GetSize, TypeHelper.Double.Write);
 		LowLevelType<decimal>.Create(TypeHelper.Decimal.GetSize, TypeHelper.Decimal.Write);
-		LowLevelType<string>.Create(SizeCalculator.Evaluate, Writer.Write);
+		LowLevelType<string>.Create(TypeHelper.String.GetSize, TypeHelper.String.Write);
 		LowLevelType<DateTime>.Create(SizeCalculator.Evaluate, Writer.Write);
 		LowLevelType<Array>.Create(SizeCalculator.Evaluate, Writer.Write);
 	}

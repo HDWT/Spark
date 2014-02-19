@@ -20,6 +20,11 @@ public static partial class Spark
 
 		private class ShortType : ITypeHelper<short>
 		{
+			public int GetSize(object value)
+			{
+				return GetSize((short)value);
+			}
+
 			public int GetSize(short value)
 			{
 				return 2;
