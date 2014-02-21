@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 public static partial class Spark
 {
@@ -70,5 +71,6 @@ public static partial class Spark
 		public static readonly ITypeHelper<string>		String		= new StringType();
 		public static readonly ITypeHelper<DateTime>	DateTime	= new DateTimeType();
 		public static readonly ITypeHelper<Array>		Array		= new ArrayType();
+		public static readonly ITypeHelper<IList>		List		= new ListType();
 	}
 }

@@ -10,23 +10,20 @@ public static partial class Spark
 			const int MinDataSize = 1;
 			const int NullReference = 0;
 
-			public int GetSize(object value)
+			public int GetSize(object array)
 			{
-				return GetSize((Array)value);
+				return GetSize((Array)array);
 			}
 
-			public int GetSize(Array value)
+			public int GetSize(Array array)
 			{
-				if (value == null)
+				if (array == null)
 					return MinDataSize;
 
-				int dataSize = MinDataSize + GetDataSize(value);
+				int dataSize = MinDataSize + GetDataSize(array) + 1; // +1 byte for Rank - An array can have a maximum of 32 dimensions(MSDN)
 
-				// 1 byte for Rank - An array can have a maximum of 32 dimensions(MSDN)
-				dataSize += 1;
-
-				for (int i = 0; i < value.Rank; ++i)
-					dataSize += 1 + SizeCalculator.GetMinSize(value.GetLength(i));
+				for (int i = 0; i < array.Rank; ++i)
+					dataSize += 1 + SizeCalculator.GetMinSize(array.GetLength(i));
 
 				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 			}
@@ -218,22 +215,20 @@ public static partial class Spark
 				throw new System.NotImplementedException();
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object array, byte[] data, ref int startIndex)
 			{
-				Write((Array)value, data, ref startIndex);
+				Write((Array)array, data, ref startIndex);
 			}
 
-			public void Write(Array value, byte[] data, ref int startIndex)
+			public void Write(Array array, byte[] data, ref int startIndex)
 			{
-				if (value == null)
+				if (array == null)
 				{
 					data[startIndex++] = NullReference;
 					return;
 				}
 
-				Array array = (Array)value;
-
-				int dataSize = SizeCalculator.Evaluate(value);
+				int dataSize = GetSize(array);
 				byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 				// Сколько байт занимает поле dataSize

@@ -83,7 +83,7 @@ public static partial class Spark
 					return TypeHelper.String.WriteObject;
 
 				if (IsGenericList(type))
-					return WriteList;
+					return TypeHelper.List.WriteObject;
 
 				if (type.IsClass)
 					return WriteClass;
@@ -114,48 +114,6 @@ public static partial class Spark
 			//{
 				LowLevelType<T>.Write(value, data, ref startIndex);
 			//}
-		}
-
-		private static void WriteList(IList list, byte[] data, ref int startIndex)
-		{
-			int dataSize = SizeCalculator.Evaluate(list);
-			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
-
-			// Сколько байт занимает поле dataSize
-			data[startIndex++] = dataSizeBlock;
-
-			// 
-			for (int i = 0; i < dataSizeBlock; ++i)
-			{
-				data[startIndex++] = (byte)dataSize;
-				dataSize >>= 8;
-			}
-
-			// Размер листа
-			int listCount = list.Count;
-			byte listCountBlock = SizeCalculator.GetMinSize(listCount);
-
-			data[startIndex++] = listCountBlock;
-
-			// 
-			for (int j = 0; j < listCountBlock; ++j)
-			{
-				data[startIndex++] = (byte)listCount;
-				listCount >>= 8;
-			}
-
-			ListTypeHelper.Write(list, data, ref startIndex);
-		}
-
-		private static void WriteList(object value, byte[] data, ref int startIndex)
-		{
-			if (value == null)
-			{
-				data[startIndex++] = NullReference;
-				return;
-			}
-
-			WriteList((IList)value, data, ref startIndex);
 		}
 
 		private static void WriteClass(object value, byte[] data, ref int startIndex)

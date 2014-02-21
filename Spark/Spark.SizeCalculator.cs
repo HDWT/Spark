@@ -71,7 +71,7 @@ public static partial class Spark
 					return TypeHelper.Array.GetSize;
 
 				if (IsGenericList(type))
-					return EvaluateList;
+					return TypeHelper.List.GetSize;
 
 				if (type.IsClass)
 					return EvaluateClass;
@@ -159,7 +159,7 @@ public static partial class Spark
 					return TypeHelper.String.GetSize(value);
 
 				if (IsGenericList(type))
-					return Evaluate((IList)value);
+					TypeHelper.List.GetSize(value);
 
 				if (type.IsClass)
 					return EvaluateClass(value);
@@ -191,18 +191,6 @@ public static partial class Spark
 			return EnumTypeHelper.Instance.GetSize(value);
 		}
 
-		public static int Evaluate(IList list)
-		{
-			if (list == null)
-				return MinDataSize;
-
-			int dataSize = MinDataSize + ListTypeHelper.GetSize(list);
-
-			dataSize += 1 + GetMinSize(list.Count);
-
-			return dataSize + GetMinSize(dataSize + GetMinSize(dataSize));
-		}
-
 		// Возвращает минимальное количество байт, которое необходимо для записи [dataSize]
 		public static byte GetMinSize(int dataSize)
 		{
@@ -228,10 +216,6 @@ public static partial class Spark
 			return Evaluate((Enum)value);
 		}
 
-		private static int EvaluateList(object value)
-		{
-			return Evaluate((IList)value);
-		}
 
 		private static int EvaluateClass(object value)
 		{

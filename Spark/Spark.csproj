@@ -47,7 +47,6 @@
     <Compile Include="Spark.DataMember.cs" />
     <Compile Include="Spark.DataType.cs" />
     <Compile Include="Spark.EnumTypeHelper.cs" />
-    <Compile Include="Spark.ListTypeHelper.cs" />
     <Compile Include="Spark.LowLevelType.cs" />
     <Compile Include="Spark.SizeCalculator.cs" />
     <Compile Include="Spark.Test.cs" />
@@ -61,6 +60,7 @@
     <Compile Include="TypeHelpers\DoubleType.cs" />
     <Compile Include="TypeHelpers\FloatType.cs" />
     <Compile Include="TypeHelpers\IntType.cs" />
+    <Compile Include="TypeHelpers\ListType.cs" />
     <Compile Include="TypeHelpers\LongType.cs" />
     <Compile Include="TypeHelpers\SByteType.cs" />
     <Compile Include="TypeHelpers\ShortType.cs" />
