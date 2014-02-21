@@ -7,14 +7,14 @@ public static partial class Spark
 	{
 		public static readonly EnumTypeHelper Instance = new EnumTypeHelper();
 
-		private readonly Values<byte>	m_byteValues	= new Values<byte>	(Writer.Get(typeof(byte)),		Reader.Get(typeof(byte)),	TypeHelper.Byte.GetSize);
-		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>	(Writer.Get(typeof(sbyte)),		Reader.Get(typeof(sbyte)),	TypeHelper.SByte.GetSize);
-		private readonly Values<short>	m_shortValues	= new Values<short>	(Writer.Get(typeof(short)),		Reader.Get(typeof(short)),	TypeHelper.Short.GetSize);
-		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(Writer.Get(typeof(ushort)),	Reader.Get(typeof(ushort)), TypeHelper.UShort.GetSize);
-		private readonly Values<int>	m_intValues		= new Values<int>	(Writer.Get(typeof(int)),		Reader.Get(typeof(int)),	TypeHelper.Int.GetSize);
-		private readonly Values<uint>	m_uintValues	= new Values<uint>	(Writer.Get(typeof(uint)),		Reader.Get(typeof(uint)),	TypeHelper.UInt.GetSize);
-		private readonly Values<long>	m_longValues	= new Values<long>	(Writer.Get(typeof(long)),		Reader.Get(typeof(long)),	TypeHelper.Long.GetSize);
-		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>	(Writer.Get(typeof(ulong)),		Reader.Get(typeof(ulong)),	TypeHelper.ULong.GetSize);
+		private readonly Values<byte>	m_byteValues	= new Values<byte>(TypeHelper.Byte);
+		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>(TypeHelper.SByte);
+		private readonly Values<short>	m_shortValues	= new Values<short>(TypeHelper.Short);
+		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(TypeHelper.UShort);
+		private readonly Values<int>	m_intValues		= new Values<int>(TypeHelper.Int);
+		private readonly Values<uint>	m_uintValues	= new Values<uint>(TypeHelper.UInt);
+		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.Long);
+		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULong);
 
 		public void Register(Type enumType)
 		{
@@ -158,11 +158,7 @@ public static partial class Spark
 		{
 			private readonly Dictionary<Type, EnumInfo> m_enumsInfo = new Dictionary<Type, EnumInfo>();
 
-			private readonly WriteDataDelegate	m_writeData = null;
-			private readonly ReadDataDelegate	m_readData	= null;
-			private readonly Func<T, int>		m_getSize	= null;
-
-			public WriteDataDelegate Write { get { return m_writeData; } }
+			private ITypeHelper<T> m_typeHelper = null;
 
 			private class EnumInfo
 			{
@@ -199,11 +195,9 @@ public static partial class Spark
 				}
 			}
 
-			public Values(WriteDataDelegate writeData, ReadDataDelegate readData, Func<T, int> getSize)
+			public Values(ITypeHelper<T> typeHelper)
 			{
-				m_writeData = writeData;
-				m_readData	= readData;
-				m_getSize	= getSize;
+				m_typeHelper = typeHelper;
 			}
 
 			public void Register(Type enumType)
@@ -213,13 +207,18 @@ public static partial class Spark
 					if (m_enumsInfo.ContainsKey(enumType))
 						return;
 
-					m_enumsInfo[enumType] = new EnumInfo(enumType, m_getSize);
+					m_enumsInfo[enumType] = new EnumInfo(enumType, m_typeHelper.GetSize);
 				}
+			}
+
+			public int GetSize(T value)
+			{
+				return m_typeHelper.GetSize(value);
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)
 			{
-				T underlyingValue = (T)m_readData(enumType, data, ref startIndex);
+				T underlyingValue = (T)m_typeHelper.ReadObject(enumType, data, ref startIndex);
 
 				EnumInfo enumInfo = null;
 
@@ -227,7 +226,7 @@ public static partial class Spark
 				{
 					lock (m_enumsInfo)
 					{
-						enumInfo = new EnumInfo(enumType, m_getSize);
+						enumInfo = new EnumInfo(enumType, m_typeHelper.GetSize);
 						m_enumsInfo[enumType] = enumInfo;
 					}
 				}
@@ -235,9 +234,9 @@ public static partial class Spark
 				return enumInfo.GetValue(underlyingValue);
 			}
 
-			public int GetSize(T value)
+			public WriteDataDelegate Write
 			{
-				return m_getSize(value);
+				get { return m_typeHelper.WriteObject; }
 			}
 		}
 	}

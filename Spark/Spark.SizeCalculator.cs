@@ -159,7 +159,7 @@ public static partial class Spark
 					return TypeHelper.String.GetSize(value);
 
 				if (IsGenericList(type))
-					TypeHelper.List.GetSize(value);
+					return TypeHelper.List.GetSize(value);
 
 				if (type.IsClass)
 					return EvaluateClass(value);
