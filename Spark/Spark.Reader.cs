@@ -9,8 +9,6 @@ public static partial class Spark
 
 	private static class Reader
 	{
-		const byte NullReference = 0;
-
 		public static ReadDataDelegate Get(Type type)
 		{
 			if (type.IsValueType)
@@ -58,9 +56,9 @@ public static partial class Spark
 					return TypeHelper.SByte.ReadObject; 
 
 				if (type == typeof(decimal))
-					return TypeHelper.Decimal.ReadObject; 
+					return TypeHelper.Decimal.ReadObject;
 
-				throw new NotImplementedException();
+				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 
 			if (type == typeof(string))
@@ -73,35 +71,9 @@ public static partial class Spark
 				return TypeHelper.List.ReadObject;
 
 			if (type.IsClass)
-				return ReadClass;
+				return TypeHelper.Object.ReadObject;
 
-			throw new NotImplementedException("Reader for " + type.Name + " type not implemented");
-		}
-
-		private static object ReadClass(Type type, byte[] data, ref int startIndex)
-		{
-			int index = startIndex;
-
-			// Сколько байт занимает поле dataSize
-			byte dataSizeBlock = data[startIndex++];
-
-			if (dataSizeBlock == NullReference)
-				return null;
-
-			// Читаем размер класса
-			int dataSize = 0;
-
-			for (int i = 0; i < dataSizeBlock; ++i)
-				dataSize += (data[startIndex++] << 8 * i);
-
-			// Создаем новый экземпляр класса
-			DataType dataType = DataType.Get(type);
-
-			var value = dataType.CreateInstance();
-
-			// Читаем все поля класса
-			dataType.ReadValues(value, data, ref startIndex, index + dataSize);
-			return value;
+			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 		}
 	}
 }

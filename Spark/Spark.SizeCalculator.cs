@@ -9,8 +9,6 @@ public static partial class Spark
 
 	private static class SizeCalculator
 	{
-		public const int MinDataSize = 1;
-
 		public static GetSizeDelegate Get(Type type)
 		{
 			if (type.IsValueType)
@@ -25,7 +23,7 @@ public static partial class Spark
 					return TypeHelper.Bool.GetSize;;
 
 				if (type.IsEnum)
-					return EvaluateEnum;
+					return EnumTypeHelper.Instance.GetSize;
 
 				if (type == typeof(DateTime))
 					return TypeHelper.DateTime.GetSize;
@@ -60,7 +58,7 @@ public static partial class Spark
 				if (type == typeof(sbyte))
 					return TypeHelper.SByte.GetSize;
 
-				throw new NotImplementedException("Type '" + type + "' is not suppoerted");
+				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 			else
 			{
@@ -74,9 +72,9 @@ public static partial class Spark
 					return TypeHelper.List.GetSize;
 
 				if (type.IsClass)
-					return EvaluateClass;
+					return TypeHelper.Object.GetSize;
 
-				throw new NotImplementedException("Type '" + type + "' is not suppoerted");
+				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 		}
 
@@ -86,86 +84,6 @@ public static partial class Spark
 			//	return Evaluate<T>;
 
 			return LowLevelType<T>.GetSize;
-		}
-
-		public static int Evaluate(object value)
-		{
-			Type type = value.GetType();
-			Type baseType = type.BaseType;
-
-			if (baseType != typeof(object))
-			{
-				if (baseType == typeof(ValueType))
-				{
-					if (type == typeof(bool))
-						return LowLevelType<bool>.GetSize((bool)value);
-
-					if (type == typeof(byte))
-						return LowLevelType<byte>.GetSize((byte)value);
-
-					if (type == typeof(sbyte))
-						return LowLevelType<sbyte>.GetSize((sbyte)value);
-
-					if (type == typeof(char))
-						return LowLevelType<char>.GetSize((char)value);
-
-					if (type == typeof(short))
-						return LowLevelType<short>.GetSize((short)value);
-
-					if (type == typeof(ushort))
-						return LowLevelType<ushort>.GetSize((ushort)value);
-
-					if (type == typeof(int))
-						return LowLevelType<int>.GetSize((int)value);
-
-					if (type == typeof(uint))
-						return LowLevelType<uint>.GetSize((uint)value);
-
-					if (type == typeof(long))
-						return LowLevelType<long>.GetSize((long)value);
-
-					if (type == typeof(ulong))
-						return LowLevelType<ulong>.GetSize((ulong)value);
-
-					if (type == typeof(float))
-						return LowLevelType<float>.GetSize((float)value);
-
-					if (type == typeof(double))
-						return LowLevelType<double>.GetSize((double)value);
-
-					if (type == typeof(decimal))
-						return LowLevelType<decimal>.GetSize((decimal)value);
-
-					if (type == typeof(DateTime))
-						return LowLevelType<DateTime>.GetSize((DateTime)value);
-
-					throw new System.ArgumentException();
-				}
-
-				if (baseType == typeof(Enum))
-					return EnumTypeHelper.Instance.GetSize(value);
-
-				if (baseType == typeof(Array))
-					TypeHelper.Array.GetSize(value);
-
-				if (type.IsClass)
-					return EvaluateClass(value);
-
-				throw new System.ArgumentException();
-			}
-			else
-			{
-				if (type == typeof(string))
-					return TypeHelper.String.GetSize(value);
-
-				if (IsGenericList(type))
-					return TypeHelper.List.GetSize(value);
-
-				if (type.IsClass)
-					return EvaluateClass(value);
-
-				throw new System.ArgumentException();
-			}
 		}
 
 		public static int Evaluate<T>(T value)
@@ -185,12 +103,6 @@ public static partial class Spark
 			return LowLevelType<T>.GetSize(value);
 		}
 
-
-		public static int Evaluate(Enum value)
-		{
-			return EnumTypeHelper.Instance.GetSize(value);
-		}
-
 		// Возвращает минимальное количество байт, которое необходимо для записи [dataSize]
 		public static byte GetMinSize(int dataSize)
 		{
@@ -207,26 +119,6 @@ public static partial class Spark
 				return 4;
 
 			throw new ArgumentException("Invalid data size: " + dataSize);
-		}
-
-		// Private
-
-		private static int EvaluateEnum(object value)
-		{
-			return Evaluate((Enum)value);
-		}
-
-
-		private static int EvaluateClass(object value)
-		{
-			if (value == null)
-				return MinDataSize;
-
-			DataType dataType = DataType.Get(value.GetType());
-
-			int dataSize = MinDataSize + dataType.GetDataSize(value);
-
-			return dataSize + GetMinSize(dataSize + GetMinSize(dataSize));
 		}
 	}
 }

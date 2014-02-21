@@ -37,24 +37,6 @@ public static partial class Spark
 
 	private static partial class TypeHelper
 	{
-		private static byte zero		= 0;
-		private static byte one			= 1;
-		private static byte two			= 2;
-		private static byte three		= 3;
-		private static byte four		= 4;
-		private static byte five		= 5;
-		private static byte six			= 6;
-		private static byte seven		= 7;
-		private static byte eight		= 8;
-		private static byte nine		= 9;
-		private static byte ten			= 10;
-		private static byte eleven		= 11;
-		private static byte twelve		= 12;
-		private static byte thirteen	= 13;
-		private static byte fourteen	= 14;
-		private static byte fifteen		= 15;
-		private static byte sixteen		= 16;
-
 		public static readonly ITypeHelper<bool>		Bool		= new BoolType();
 		public static readonly ITypeHelper<byte>		Byte		= new ByteType();
 		public static readonly ITypeHelper<sbyte>		SByte		= new SByteType();
@@ -72,5 +54,6 @@ public static partial class Spark
 		public static readonly ITypeHelper<DateTime>	DateTime	= new DateTimeType();
 		public static readonly ITypeHelper<Array>		Array		= new ArrayType();
 		public static readonly ITypeHelper<IList>		List		= new ListType();
+		public static readonly ITypeHelper<object>		Object		= new ObjectType();
 	}
 }

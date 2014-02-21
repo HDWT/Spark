@@ -47,7 +47,7 @@ public static partial class Spark
 			else if (underlyingType == typeof(ulong))
 				m_ulongValues.Register(enumType);
 
-			else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
+			else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
 		public WriteDataDelegate GetWriter(Type enumType)
@@ -81,7 +81,7 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.Write;
 
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
 		public ReadDataDelegate GetReader(Type enumType)
@@ -115,7 +115,7 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.Read;
 
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
 		public int GetSize(object value)
@@ -151,7 +151,7 @@ public static partial class Spark
 			if (underlyingType == typeof(ulong))
 				return m_ulongValues.GetSize((ulong)value);
 
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' not supported", underlyingType));
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
 		private class Values<T> where T : IComparable<T>, IEquatable<T>

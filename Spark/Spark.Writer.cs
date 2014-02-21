@@ -10,8 +10,6 @@ public static partial class Spark
 
 	private static class Writer
 	{
-		const byte NullReference = 0;
-
 		public static WriteDataDelegate Get(Type type)
 		{
 			Type baseType = type.BaseType;
@@ -62,7 +60,7 @@ public static partial class Spark
 					if (type == typeof(decimal))
 						return TypeHelper.Decimal.WriteObject;
 
-					throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+					throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 				}
 				else if (baseType == typeof(Enum))
 				{
@@ -74,7 +72,7 @@ public static partial class Spark
 				}
 				else
 				{
-					throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+					throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 				}
 			}
 			else
@@ -86,9 +84,9 @@ public static partial class Spark
 					return TypeHelper.List.WriteObject;
 
 				if (type.IsClass)
-					return WriteClass;
+					return TypeHelper.Object.WriteObject;
 
-				throw new NotImplementedException("Writer for " + type.Name + " type not implemented");
+				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 		}
 
@@ -114,33 +112,6 @@ public static partial class Spark
 			//{
 				LowLevelType<T>.Write(value, data, ref startIndex);
 			//}
-		}
-
-		private static void WriteClass(object value, byte[] data, ref int startIndex)
-		{
-			if (value == null)
-			{
-				data[startIndex++] = NullReference;
-				return;
-			}
-
-			DataType dataType = DataType.Get(value.GetType());
-
-			int dataSize = SizeCalculator.Evaluate(value);
-			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
-
-			// Сколько байт занимает поле dataSize
-			data[startIndex++] = dataSizeBlock;
-
-			// Записываем размер класса
-			for (int i = 0; i < dataSizeBlock; ++i)
-			{
-				data[startIndex++] = (byte)dataSize;
-				dataSize >>= 8;
-			}
-
-			// Записываем все поля класса
-			dataType.WriteValues(value, data, ref startIndex);
 		}
 	}
 }

@@ -61,7 +61,7 @@ public static partial class Spark
 					startIndex++;
 
 				// Длина строки
-				int stringLength = (dataSize - 1 - dataSizeBlock - SizeCalculator.MinDataSize) / sizeof(char);
+				int stringLength = (dataSize - 1 - dataSizeBlock - MinDataSize) / sizeof(char);
 
 				TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
 				mapper.byteArray = data;
