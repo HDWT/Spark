@@ -1,14 +1,53 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
 {
 	private static partial class TypeHelper
 	{
-		private class ObjectType : ITypeHelper<object>
+		public class ObjectType : ITypeHelper<object>
 		{
 			const int MinDataSize = 1;
 			const int NullReference = 0;
+
+			private static readonly Dictionary<Type, SizeGetter> s_sizeGettersByType = new Dictionary<Type, SizeGetter>(16);
+
+			private class SizeGetter
+			{
+				private DataType m_dataType = null;
+
+				public SizeGetter(Type type)
+				{
+					m_dataType = DataType.Get(type);
+				}
+
+				public int GetSize(object value)
+				{
+					if (value == null)
+						return MinDataSize;
+
+					int dataSize = MinDataSize + m_dataType.GetDataSize(value);
+
+					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+				}
+			}
+
+			public static GetSizeDelegate GetGetSizeDelegate(Type type)
+			{
+				SizeGetter sizeGetter = null;
+
+				if (!s_sizeGettersByType.TryGetValue(type, out sizeGetter))
+				{
+					lock (s_sizeGettersByType)
+					{
+						sizeGetter = new SizeGetter(type);
+						s_sizeGettersByType.Add(type, sizeGetter);
+					}
+				}
+
+				return sizeGetter.GetSize;
+			}
 
 			public int GetSize(object value)
 			{

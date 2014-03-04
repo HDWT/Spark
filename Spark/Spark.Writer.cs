@@ -10,7 +10,25 @@ public static partial class Spark
 
 	private static class Writer
 	{
+		private static readonly Dictionary<Type, WriteDataDelegate> s_writersByType = new Dictionary<Type, WriteDataDelegate>(16);
+
 		public static WriteDataDelegate Get(Type type)
+		{
+			WriteDataDelegate writer = null;
+
+			if (!s_writersByType.TryGetValue(type, out writer))
+			{
+				lock (s_writersByType)
+				{
+					writer = GetDelegate(type);
+					s_writersByType[type] = writer;
+				}
+			}
+
+			return writer;
+		}
+
+		private static WriteDataDelegate GetDelegate(Type type)
 		{
 			Type baseType = type.BaseType;
 

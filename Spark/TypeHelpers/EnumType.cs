@@ -16,12 +16,11 @@ public static partial class Spark
 		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.Long);
 		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULong);
 
+		private static readonly Dictionary<Type, Type> s_underlyingTypesByEnumType = new Dictionary<Type, Type>(16);
+
 		public void Register(Type enumType)
 		{
-			if (enumType.BaseType != typeof(Enum))
-				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
-
-			Type underlyingType = Enum.GetUnderlyingType(enumType);
+			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
 				m_intValues.Register(enumType);
@@ -52,10 +51,7 @@ public static partial class Spark
 
 		public WriteDataDelegate GetWriter(Type enumType)
 		{
-			if (enumType.BaseType != typeof(Enum))
-				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
-
-			Type underlyingType = Enum.GetUnderlyingType(enumType);
+			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
 				return m_intValues.Write;
@@ -86,10 +82,7 @@ public static partial class Spark
 
 		public ReadDataDelegate GetReader(Type enumType)
 		{
-			if (enumType.BaseType != typeof(Enum))
-				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
-
-			Type underlyingType = Enum.GetUnderlyingType(enumType);
+			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
 				return m_intValues.Read;
@@ -121,11 +114,7 @@ public static partial class Spark
 		public int GetSize(object value)
 		{
 			Type enumType = value.GetType();
-
-			if (enumType.BaseType != typeof(Enum))
-				throw new System.ArgumentException(string.Format("'{0}' is not an Enum Type"));
-
-			Type underlyingType = Enum.GetUnderlyingType(enumType);
+			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
 				return m_intValues.GetSize((int)value);
@@ -152,6 +141,51 @@ public static partial class Spark
 				return m_ulongValues.GetSize((ulong)value);
 
 			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
+		}
+
+		private class Container
+		{
+			public Type enumType;
+			public Type underType;
+
+			public Container(Type eT, Type uT)
+			{
+				enumType = eT;
+				underType = uT;
+			}
+		}
+
+		static List<Container> testList = new List<Container>(10);
+
+		private static Type GetUnderlyingType(Type enumType)
+		{
+			for (int i = 0; i < testList.Count; ++i)
+			{
+				if (testList[i].enumType == enumType)
+					return testList[i].underType; 
+			}
+
+						Type underlyingType = null;
+
+
+			lock (testList)
+			{
+				underlyingType = Enum.GetUnderlyingType(enumType);
+				testList.Add(new Container(enumType, underlyingType));
+			}
+
+			return underlyingType;
+
+			//if (!s_underlyingTypesByEnumType.TryGetValue(enumType, out underlyingType))
+			//{
+			//	lock (s_underlyingTypesByEnumType)
+			//	{
+			//		underlyingType = Enum.GetUnderlyingType(enumType);
+			//		s_underlyingTypesByEnumType[enumType] = underlyingType;
+			//	}
+			//}
+
+			//return underlyingType;
 		}
 
 		private class Values<T> where T : IComparable<T>, IEquatable<T>

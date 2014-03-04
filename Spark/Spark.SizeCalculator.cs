@@ -9,7 +9,25 @@ public static partial class Spark
 
 	private static class SizeCalculator
 	{
+		private static readonly Dictionary<Type, GetSizeDelegate> s_getSizeDelegatesByType = new Dictionary<Type, GetSizeDelegate>(16);
+
 		public static GetSizeDelegate Get(Type type)
+		{
+			GetSizeDelegate sizeGetter = null;
+
+			if (!s_getSizeDelegatesByType.TryGetValue(type, out sizeGetter))
+			{
+				lock (s_getSizeDelegatesByType)
+				{
+					sizeGetter = GetDelegate(type);
+					s_getSizeDelegatesByType.Add(type, sizeGetter);
+				}
+			}
+
+			return sizeGetter;
+		}
+
+		private static GetSizeDelegate GetDelegate(Type type)
 		{
 			if (type.IsValueType)
 			{
@@ -72,7 +90,7 @@ public static partial class Spark
 					return TypeHelper.List.GetSize;
 
 				if (type.IsClass)
-					return TypeHelper.Object.GetSize;
+					return TypeHelper.ObjectType.GetGetSizeDelegate(type);// Object.GetSize;
 
 				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}

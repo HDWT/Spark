@@ -10,6 +10,9 @@ public static partial class Spark
 		const int MinDataSize = 1;
 		const int NullReference = 0;
 
+		private static readonly Dictionary<Type, Type> s_elementTypesByListType = new Dictionary<Type, Type>(16);
+		private static readonly Dictionary<Type, GetSizeDelegate<IList>> s_getSizeDelegatesByListType = new Dictionary<Type, GetSizeDelegate<IList>>(16);
+
 		public int GetSize(object list)
 		{
 			return GetSize((IList)list);
@@ -27,89 +30,120 @@ public static partial class Spark
 			return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 		}
 
-		private int GetDataSize(IList list)
+		private static Type GetElementType(Type listType)
 		{
-			Type elementType = list.GetType().GetGenericArguments()[0];
+			Type elementType = null;
 
+			if (!s_elementTypesByListType.TryGetValue(listType, out elementType))
+			{
+				elementType = listType.GetGenericArguments()[0];
+				s_elementTypesByListType[listType] = elementType;
+			}
+
+			return elementType;
+		}
+
+		private GetSizeDelegate<IList> GetDataSizeDelegate(IList list, Type elementType)
+		{
 			if (elementType.IsValueType)
 			{
 				if (elementType == typeof(int))
-					return GetDataSize<int>(list);
+					return GetDataSize<int>;
 
 				if (elementType == typeof(float))
-					return GetDataSize<float>(list);
+					return GetDataSize<float>;
 
 				if (elementType == typeof(bool))
-					return GetDataSize<bool>(list);
+					return GetDataSize<bool>;
 
 				if (elementType.IsEnum)
-					return GetDataSize(list, elementType);
+					return GetDataSize2;
 
 				if (elementType == typeof(DateTime))
-					return GetDataSize<DateTime>(list);
+					return GetDataSize<DateTime>;
 
 				if (elementType == typeof(short))
-					return GetDataSize<short>(list);
+					return GetDataSize<short>;
 
 				if (elementType == typeof(long))
-					return GetDataSize<long>(list);
+					return GetDataSize<long>;
 
 				if (elementType == typeof(double))
-					return GetDataSize<double>(list);
+					return GetDataSize<double>;
 
 				if (elementType == typeof(byte))
-					return GetDataSize<byte>(list);
+					return GetDataSize<byte>;
 
 				if (elementType == typeof(char))
-					return GetDataSize<char>(list);
+					return GetDataSize<char>;
 
 				if (elementType == typeof(uint))
-					return GetDataSize<uint>(list);
+					return GetDataSize<uint>;
 
 				if (elementType == typeof(ushort))
-					return GetDataSize<ushort>(list);
+					return GetDataSize<ushort>;
 
 				if (elementType == typeof(ulong))
-					return GetDataSize<ulong>(list);
+					return GetDataSize<ulong>;
 
 				if (elementType == typeof(decimal))
-					return GetDataSize<decimal>(list);
+					return GetDataSize<decimal>;
 
 				if (elementType == typeof(sbyte))
-					return GetDataSize<sbyte>(list);
+					return GetDataSize<sbyte>;
 
 				throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 			}
 			else
 			{
 				if (elementType == typeof(string))
-					return GetDataSize<string>(list);
+					return GetDataSize<string>;
 
 				if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
-					return GetDataSize(list, elementType);
+					return GetDataSize2;
 
 				throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 			}
+		}
+
+		private int GetDataSize(IList list)
+		{
+			Type listType = list.GetType();
+			Type elementType = GetElementType(listType);
+
+			GetSizeDelegate<IList> getSize = null;
+
+			if (!s_getSizeDelegatesByListType.TryGetValue(elementType, out getSize))
+			{
+				getSize = GetDataSizeDelegate(list, elementType);
+				s_getSizeDelegatesByListType[elementType] = getSize;
+			}
+
+			return getSize(list);
 		}
 
 		private int GetDataSize<T>(IList list)
 		{
 			int size = 0;
 
-			foreach (T item in (List<T>)list)
-				size += SizeCalculator.Evaluate<T>(item);
+			List<T> theList = (List<T>)list;
+
+			for (int i = 0; i < theList.Count; ++i)
+				size += SizeCalculator.Evaluate<T>(theList[i]);
 
 			return size;
 		}
 
-		private int GetDataSize(IList list, Type elementType)
+		private int GetDataSize2(IList list)
 		{
 			int size = 0;
 
+			Type elementType = GetElementType(list.GetType());
+
 			var GetSize = SizeCalculator.Get(elementType);
 
-			foreach (var item in list)
-				size += GetSize(item);
+			for (int i = 0; i < list.Count; ++i)
+				size += GetSize(list[i]);
 
 			return size;
 		}
@@ -161,7 +195,7 @@ public static partial class Spark
 
 		public void Write(IList list, byte[] data, ref int startIndex)
 		{
-			int dataSize = GetSize(list);// SizeCalculator.Evaluate(value);
+			int dataSize = GetSize(list);
 			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 			// Сколько байт занимает поле dataSize
@@ -193,7 +227,7 @@ public static partial class Spark
 		/// <summary> </summary>
 		public static void WriteListData(IList list, byte[] data, ref int startIndex)
 		{
-			Type elementType = list.GetType().GetGenericArguments()[0];
+			Type elementType = GetElementType(list.GetType());
 
 			if (elementType.IsValueType)
 			{
@@ -258,16 +292,18 @@ public static partial class Spark
 
 		private static void WriteListData<T>(IList list, Type elementType, byte[] data, ref int startIndex)
 		{
-			foreach (T item in (List<T>)list)
-				Writer.Write<T>(item, data, ref startIndex);
+			List<T> theList = (List<T>)list;
+
+			for (int i = 0; i < theList.Count; ++i)
+				Writer.Write<T>(theList[i], data, ref startIndex);
 		}
 
 		private static void WriteListData(IList list, Type elementType, byte[] data, ref int startIndex)
 		{
 			var WriteData = Writer.Get(elementType);
 
-			foreach (var item in list)
-				WriteData(item, data, ref startIndex);
+			for (int i = 0; i < list.Count; ++i)
+				WriteData(list[i], data, ref startIndex);
 		}
 	}
 }

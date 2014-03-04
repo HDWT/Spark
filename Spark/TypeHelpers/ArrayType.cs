@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -9,6 +10,41 @@ public static partial class Spark
 		{
 			const int MinDataSize = 1;
 			const int NullReference = 0;
+
+			private static readonly Dictionary<Type, Type> s_elementTypeByArrayType = new Dictionary<Type, Type>(16);
+			private static readonly Dictionary<Type, GetSizeDelegate<Array>> s_getSizeDelegatesByArrayType = new Dictionary<Type, GetSizeDelegate<Array>>(16);
+
+			private static Type GetElementType(Type arrayType)
+			{
+				Type elementType = null;
+
+				if (!s_elementTypeByArrayType.TryGetValue(arrayType, out elementType))
+				{
+					lock (s_elementTypeByArrayType)
+					{
+						elementType = arrayType.GetElementType();
+						s_elementTypeByArrayType[arrayType] = elementType;
+					}
+				}
+
+				return elementType;
+			}
+
+			private GetSizeDelegate<Array> GetSizeGetter(Type arrayType)
+			{
+				GetSizeDelegate<Array> sizeGetter = null;
+
+				if (!s_getSizeDelegatesByArrayType.TryGetValue(arrayType, out sizeGetter))
+				{
+					lock (s_getSizeDelegatesByArrayType)
+					{
+						sizeGetter = GetDataSizeDelegate(arrayType);
+						s_getSizeDelegatesByArrayType[arrayType] = sizeGetter;
+					}
+				}
+
+				return sizeGetter;
+			}
 
 			public int GetSize(object array)
 			{
@@ -28,9 +64,74 @@ public static partial class Spark
 				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 			}
 
+			private GetSizeDelegate<Array> GetDataSizeDelegate(Type arrayType)
+			{
+				Type elementType = GetElementType(arrayType);
+
+				if (elementType.IsValueType)
+				{
+					if (elementType == typeof(int))
+						return GetDataSize<int>;
+
+					if (elementType == typeof(float))
+						return GetDataSize<float>;
+
+					if (elementType == typeof(bool))
+						return GetDataSize<bool>;
+
+					if (elementType.IsEnum)
+						return GetDataSize2;
+
+					if (elementType == typeof(DateTime))
+						return GetDataSize<DateTime>;
+
+					if (elementType == typeof(short))
+						return GetDataSize<short>;
+
+					if (elementType == typeof(long))
+						return GetDataSize<long>;
+
+					if (elementType == typeof(double))
+						return GetDataSize<double>;
+
+					if (elementType == typeof(byte))
+						return GetDataSize<byte>;
+
+					if (elementType == typeof(char))
+						return GetDataSize<char>;
+
+					if (elementType == typeof(uint))
+						return GetDataSize<uint>;
+
+					if (elementType == typeof(ushort))
+						return GetDataSize<ushort>;
+
+					if (elementType == typeof(ulong))
+						return GetDataSize<ulong>;
+
+					if (elementType == typeof(decimal))
+						return GetDataSize<decimal>;
+
+					if (elementType == typeof(sbyte))
+						return GetDataSize<sbyte>;
+
+					throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
+				}
+				else
+				{
+					if (elementType == typeof(string))
+						return GetDataSize<string>;
+
+					if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
+						return GetDataSize2;
+
+					throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
+				}
+			}
+
 			private int GetDataSize(Array array)
 			{
-				Type elementType = array.GetType().GetElementType();
+				Type elementType = GetElementType(array.GetType());
 
 				if (elementType.IsValueType)
 				{
@@ -44,7 +145,7 @@ public static partial class Spark
 						return GetDataSize<bool>(array);
 
 					if (elementType.IsEnum)
-						return GetDataSize(array, elementType);
+						return GetDataSize2(array);
 
 					if (elementType == typeof(DateTime))
 						return GetDataSize<DateTime>(array);
@@ -87,7 +188,7 @@ public static partial class Spark
 						return GetDataSize<string>(array);
 
 					if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
-						return GetDataSize(array, elementType);
+						return GetDataSize2(array);
 
 					throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 				}
@@ -124,9 +225,11 @@ public static partial class Spark
 				}
 			}
 
-			private int GetDataSize(Array array, Type elementType)
+			private int GetDataSize2(Array array)
 			{
 				int size = 0;
+
+				Type elementType = GetElementType(array.GetType());
 
 				var GetSize = SizeCalculator.Get(elementType);
 
@@ -169,7 +272,7 @@ public static partial class Spark
 				}
 
 				//
-				Type elementType = type.GetElementType();
+				Type elementType = GetElementType(type);//.GetElementType();
 
 				int[] indices = new int[rank];
 
@@ -265,7 +368,7 @@ public static partial class Spark
 			/// <summary> </summary>
 			private void WriteArrayData(Array array, byte[] data, ref int startIndex)
 			{
-				Type elementType = array.GetType().GetElementType();
+				Type elementType = GetElementType(array.GetType());
 
 				if (elementType.IsValueType)
 				{

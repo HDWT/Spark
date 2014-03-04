@@ -16,7 +16,7 @@ public static partial class Spark
 		private static readonly Type[] DataMemberConstructorParamTypes_IdProperty = { typeof(ushort), typeof(PropertyInfo) };
 		private static readonly object[] DataMemberConstructorParameters_IdType = new object[2];
 
-		private static readonly Dictionary<Type, DataType> DataTypes = new Dictionary<Type, DataType>(10);
+		private static readonly Dictionary<Type, DataType> s_dataTypes = new Dictionary<Type, DataType>(16);
 
 		private readonly IDataMember[] m_members = null;
 		private readonly ConstructorInfo m_constructor = null;
@@ -25,12 +25,12 @@ public static partial class Spark
 		{
 			DataType dataType = null;
 
-			if (!DataTypes.TryGetValue(type, out dataType))
+			if (!s_dataTypes.TryGetValue(type, out dataType))
 			{
-				lock (DataTypes)
+				lock (s_dataTypes)
 				{
 					dataType = new DataType(type);
-					DataTypes[type] = dataType;
+					s_dataTypes[type] = dataType;
 				}
 			}
 
@@ -39,10 +39,10 @@ public static partial class Spark
 
 		public static void Register(Type type)
 		{
-			lock (DataTypes)
+			lock (s_dataTypes)
 			{
-				if (!DataTypes.ContainsKey(type))
-					DataTypes[type] = new DataType(type);
+				if (!s_dataTypes.ContainsKey(type))
+					s_dataTypes[type] = new DataType(type);
 			}
 		}
 
@@ -206,8 +206,8 @@ public static partial class Spark
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
 		public void WriteValues(object instance, byte[] data, ref int startIndex)
 		{
-			foreach (var member in m_members)
-				member.WriteValue(instance, data, ref startIndex);
+			for (int i = 0; i < m_members.Length; ++i)
+				m_members[i].WriteValue(instance, data, ref startIndex);
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
@@ -215,8 +215,8 @@ public static partial class Spark
 		{
 			int size = 0;
 
-			foreach (var member in m_members)
-				size += member.GetSize(instance);
+			for (int i = 0; i < m_members.Length; ++i)
+				size += m_members[i].GetSize(instance);
 
 			return size;
 		}
