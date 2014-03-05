@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -17,12 +18,12 @@ public static partial class Spark
 
 		private class ByteType : ITypeHelper<byte>
 		{
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((byte)value);
+				return GetSize((byte)value, sizes);
 			}
 
-			public int GetSize(byte value)
+			public int GetSize(byte value, LinkedList<int> sizes)
 			{
 				return 1;
 			}
@@ -37,12 +38,12 @@ public static partial class Spark
 				return data[startIndex++];
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((byte)value, data, ref startIndex);
+				Write((byte)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(byte value, byte[] data, ref int startIndex)
+			public void Write(byte value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				data[startIndex++] = value;
 			}

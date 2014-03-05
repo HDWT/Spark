@@ -22,14 +22,26 @@ public static partial class Spark
 					m_dataType = DataType.Get(type);
 				}
 
-				public int GetSize(object value)
+				public int GetSize(object value, LinkedList<int> sizes)
 				{
 					if (value == null)
 						return MinDataSize;
 
-					int dataSize = MinDataSize + m_dataType.GetDataSize(value);
+					var node = sizes != null ? sizes.Last : null;
 
-					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					int dataSize = MinDataSize + m_dataType.GetDataSize(value, sizes);
+					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+
+					if (sizes != null)
+					{
+						if (node == null)
+							sizes.AddFirst(size);
+						else
+							sizes.AddAfter(node, size);
+						//Console.WriteLine("add object " + size);
+					}
+
+					return size;
 				}
 			}
 
@@ -49,16 +61,30 @@ public static partial class Spark
 				return sizeGetter.GetSize;
 			}
 
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
 				if (value == null)
 					return MinDataSize;
 
+				var node = sizes != null ? sizes.Last : null;
+
 				DataType dataType = DataType.Get(value.GetType());
 
-				int dataSize = MinDataSize + dataType.GetDataSize(value);
+				int dataSize = MinDataSize + dataType.GetDataSize(value, sizes);
 
-				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+				int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+
+
+				if (sizes != null)
+				{
+					if (node == null)
+						sizes.AddFirst(size);
+					else
+						sizes.AddAfter(node, size);
+					//Console.WriteLine("add object " + size);
+				}
+
+				return size;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -93,7 +119,7 @@ public static partial class Spark
 				throw new NotImplementedException();
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				if (value == null)
 				{
@@ -103,7 +129,14 @@ public static partial class Spark
 
 				DataType dataType = DataType.Get(value.GetType());
 
-				int dataSize = GetSize(value);
+				int myDataSize = sizes.First.Value;
+				sizes.RemoveFirst();
+
+				int dataSize = myDataSize;// GetSize(value, null); // CHECK HERE !!!
+
+				//if (myDataSize != dataSize)
+					//Console.WriteLine("Object size " + myDataSize + " != " + dataSize);
+
 				byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 				// Сколько байт занимает поле dataSize
@@ -117,12 +150,12 @@ public static partial class Spark
 				}
 
 				// Записываем все поля класса
-				dataType.WriteValues(value, data, ref startIndex);
+				dataType.WriteValues(value, data, ref startIndex, sizes);
 			}
 
-			public void Write(object value, byte[] data, ref int startIndex)
+			public void Write(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				WriteObject(value, data, ref startIndex);
+				WriteObject(value, data, ref startIndex, sizes);
 			}
 		}
 	}

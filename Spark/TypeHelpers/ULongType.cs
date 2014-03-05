@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -54,12 +55,12 @@ public static partial class Spark
 			const byte Size2		= 0x38;		// 0 0111 000
 			const byte Size1		= 0x30;		// 0 0110 000
 
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((ulong)value);
+				return GetSize((ulong)value, sizes);
 			}
 
-			public int GetSize(ulong value)
+			public int GetSize(ulong value, LinkedList<int> sizes)
 			{
 				if (value > 0xFFFFFFFF00000000UL)
 					value = ~value;
@@ -203,12 +204,12 @@ public static partial class Spark
 				return (invert) ? (~mapper.value) : (mapper.value);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((ulong)value, data, ref startIndex);
+				Write((ulong)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(ulong value, byte[] data, ref int startIndex)
+			public void Write(ulong value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				if (value > 0xFFFFFFFF00000000UL)
 				{

@@ -111,81 +111,52 @@ public static partial class Spark
 			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
-		public int GetSize(object value)
+		public int GetSize(object value, LinkedList<int> sizes)
 		{
 			Type enumType = value.GetType();
 			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
-				return m_intValues.GetSize((int)value);
+				return m_intValues.GetSize((int)value, sizes);
 
 			if (underlyingType == typeof(short))
-				return m_shortValues.GetSize((short)value);
+				return m_shortValues.GetSize((short)value, sizes);
 
 			if (underlyingType == typeof(byte))
-				return m_byteValues.GetSize((byte)value);
+				return m_byteValues.GetSize((byte)value, sizes);
 
 			if (underlyingType == typeof(long))
-				return m_longValues.GetSize((long)value);
+				return m_longValues.GetSize((long)value, sizes);
 
 			if (underlyingType == typeof(uint))
-				return m_uintValues.GetSize((uint)value);
+				return m_uintValues.GetSize((uint)value, sizes);
 
 			if (underlyingType == typeof(ushort))
-				return m_ushortValues.GetSize((ushort)value);
+				return m_ushortValues.GetSize((ushort)value, sizes);
 
 			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.GetSize((sbyte)value);
+				return m_sbyteValues.GetSize((sbyte)value, sizes);
 
 			if (underlyingType == typeof(ulong))
-				return m_ulongValues.GetSize((ulong)value);
+				return m_ulongValues.GetSize((ulong)value, sizes);
 
 			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
-		private class Container
-		{
-			public Type enumType;
-			public Type underType;
-
-			public Container(Type eT, Type uT)
-			{
-				enumType = eT;
-				underType = uT;
-			}
-		}
-
-		static List<Container> testList = new List<Container>(10);
-
 		private static Type GetUnderlyingType(Type enumType)
 		{
-			for (int i = 0; i < testList.Count; ++i)
+			Type underlyingType = null;
+
+			if (!s_underlyingTypesByEnumType.TryGetValue(enumType, out underlyingType))
 			{
-				if (testList[i].enumType == enumType)
-					return testList[i].underType; 
-			}
-
-						Type underlyingType = null;
-
-
-			lock (testList)
-			{
-				underlyingType = Enum.GetUnderlyingType(enumType);
-				testList.Add(new Container(enumType, underlyingType));
+				lock (s_underlyingTypesByEnumType)
+				{
+					underlyingType = Enum.GetUnderlyingType(enumType);
+					s_underlyingTypesByEnumType[enumType] = underlyingType;
+				}
 			}
 
 			return underlyingType;
-
-			//if (!s_underlyingTypesByEnumType.TryGetValue(enumType, out underlyingType))
-			//{
-			//	lock (s_underlyingTypesByEnumType)
-			//	{
-			//		underlyingType = Enum.GetUnderlyingType(enumType);
-			//		s_underlyingTypesByEnumType[enumType] = underlyingType;
-			//	}
-			//}
-
-			//return underlyingType;
 		}
 
 		private class Values<T> where T : IComparable<T>, IEquatable<T>
@@ -200,7 +171,7 @@ public static partial class Spark
 				private T[]		m_underlyingValues	= null;
 				private int[]	m_sizes				= null;
 
-				public EnumInfo(Type enumType, Func<T, int> getSize)
+				public EnumInfo(Type enumType, GetSizeDelegate getSize)
 				{
 					m_values = Enum.GetValues(enumType);
 
@@ -211,7 +182,7 @@ public static partial class Spark
 					foreach (T value in m_values)
 					{
 						m_underlyingValues[index] = value;
-						m_sizes[index] = getSize(value);
+						m_sizes[index] = getSize(value, null);
 
 						index++;
 					}
@@ -245,9 +216,9 @@ public static partial class Spark
 				}
 			}
 
-			public int GetSize(T value)
+			public int GetSize(T value, LinkedList<int> sizes)
 			{
-				return m_typeHelper.GetSize(value);
+				return m_typeHelper.GetSize(value, sizes);
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)

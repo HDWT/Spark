@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -29,17 +30,17 @@ public static partial class Spark
 
 		private class IntType : ITypeHelper<int>
 		{
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((int)value);
+				return GetSize((int)value, sizes);
 			}
 
-			public int GetSize(int value)
+			public int GetSize(int value, LinkedList<int> sizes)
 			{
 				IntTypeMapper mapper = new IntTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.UInt.GetSize(mapper.uintValue);
+				return TypeHelper.UInt.GetSize(mapper.uintValue, sizes);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -55,17 +56,17 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((int)value, data, ref startIndex);
+				Write((int)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(int value, byte[] data, ref int startIndex)
+			public void Write(int value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				IntTypeMapper mapper = new IntTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.UInt.Write(mapper.uintValue, data, ref startIndex);
+				TypeHelper.UInt.Write(mapper.uintValue, data, ref startIndex, sizes);
 			}
 		}
 	}

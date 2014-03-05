@@ -5,8 +5,10 @@ using System.Reflection;
 
 public static partial class Spark
 {
-	private delegate void WriteDataDelegate(object value, byte[] data, ref int startIndex);
-	private delegate void WriteDataDelegate<T>(T value, byte[] data, ref int startIndex);
+	private delegate void WriteDataDelegate(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+	//private delegate void WriteDataDelegateWithSize(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+
+	private delegate void WriteDataDelegate<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes);
 
 	private static class Writer
 	{
@@ -108,7 +110,7 @@ public static partial class Spark
 			}
 		}
 
-		public static void Write<T>(T value, byte[] data, ref int startIndex)
+		public static void Write<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			//if (typeof(T) == typeof(string))
 			//{
@@ -128,7 +130,7 @@ public static partial class Spark
 			//}
 			//else
 			//{
-				LowLevelType<T>.Write(value, data, ref startIndex);
+				LowLevelType<T>.Write(value, data, ref startIndex, sizes);
 			//}
 		}
 	}

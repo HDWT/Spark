@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 
 public static partial class Spark
 {
@@ -25,22 +24,26 @@ public static partial class Spark
 		{
 			DataType dataType = DataType.Get(type);
 
-			int dataSize = dataType.GetDataSize(instance);
+			LinkedList<int> m_sizes = new LinkedList<int>();
+
+			int dataSize = dataType.GetDataSize(instance, m_sizes);
 			byte[] data = new byte[dataSize];
 
-			dataType.WriteValues(instance, data, ref index);
+			dataType.WriteValues(instance, data, ref index, m_sizes);
 
 			return data;
 		}
 		else
 		{
+			LinkedList<int> m_sizes = new LinkedList<int>();
+
 			var GetDataSize = SizeCalculator.Get(type);
-			int dataSize = GetDataSize(instance);
+			int dataSize = GetDataSize(instance, m_sizes);
 
 			byte[] data = new byte[dataSize];
 
 			var WriteData = Writer.Get(type);
-			WriteData(instance, data, ref index);
+			WriteData(instance, data, ref index, m_sizes);
 
 			return data;
 		}
@@ -70,13 +73,6 @@ public static partial class Spark
 			var ReadData = Reader.Get(type);
 			return (T)ReadData(type, data, ref index);
 		}
-	}
-
-	public static int GetSize(object instance)
-	{
-		DataType dataType = DataType.Get(instance.GetType());
-
-		return dataType.GetDataSize(instance);
 	}
 
 	[Flags]

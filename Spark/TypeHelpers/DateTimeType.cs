@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -7,14 +8,14 @@ public static partial class Spark
 	{
 		private class DateTimeType : ITypeHelper<DateTime>
 		{
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((DateTime)value);
+				return GetSize((DateTime)value, sizes);
 			}
 
-			public int GetSize(DateTime value)
+			public int GetSize(DateTime value, LinkedList<int> sizes)
 			{
-				return TypeHelper.Long.GetSize(value.Ticks);
+				return TypeHelper.Long.GetSize(value.Ticks, sizes);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -29,14 +30,14 @@ public static partial class Spark
 				return new DateTime(ticks);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((DateTime)value, data, ref startIndex);
+				Write((DateTime)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(DateTime value, byte[] data, ref int startIndex)
+			public void Write(DateTime value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				TypeHelper.Long.Write(value.Ticks, data, ref startIndex);
+				TypeHelper.Long.Write(value.Ticks, data, ref startIndex, sizes);
 			}
 		}
 	}

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
-	private delegate int GetSizeDelegate(object value);
-	private delegate int GetSizeDelegate<T>(T value);
+	private delegate int GetSizeDelegate(object value, LinkedList<int> sizes);
+	private delegate int GetSizeDelegate<T>(T value, LinkedList<int> sizes);
 
 	private static class SizeCalculator
 	{
@@ -104,7 +104,7 @@ public static partial class Spark
 			return LowLevelType<T>.GetSize;
 		}
 
-		public static int Evaluate<T>(T value)
+		public static int Evaluate<T>(T value, LinkedList<int> sizes)
 		{
 			//if (!IsLowLevelType(typeof(T)))
 			//	return EvaluateClass(value);
@@ -118,7 +118,7 @@ public static partial class Spark
 			//if (IsGenericList(typeof(T)))
 			//	return EvaluateList(value);
 
-			return LowLevelType<T>.GetSize(value);
+			return LowLevelType<T>.GetSize(value, sizes);
 		}
 
 		// Возвращает минимальное количество байт, которое необходимо для записи [dataSize]

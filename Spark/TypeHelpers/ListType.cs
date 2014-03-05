@@ -13,21 +13,36 @@ public static partial class Spark
 		private static readonly Dictionary<Type, Type> s_elementTypesByListType = new Dictionary<Type, Type>(16);
 		private static readonly Dictionary<Type, GetSizeDelegate<IList>> s_getSizeDelegatesByListType = new Dictionary<Type, GetSizeDelegate<IList>>(16);
 
-		public int GetSize(object list)
+		public int GetSize(object list, LinkedList<int> sizes)
 		{
-			return GetSize((IList)list);
+			return GetSize((IList)list, sizes);
 		}
 
-		public int GetSize(IList list)
+		public int GetSize(IList list, LinkedList<int> sizes)
 		{
 			if (list == null)
 				return MinDataSize;
 
-			int dataSize = MinDataSize + GetDataSize(list);
+			var node = sizes != null ? sizes.Last : null;
+
+			int dataSize = MinDataSize + GetDataSize(list, sizes);
 
 			dataSize += 1 + SizeCalculator.GetMinSize(list.Count);
 
-			return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+			int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+
+
+			if (sizes != null)
+			{
+				if (node == null)
+					sizes.AddFirst(size);
+				else
+					sizes.AddAfter(node, size);
+
+				//Console.WriteLine("add list " + size);
+			}
+
+			return size;
 		}
 
 		private static Type GetElementType(Type listType)
@@ -106,7 +121,7 @@ public static partial class Spark
 			}
 		}
 
-		private int GetDataSize(IList list)
+		private int GetDataSize(IList list, LinkedList<int> sizes)
 		{
 			Type listType = list.GetType();
 			Type elementType = GetElementType(listType);
@@ -119,22 +134,22 @@ public static partial class Spark
 				s_getSizeDelegatesByListType[elementType] = getSize;
 			}
 
-			return getSize(list);
+			return getSize(list, sizes);
 		}
 
-		private int GetDataSize<T>(IList list)
+		private int GetDataSize<T>(IList list, LinkedList<int> sizes)
 		{
 			int size = 0;
 
 			List<T> theList = (List<T>)list;
 
 			for (int i = 0; i < theList.Count; ++i)
-				size += SizeCalculator.Evaluate<T>(theList[i]);
+				size += SizeCalculator.Evaluate<T>(theList[i], sizes);
 
 			return size;
 		}
 
-		private int GetDataSize2(IList list)
+		private int GetDataSize2(IList list, LinkedList<int> sizes)
 		{
 			int size = 0;
 
@@ -143,7 +158,7 @@ public static partial class Spark
 			var GetSize = SizeCalculator.Get(elementType);
 
 			for (int i = 0; i < list.Count; ++i)
-				size += GetSize(list[i]);
+				size += GetSize(list[i], sizes);
 
 			return size;
 		}
@@ -188,14 +203,21 @@ public static partial class Spark
 			throw new NotImplementedException();
 		}
 
-		public void WriteObject(object list, byte[] data, ref int startIndex)
+		public void WriteObject(object list, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
-			Write((IList)list, data, ref startIndex);
+			Write((IList)list, data, ref startIndex, sizes);
 		}
 
-		public void Write(IList list, byte[] data, ref int startIndex)
+		public void Write(IList list, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
-			int dataSize = GetSize(list);
+			int myDataSize = sizes.First.Value;
+			sizes.RemoveFirst();
+
+			int dataSize = myDataSize; //GetSize(list, null); // CHECK HERE !!!
+
+			//if (myDataSize != dataSize)
+				//Console.WriteLine("List size " + myDataSize + " != " + dataSize);
+
 			byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 			// Сколько байт занимает поле dataSize
@@ -221,89 +243,89 @@ public static partial class Spark
 				listCount >>= 8;
 			}
 
-			WriteListData(list, data, ref startIndex);
+			WriteListData(list, data, ref startIndex, sizes);
 		}
 
 		/// <summary> </summary>
-		public static void WriteListData(IList list, byte[] data, ref int startIndex)
+		public static void WriteListData(IList list, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			Type elementType = GetElementType(list.GetType());
 
 			if (elementType.IsValueType)
 			{
 				if (elementType == typeof(int))
-					WriteListData<int>(list, elementType, data, ref startIndex);
+					WriteListData<int>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(float))
-					WriteListData<float>(list, elementType, data, ref startIndex);
+					WriteListData<float>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(bool))
-					WriteListData<bool>(list, elementType, data, ref startIndex);
+					WriteListData<bool>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType.IsEnum)
-					WriteListData(list, elementType, data, ref startIndex);
+					WriteListData(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(DateTime))
-					WriteListData<DateTime>(list, elementType, data, ref startIndex);
+					WriteListData<DateTime>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(short))
-					WriteListData<short>(list, elementType, data, ref startIndex);
+					WriteListData<short>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(long))
-					WriteListData<long>(list, elementType, data, ref startIndex);
+					WriteListData<long>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(double))
-					WriteListData<double>(list, elementType, data, ref startIndex);
+					WriteListData<double>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(byte))
-					WriteListData<byte>(list, elementType, data, ref startIndex);
+					WriteListData<byte>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(char))
-					WriteListData<char>(list, elementType, data, ref startIndex);
+					WriteListData<char>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(uint))
-					WriteListData<uint>(list, elementType, data, ref startIndex);
+					WriteListData<uint>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(ushort))
-					WriteListData<ushort>(list, elementType, data, ref startIndex);
+					WriteListData<ushort>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(ulong))
-					WriteListData<ulong>(list, elementType, data, ref startIndex);
+					WriteListData<ulong>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(decimal))
-					WriteListData<decimal>(list, elementType, data, ref startIndex);
+					WriteListData<decimal>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType == typeof(sbyte))
-					WriteListData<sbyte>(list, elementType, data, ref startIndex);
+					WriteListData<sbyte>(list, elementType, data, ref startIndex, sizes);
 
 				else throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 			}
 			else
 			{
 				if (elementType == typeof(string))
-					WriteListData<string>(list, elementType, data, ref startIndex);
+					WriteListData<string>(list, elementType, data, ref startIndex, sizes);
 
 				else if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
-					WriteListData(list, elementType, data, ref startIndex);
+					WriteListData(list, elementType, data, ref startIndex, sizes);
 
 				else throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 			}
 		}
 
-		private static void WriteListData<T>(IList list, Type elementType, byte[] data, ref int startIndex)
+		private static void WriteListData<T>(IList list, Type elementType, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			List<T> theList = (List<T>)list;
 
 			for (int i = 0; i < theList.Count; ++i)
-				Writer.Write<T>(theList[i], data, ref startIndex);
+				Writer.Write<T>(theList[i], data, ref startIndex, sizes);
 		}
 
-		private static void WriteListData(IList list, Type elementType, byte[] data, ref int startIndex)
+		private static void WriteListData(IList list, Type elementType, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			var WriteData = Writer.Get(elementType);
 
 			for (int i = 0; i < list.Count; ++i)
-				WriteData(list[i], data, ref startIndex);
+				WriteData(list[i], data, ref startIndex, sizes);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -17,12 +18,12 @@ public static partial class Spark
 
 		private class BoolType : ITypeHelper<bool>
 		{
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((bool)value);
+				return GetSize((bool)value, sizes);
 			}
 
-			public int GetSize(bool value)
+			public int GetSize(bool value, LinkedList<int> sizes)
 			{
 				return 1;
 			}
@@ -40,12 +41,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((bool)value, data, ref startIndex);
+				Write((bool)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(bool value, byte[] data, ref int startIndex)
+			public void Write(bool value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				BoolTypeMapper mapper = new BoolTypeMapper();
 				mapper.value = value;

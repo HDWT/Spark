@@ -20,20 +20,20 @@ public static partial class Spark
 			m_writeData = writeData;
 		}
 
-		public static int GetSize(T value)
+		public static int GetSize(T value, LinkedList<int> sizes)
 		{
 			if (m_getSize == null)
 				throw new NotImplementedException("Get Size for " + typeof(T) + " type not implemented");
 
-			return m_getSize(value);
+			return m_getSize(value, sizes);
 		}
 
-		public static void Write(T value, byte[] data, ref int startIndex)
+		public static void Write(T value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			if (m_writeData == null)
 				throw new NotImplementedException("Writer for " + typeof(T).Name + " type not implemented");
 
-			m_writeData(value, data, ref startIndex);
+			m_writeData(value, data, ref startIndex, sizes);
 		}
 	}
 

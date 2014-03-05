@@ -9,10 +9,14 @@ public static partial class Spark
 	{
 		ushort Id { get; }
 
-		int GetSize(object instance);
+		//int GetSize(object instance);
+		int GetSize(object instance, LinkedList<int> sizes);
 
 		void SetValue(object instance, object value);
-		void WriteValue(object instance, byte[] data, ref int startIndex);
+
+		//void WriteValue(object instance, byte[] data, ref int startIndex);
+		void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes);
+
 		void ReadValue(object instance, byte[] data, ref int startIndex);
 	}
 
@@ -82,19 +86,34 @@ public static partial class Spark
 				m_propertyInfo.SetValue(instance, value, null); // Indexer ??
 		}
 
-		public virtual int GetSize(object instance)
+		//public virtual int GetSize(object instance)
+		//{
+		//	object value = GetValue(instance);
+
+		//	return HeaderSize + getSize(value);
+		//}
+
+		public virtual int GetSize(object instance, LinkedList<int> sizes)
 		{
 			object value = GetValue(instance);
 
-			return HeaderSize + getSize(value);
+			return HeaderSize + getSize(value, sizes);
 		}
 
-		public virtual void WriteValue(object instance, byte[] data, ref int startIndex)
+		//public virtual void WriteValue(object instance, byte[] data, ref int startIndex)
+		//{
+		//	object value = GetValue(instance);
+
+		//	WriteHeader(data, ref startIndex);
+		//	writeData(value, data, ref startIndex, null);
+		//}
+
+		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			object value = GetValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			writeData(value, data, ref startIndex);
+			writeData(value, data, ref startIndex, sizes);
 		}
 
 		public virtual void ReadValue(object instance, byte[] data, ref int startIndex)
@@ -231,34 +250,34 @@ public static partial class Spark
 		//	//return IsField ? m_getFieldValue(instance) : (T)m_propertyInfo.GetValue(instance, null); // Indexer ??
 		//}
 
-		public override int GetSize(object instance)
+		//public override int GetSize(object instance)
+		//{
+		//	T value = m_getValue(instance);
+
+		//	return HeaderSize + getSize(value);
+		//}
+
+		public override int GetSize(object instance, LinkedList<int> sizes)
 		{
-			//if ((m_typeFlags & TypeFlags.Basic) == TypeFlags.Basic)
-			//{
 			T value = m_getValue(instance);
 
-				return HeaderSize + getSize(value);// SizeCalculator.Evaluate(value);
-			//}
-			//else
-			//{
-			//	return base.GetSize(instance);
-			//}
+			return HeaderSize + getSize(value, sizes);
 		}
 
-		public override void WriteValue(object instance, byte[] data, ref int startIndex)
+		//public override void WriteValue(object instance, byte[] data, ref int startIndex)
+		//{
+		//	T value = m_getValue(instance);
+
+		//	WriteHeader(data, ref startIndex);
+		//	writeData(value, data, ref startIndex, null);
+		//}
+
+		public override void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
-			//if ((m_typeFlags & TypeFlags.Basic) == TypeFlags.Basic)
-			//{
 			T value = m_getValue(instance);
 
-				WriteHeader(data, ref startIndex);
-				writeData(value, data, ref startIndex);
-				//Writer.Write<T>(value, data, ref startIndex);
-			//}
-			//else
-			//{
-				//base.WriteValue(instance, data, ref startIndex);
-			//}
+			WriteHeader(data, ref startIndex);
+			writeData(value, data, ref startIndex, sizes);
 		}
 	}
 }

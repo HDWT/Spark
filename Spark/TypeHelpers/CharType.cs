@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -20,12 +21,12 @@ public static partial class Spark
 
 		private class CharType : ITypeHelper<char>
 		{
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((char)value);
+				return GetSize((char)value, sizes);
 			}
 
-			public int GetSize(char value)
+			public int GetSize(char value, LinkedList<int> sizes)
 			{
 				return 2;
 			}
@@ -45,12 +46,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((char)value, data, ref startIndex);
+				Write((char)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(char value, byte[] data, ref int startIndex)
+			public void Write(char value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				CharMapper mapper = new CharMapper();
 				mapper.value = value;

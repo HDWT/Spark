@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -13,19 +14,28 @@ public static partial class Spark
 			const byte ForwardPaddingMark = 128;
 			const byte PaddingValue = 0;
 
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((string)value);
+				return GetSize((string)value, sizes);
 			}
 
-			public int GetSize(string value)
+			public int GetSize(string value, LinkedList<int> sizes)
 			{
 				if (value == null)
 					return MinDataSize;
 
 				int dataSize = MinDataSize + value.Length * sizeof(char) + 1; // +1 for padding
 
-				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+				int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+
+
+				if (sizes != null)
+				{
+					//Console.WriteLine("add string " + size);
+					sizes.AddLast(size);
+				}
+
+				return size;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -81,12 +91,12 @@ public static partial class Spark
 				return str;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((string)value, data, ref startIndex);
+				Write((string)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(string value, byte[] data, ref int startIndex)
+			public void Write(string value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				if (value == null)
 				{
@@ -94,7 +104,14 @@ public static partial class Spark
 					return;
 				}
 
-				int dataSize = SizeCalculator.Evaluate(value);
+				int myDataSize = sizes.First.Value;
+				sizes.RemoveFirst();
+
+				int dataSize = myDataSize;// SizeCalculator.Evaluate(value, null);
+
+				//if (myDataSize != dataSize)
+					//Console.WriteLine("String size " + myDataSize + " != " + dataSize);
+
 				byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 				// Сколько байт занимает поле dataSize

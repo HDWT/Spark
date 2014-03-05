@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -80,12 +81,12 @@ public static partial class Spark
 			private static byte fifteen		= 15;
 			private static byte sixteen		= 16;
 
-			public int GetSize(object value)
+			public int GetSize(object value, LinkedList<int> sizes)
 			{
-				return GetSize((decimal)value);
+				return GetSize((decimal)value, sizes);
 			}
 
-			public int GetSize(decimal value)
+			public int GetSize(decimal value, LinkedList<int> sizes)
 			{
 				DecimalTypeMapper mapper = new DecimalTypeMapper();
 				mapper.value = value;
@@ -231,12 +232,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((decimal)value, data, ref startIndex);
+				Write((decimal)value, data, ref startIndex, sizes);
 			}
 
-			public void Write(decimal value, byte[] data, ref int startIndex)
+			public void Write(decimal value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				DecimalTypeMapper mapper = new DecimalTypeMapper();
 				mapper.value = value;

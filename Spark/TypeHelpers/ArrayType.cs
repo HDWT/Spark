@@ -46,22 +46,36 @@ public static partial class Spark
 				return sizeGetter;
 			}
 
-			public int GetSize(object array)
+			public int GetSize(object array, LinkedList<int> sizes)
 			{
-				return GetSize((Array)array);
+				return GetSize((Array)array, sizes);
 			}
 
-			public int GetSize(Array array)
+			public int GetSize(Array array, LinkedList<int> sizes)
 			{
 				if (array == null)
 					return MinDataSize;
 
-				int dataSize = MinDataSize + GetDataSize(array) + 1; // +1 byte for Rank - An array can have a maximum of 32 dimensions(MSDN)
+				var node = sizes != null ? sizes.Last : null;
+
+				int dataSize = MinDataSize + GetDataSize(array, sizes) + 1; // +1 byte for Rank - An array can have a maximum of 32 dimensions(MSDN)
 
 				for (int i = 0; i < array.Rank; ++i)
 					dataSize += 1 + SizeCalculator.GetMinSize(array.GetLength(i));
 
-				return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+				int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+
+
+				if (sizes != null)
+				{
+					if (node == null)
+						sizes.AddFirst(size);
+					else
+						sizes.AddAfter(node, size);
+					//Console.WriteLine("add array " + size);
+				}
+
+				return size;
 			}
 
 			private GetSizeDelegate<Array> GetDataSizeDelegate(Type arrayType)
@@ -129,72 +143,72 @@ public static partial class Spark
 				}
 			}
 
-			private int GetDataSize(Array array)
+			private int GetDataSize(Array array, LinkedList<int> sizes)
 			{
 				Type elementType = GetElementType(array.GetType());
 
 				if (elementType.IsValueType)
 				{
 					if (elementType == typeof(int))
-						return GetDataSize<int>(array);
+						return GetDataSize<int>(array, sizes);
 
 					if (elementType == typeof(float))
-						return GetDataSize<float>(array);
+						return GetDataSize<float>(array, sizes);
 
 					if (elementType == typeof(bool))
-						return GetDataSize<bool>(array);
+						return GetDataSize<bool>(array, sizes);
 
 					if (elementType.IsEnum)
-						return GetDataSize2(array);
+						return GetDataSize2(array, sizes);
 
 					if (elementType == typeof(DateTime))
-						return GetDataSize<DateTime>(array);
+						return GetDataSize<DateTime>(array, sizes);
 
 					if (elementType == typeof(short))
-						return GetDataSize<short>(array);
+						return GetDataSize<short>(array, sizes);
 
 					if (elementType == typeof(long))
-						return GetDataSize<long>(array);
+						return GetDataSize<long>(array, sizes);
 
 					if (elementType == typeof(double))
-						return GetDataSize<double>(array);
+						return GetDataSize<double>(array, sizes);
 
 					if (elementType == typeof(byte))
-						return GetDataSize<byte>(array);
+						return GetDataSize<byte>(array, sizes);
 
 					if (elementType == typeof(char))
-						return GetDataSize<char>(array);
+						return GetDataSize<char>(array, sizes);
 
 					if (elementType == typeof(uint))
-						return GetDataSize<uint>(array);
+						return GetDataSize<uint>(array, sizes);
 
 					if (elementType == typeof(ushort))
-						return GetDataSize<ushort>(array);
+						return GetDataSize<ushort>(array, sizes);
 
 					if (elementType == typeof(ulong))
-						return GetDataSize<ulong>(array);
+						return GetDataSize<ulong>(array, sizes);
 
 					if (elementType == typeof(decimal))
-						return GetDataSize<decimal>(array);
+						return GetDataSize<decimal>(array, sizes);
 
 					if (elementType == typeof(sbyte))
-						return GetDataSize<sbyte>(array);
+						return GetDataSize<sbyte>(array, sizes);
 
 					throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 				}
 				else
 				{
 					if (elementType == typeof(string))
-						return GetDataSize<string>(array);
+						return GetDataSize<string>(array, sizes);
 
 					if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
-						return GetDataSize2(array);
+						return GetDataSize2(array, sizes);
 
 					throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 				}
 			}
 
-			private static int GetDataSize<T>(Array array)
+			private static int GetDataSize<T>(Array array, LinkedList<int> sizes)
 			{
 				int size = 0;
 
@@ -202,22 +216,22 @@ public static partial class Spark
 				{
 					case 1:
 						foreach (T item in (T[])array)
-							size += SizeCalculator.Evaluate<T>(item);
+							size += SizeCalculator.Evaluate<T>(item, sizes);
 						return size;
 
 					case 2:
 						foreach (T item in (T[,])array)
-							size += SizeCalculator.Evaluate<T>(item);
+							size += SizeCalculator.Evaluate<T>(item, sizes);
 						return size;
 
 					case 3:
 						foreach (T item in (T[, ,])array)
-							size += SizeCalculator.Evaluate<T>(item);
+							size += SizeCalculator.Evaluate<T>(item, sizes);
 						return size;
 
 					case 4:
 						foreach (T item in (T[, , ,])array)
-							size += SizeCalculator.Evaluate<T>(item);
+							size += SizeCalculator.Evaluate<T>(item, sizes);
 						return size;
 
 					default:
@@ -225,7 +239,7 @@ public static partial class Spark
 				}
 			}
 
-			private int GetDataSize2(Array array)
+			private int GetDataSize2(Array array, LinkedList<int> sizes)
 			{
 				int size = 0;
 
@@ -234,7 +248,7 @@ public static partial class Spark
 				var GetSize = SizeCalculator.Get(elementType);
 
 				foreach (var item in array)
-					size += GetSize(item);
+					size += GetSize(item, sizes);
 
 				return size;
 			}
@@ -318,12 +332,12 @@ public static partial class Spark
 				throw new System.NotImplementedException();
 			}
 
-			public void WriteObject(object array, byte[] data, ref int startIndex)
+			public void WriteObject(object array, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
-				Write((Array)array, data, ref startIndex);
+				Write((Array)array, data, ref startIndex, sizes);
 			}
 
-			public void Write(Array array, byte[] data, ref int startIndex)
+			public void Write(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				if (array == null)
 				{
@@ -331,7 +345,14 @@ public static partial class Spark
 					return;
 				}
 
-				int dataSize = GetSize(array);
+				int myDataSize = sizes.First.Value;
+				sizes.RemoveFirst();
+
+				int dataSize = myDataSize; // GetSize(array, null); // CHECK HERE !!!
+
+				//if (myDataSize != dataSize)
+					//Console.WriteLine("Array size " + myDataSize + " != " + dataSize);
+
 				byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 				// Сколько байт занимает поле dataSize
@@ -362,97 +383,97 @@ public static partial class Spark
 					}
 				}
 
-				WriteArrayData(array, data, ref startIndex);
+				WriteArrayData(array, data, ref startIndex, sizes);
 			}
 
 			/// <summary> </summary>
-			private void WriteArrayData(Array array, byte[] data, ref int startIndex)
+			private void WriteArrayData(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				Type elementType = GetElementType(array.GetType());
 
 				if (elementType.IsValueType)
 				{
 					if (elementType == typeof(int))
-						WriteArrayData<int>(array, elementType, data, ref startIndex);
+						WriteArrayData<int>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(float))
-						WriteArrayData<float>(array, elementType, data, ref startIndex);
+						WriteArrayData<float>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(bool))
-						WriteArrayData<bool>(array, elementType, data, ref startIndex);
+						WriteArrayData<bool>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType.IsEnum)
-						WriteArrayData(array, elementType, data, ref startIndex);
+						WriteArrayData(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(DateTime))
-						WriteArrayData<DateTime>(array, elementType, data, ref startIndex);
+						WriteArrayData<DateTime>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(short))
-						WriteArrayData<short>(array, elementType, data, ref startIndex);
+						WriteArrayData<short>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(long))
-						WriteArrayData<long>(array, elementType, data, ref startIndex);
+						WriteArrayData<long>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(double))
-						WriteArrayData<double>(array, elementType, data, ref startIndex);
+						WriteArrayData<double>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(byte))
-						WriteArrayData<byte>(array, elementType, data, ref startIndex);
+						WriteArrayData<byte>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(char))
-						WriteArrayData<char>(array, elementType, data, ref startIndex);
+						WriteArrayData<char>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(uint))
-						WriteArrayData<uint>(array, elementType, data, ref startIndex);
+						WriteArrayData<uint>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(ushort))
-						WriteArrayData<ushort>(array, elementType, data, ref startIndex);
+						WriteArrayData<ushort>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(ulong))
-						WriteArrayData<ulong>(array, elementType, data, ref startIndex);
+						WriteArrayData<ulong>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(decimal))
-						WriteArrayData<decimal>(array, elementType, data, ref startIndex);
+						WriteArrayData<decimal>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType == typeof(sbyte))
-						WriteArrayData<sbyte>(array, elementType, data, ref startIndex);
+						WriteArrayData<sbyte>(array, elementType, data, ref startIndex, sizes);
 
 					else throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 				}
 				else
 				{
 					if (elementType == typeof(string))
-						WriteArrayData<string>(array, elementType, data, ref startIndex);
+						WriteArrayData<string>(array, elementType, data, ref startIndex, sizes);
 
 					else if (elementType.IsArray || IsGenericList(elementType) || elementType.IsClass)
-						WriteArrayData(array, elementType, data, ref startIndex);
+						WriteArrayData(array, elementType, data, ref startIndex, sizes);
 
 					else throw new NotImplementedException(string.Format("Type '{0}' is not suppoerted", elementType));
 				}
 			}
 
-			private void WriteArrayData<T>(Array array, Type elementType, byte[] data, ref int startIndex)
+			private void WriteArrayData<T>(Array array, Type elementType, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				switch (array.Rank)
 				{
 					case 1:
 						foreach (var item in (T[])array)
-							Writer.Write<T>(item, data, ref startIndex);
+							Writer.Write<T>(item, data, ref startIndex, sizes);
 						break;
 
 					case 2:
 						foreach (var item in (T[,])array)
-							Writer.Write<T>(item, data, ref startIndex);
+							Writer.Write<T>(item, data, ref startIndex, sizes);
 						break;
 
 					case 3:
 						foreach (var item in (T[, ,])array)
-							Writer.Write<T>(item, data, ref startIndex);
+							Writer.Write<T>(item, data, ref startIndex, sizes);
 						break;
 
 					case 4:
 						foreach (var item in (T[, , ,])array)
-							Writer.Write<T>(item, data, ref startIndex);
+							Writer.Write<T>(item, data, ref startIndex, sizes);
 						break;
 
 					default:
@@ -460,12 +481,12 @@ public static partial class Spark
 				}
 			}
 
-			private void WriteArrayData(Array array, Type elementType, byte[] data, ref int startIndex)
+			private void WriteArrayData(Array array, Type elementType, byte[] data, ref int startIndex, LinkedList<int> sizes)
 			{
 				var WriteData = Writer.Get(elementType);
 
 				foreach (var item in array)
-					WriteData(item, data, ref startIndex);
+					WriteData(item, data, ref startIndex, sizes);
 			}
 		}
 	}

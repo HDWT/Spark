@@ -204,19 +204,35 @@ public static partial class Spark
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
-		public void WriteValues(object instance, byte[] data, ref int startIndex)
+		//public void WriteValues(object instance, byte[] data, ref int startIndex)
+		//{
+		//	for (int i = 0; i < m_members.Length; ++i)
+		//		m_members[i].WriteValue(instance, data, ref startIndex);
+		//}
+
+		public void WriteValues(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
 			for (int i = 0; i < m_members.Length; ++i)
-				m_members[i].WriteValue(instance, data, ref startIndex);
+				m_members[i].WriteValue(instance, data, ref startIndex, sizes);
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
-		public int GetDataSize(object instance)
+		//public int GetDataSize(object instance)
+		//{
+		//	int size = 0;
+
+		//	for (int i = 0; i < m_members.Length; ++i)
+		//		size += m_members[i].GetSize(instance);
+
+		//	return size;
+		//}
+
+		public int GetDataSize(object instance, LinkedList<int> sizes)
 		{
 			int size = 0;
 
 			for (int i = 0; i < m_members.Length; ++i)
-				size += m_members[i].GetSize(instance);
+				size += m_members[i].GetSize(instance, sizes);
 
 			return size;
 		}

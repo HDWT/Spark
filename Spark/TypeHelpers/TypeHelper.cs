@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public static partial class Spark
 {
 	private interface ITypeHelper<T>
 	{
-		int GetSize(object value);
-		int GetSize(T value);
+		int GetSize(object value, LinkedList<int> sizes);
+		int GetSize(T value, LinkedList<int> sizes);
 
 		object ReadObject(Type type, byte[] data, ref int startIndex);
 		T Read(byte[] data, ref int startIndex);
 		
-		void WriteObject(object value, byte[] data, ref int startIndex);
-		void Write(T value, byte[] data, ref int startIndex);
+		void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+		void Write(T value, byte[] data, ref int startIndex, LinkedList<int> sizes);
 	}
 
 	private abstract class TypeHelper<T>
@@ -24,14 +25,14 @@ public static partial class Spark
 			m_typeHelper = typeHelper;
 		}
 
-		public static int GetSize(T value)
+		public static int GetSize(T value, LinkedList<int> sizes)
 		{
-			return m_typeHelper.GetSize(value);
+			return m_typeHelper.GetSize(value, sizes);
 		}
 
-		public static void Write(T value, byte[] data, ref int startIndex)
+		public static void Write(T value, byte[] data, ref int startIndex, LinkedList<int> sizes)
 		{
-			m_typeHelper.Write(value, data, ref startIndex);
+			m_typeHelper.Write(value, data, ref startIndex, sizes);
 		}
 	}
 
