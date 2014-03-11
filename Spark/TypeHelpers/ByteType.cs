@@ -18,12 +18,12 @@ public static partial class Spark
 
 		private class ByteType : ITypeHelper<byte>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((byte)value, sizes);
+				return GetSize((byte)value);
 			}
 
-			public int GetSize(byte value, LinkedList<int> sizes)
+			public int GetSize(byte value)
 			{
 				return 1;
 			}
@@ -38,12 +38,12 @@ public static partial class Spark
 				return data[startIndex++];
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((byte)value, data, ref startIndex, sizes);
+				Write((byte)value, data, ref startIndex);
 			}
 
-			public void Write(byte value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(byte value, byte[] data, ref int startIndex)
 			{
 				data[startIndex++] = value;
 			}

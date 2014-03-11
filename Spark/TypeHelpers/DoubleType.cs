@@ -42,17 +42,17 @@ public static partial class Spark
 
 		private class DoubleType : ITypeHelper<double>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((double)value, sizes);
+				return GetSize((double)value);
 			}
 
-			public int GetSize(double value, LinkedList<int> sizes)
+			public int GetSize(double value)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.ULong.GetSize(mapper.ulongValue, sizes);
+				return TypeHelper.ULong.GetSize(mapper.ulongValue);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -68,17 +68,17 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((double)value, data, ref startIndex, sizes);
+				Write((double)value, data, ref startIndex);
 			}
 
-			public void Write(double value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(double value, byte[] data, ref int startIndex)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.ULong.Write(mapper.ulongValue, data, ref startIndex, sizes);
+				TypeHelper.ULong.Write(mapper.ulongValue, data, ref startIndex);
 			}
 		}
 	}

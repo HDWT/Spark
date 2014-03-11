@@ -5,133 +5,80 @@ using System.Reflection;
 
 public static partial class Spark
 {
-	private delegate void WriteDataDelegate(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
-	//private delegate void WriteDataDelegateWithSize(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+	private delegate void WriteValueDelegate(object value, byte[] data, ref int startIndex);
+	private delegate void WriteValueDelegate<T>(T value, byte[] data, ref int startIndex);
 
-	private delegate void WriteDataDelegate<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes);
 
 	private static class Writer
 	{
-		private static readonly Dictionary<Type, WriteDataDelegate> s_writersByType = new Dictionary<Type, WriteDataDelegate>(16);
-
-		public static WriteDataDelegate Get(Type type)
+		private static readonly Dictionary<Type, WriteValueDelegate> s_writeValueDelegates = new Dictionary<Type, WriteValueDelegate>(16)
 		{
-			WriteDataDelegate writer = null;
+			{ typeof(bool),		TypeHelper.Bool.WriteObject },
+			{ typeof(byte),		TypeHelper.Byte.WriteObject },
+			{ typeof(sbyte),	TypeHelper.SByte.WriteObject },
+			{ typeof(char),		TypeHelper.Char.WriteObject },
+			{ typeof(short),	TypeHelper.Short.WriteObject },
+			{ typeof(ushort),	TypeHelper.UShort.WriteObject },
+			{ typeof(int),		TypeHelper.Int.WriteObject },
+			{ typeof(uint),		TypeHelper.UInt.WriteObject },
+			{ typeof(float),	TypeHelper.Float.WriteObject },
+			{ typeof(double),	TypeHelper.Double.WriteObject },
+			{ typeof(long),		TypeHelper.Long.WriteObject },
+			{ typeof(ulong),	TypeHelper.ULong.WriteObject },
+			{ typeof(decimal),	TypeHelper.Decimal.WriteObject },
+			
+			{ typeof(DateTime), TypeHelper.DateTime.WriteObject },
+			
+		};
 
-			if (!s_writersByType.TryGetValue(type, out writer))
-			{
-				lock (s_writersByType)
-				{
-					writer = GetDelegate(type);
-					s_writersByType[type] = writer;
-				}
-			}
-
-			return writer;
-		}
-
-		private static WriteDataDelegate GetDelegate(Type type)
+		private static readonly Dictionary<Type, WriteReferenceDelegate> s_writeReferenceDelegates = new Dictionary<Type, WriteReferenceDelegate>(16)
 		{
-			Type baseType = type.BaseType;
+			{ typeof(string),	TypeHelper.String.GetDataWriter(null).WriteObject },
+		};
 
-			if (baseType != typeof(object))
+		public static WriteValueDelegate GetDelegateForValueType(Type type)
+		{
+			WriteValueDelegate writeValueDelegate = null;
+
+			if (!s_writeValueDelegates.TryGetValue(type, out writeValueDelegate))
 			{
-				if (baseType == typeof(ValueType))
+				if (type.IsEnum) // BaseType == Enum ?
 				{
-					if (type == typeof(int))
-						return TypeHelper.Int.WriteObject;
-
-					if (type == typeof(float))
-						return TypeHelper.Float.WriteObject;
-
-					if (type == typeof(bool))
-						return TypeHelper.Bool.WriteObject;
-
-					if (type == typeof(char))
-						return TypeHelper.Char.WriteObject;
-
-					if (type == typeof(long))
-						return TypeHelper.Long.WriteObject;
-
-					if (type == typeof(short))
-						return TypeHelper.Short.WriteObject;
-
-					if (type == typeof(byte))
-						return TypeHelper.Byte.WriteObject;
-
-					if (type == typeof(DateTime))
-						return TypeHelper.DateTime.WriteObject;
-
-					if (type == typeof(double))
-						return TypeHelper.Double.WriteObject;
-
-					if (type == typeof(uint))
-						return TypeHelper.UInt.WriteObject;
-
-					if (type == typeof(ushort))
-						return TypeHelper.UShort.WriteObject;
-
-					if (type == typeof(ulong))
-						return TypeHelper.ULong.WriteObject;
-
-					if (type == typeof(sbyte))
-						return TypeHelper.SByte.WriteObject;
-
-					if (type == typeof(decimal))
-						return TypeHelper.Decimal.WriteObject;
-
-					throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
-				}
-				else if (baseType == typeof(Enum))
-				{
-					return EnumTypeHelper.Instance.GetWriter(type);
-				}
-				else if (baseType == typeof(Array))
-				{
-					return TypeHelper.Array.WriteObject;
+					writeValueDelegate = EnumTypeHelper.Instance.GetWriter(type);
+					s_writeValueDelegates[type] = writeValueDelegate;
 				}
 				else
 				{
 					throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 				}
 			}
-			else
-			{
-				if (type == typeof(string))
-					return TypeHelper.String.WriteObject;
 
-				if (IsGenericList(type))
-					return TypeHelper.List.WriteObject;
-
-				if (type.IsClass)
-					return TypeHelper.Object.WriteObject;
-
-				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
-			}
+			return writeValueDelegate;
 		}
 
-		public static void Write<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		public static WriteReferenceDelegate GetDelegateForReferenceType(Type type)
 		{
-			//if (typeof(T) == typeof(string))
-			//{
-			//	Write(value, data, ref startIndex);
-			//}
-			//if (typeof(T).BaseType == typeof(Enum))
-			//{
-			//	EnumTypeHelper.Instance.GetWriter(typeof(T))(value, data, ref startIndex);
-			//}
-			//else if (typeof(T).BaseType == typeof(Array))
-			//{
-			//	WriteArray(value, data, ref startIndex);
-			//}
-			//else if (IsGenericList(typeof(T)))
-			//{
-			//	WriteList(value, data, ref startIndex);
-			//}
-			//else
-			//{
-				LowLevelType<T>.Write(value, data, ref startIndex, sizes);
-			//}
+			WriteReferenceDelegate writeDelegate = null;
+
+			if (!s_writeReferenceDelegates.TryGetValue(type, out writeDelegate))
+			{
+				if (type.IsArray)
+					writeDelegate = TypeHelper.Array.GetDataWriter(type).WriteObject;
+
+				else if (IsGenericList(type))
+					writeDelegate = TypeHelper.List.GetDataWriter(type).WriteObject;
+
+				else if (type.IsClass)
+					writeDelegate = TypeHelper.Object.GetDataWriter(type).WriteObject;
+
+				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
+
+				s_writeReferenceDelegates[type] = writeDelegate;
+			}
+
+			return writeDelegate;
 		}
 	}
 }

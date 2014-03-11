@@ -49,7 +49,7 @@ public static partial class Spark
 			else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
-		public WriteDataDelegate GetWriter(Type enumType)
+		public WriteValueDelegate GetWriter(Type enumType)
 		{
 			Type underlyingType = GetUnderlyingType(enumType);
 
@@ -111,34 +111,66 @@ public static partial class Spark
 			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
-		public int GetSize(object value, LinkedList<int> sizes)
+		/*
+		public GetValueSizeDelegate GetSizeDelegate(Type enumType)
+		{
+			Type underlyingType = GetUnderlyingType(enumType);
+
+			if (underlyingType == typeof(int))
+				return m_intValues.GetSize;
+
+			if (underlyingType == typeof(short))
+				return m_shortValues.GetSize((short)value);
+
+			if (underlyingType == typeof(byte))
+				return m_byteValues.GetSize((byte)value);
+
+			if (underlyingType == typeof(long))
+				return m_longValues.GetSize((long)value);
+
+			if (underlyingType == typeof(uint))
+				return m_uintValues.GetSize((uint)value);
+
+			if (underlyingType == typeof(ushort))
+				return m_ushortValues.GetSize((ushort)value);
+
+			if (underlyingType == typeof(sbyte))
+				return m_sbyteValues.GetSize((sbyte)value);
+
+			if (underlyingType == typeof(ulong))
+				return m_ulongValues.GetSize((ulong)value);
+
+			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
+		}*/
+
+		public int GetSize(object value)
 		{
 			Type enumType = value.GetType();
 			Type underlyingType = GetUnderlyingType(enumType);
 
 			if (underlyingType == typeof(int))
-				return m_intValues.GetSize((int)value, sizes);
+				return m_intValues.GetSize((int)value);
 
 			if (underlyingType == typeof(short))
-				return m_shortValues.GetSize((short)value, sizes);
+				return m_shortValues.GetSize((short)value);
 
 			if (underlyingType == typeof(byte))
-				return m_byteValues.GetSize((byte)value, sizes);
+				return m_byteValues.GetSize((byte)value);
 
 			if (underlyingType == typeof(long))
-				return m_longValues.GetSize((long)value, sizes);
+				return m_longValues.GetSize((long)value);
 
 			if (underlyingType == typeof(uint))
-				return m_uintValues.GetSize((uint)value, sizes);
+				return m_uintValues.GetSize((uint)value);
 
 			if (underlyingType == typeof(ushort))
-				return m_ushortValues.GetSize((ushort)value, sizes);
+				return m_ushortValues.GetSize((ushort)value);
 
 			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.GetSize((sbyte)value, sizes);
+				return m_sbyteValues.GetSize((sbyte)value);
 
 			if (underlyingType == typeof(ulong))
-				return m_ulongValues.GetSize((ulong)value, sizes);
+				return m_ulongValues.GetSize((ulong)value);
 
 			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
@@ -182,7 +214,7 @@ public static partial class Spark
 					foreach (T value in m_values)
 					{
 						m_underlyingValues[index] = value;
-						m_sizes[index] = getSize(value, null);
+						m_sizes[index] = getSize(value);
 
 						index++;
 					}
@@ -216,9 +248,14 @@ public static partial class Spark
 				}
 			}
 
-			public int GetSize(T value, LinkedList<int> sizes)
+			public int GetSize(T value)
 			{
-				return m_typeHelper.GetSize(value, sizes);
+				return m_typeHelper.GetSize(value);
+			}
+
+			public int GetSize(object value)
+			{
+				return GetSize((T)value);
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)
@@ -239,7 +276,7 @@ public static partial class Spark
 				return enumInfo.GetValue(underlyingValue);
 			}
 
-			public WriteDataDelegate Write
+			public WriteValueDelegate Write
 			{
 				get { return m_typeHelper.WriteObject; }
 			}

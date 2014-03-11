@@ -18,12 +18,12 @@ public static partial class Spark
 
 		private class BoolType : ITypeHelper<bool>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((bool)value, sizes);
+				return GetSize((bool)value);
 			}
 
-			public int GetSize(bool value, LinkedList<int> sizes)
+			public int GetSize(bool value)
 			{
 				return 1;
 			}
@@ -41,12 +41,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((bool)value, data, ref startIndex, sizes);
+				Write((bool)value, data, ref startIndex);
 			}
 
-			public void Write(bool value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(bool value, byte[] data, ref int startIndex)
 			{
 				BoolTypeMapper mapper = new BoolTypeMapper();
 				mapper.value = value;

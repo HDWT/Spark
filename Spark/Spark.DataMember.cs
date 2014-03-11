@@ -9,15 +9,57 @@ public static partial class Spark
 	{
 		ushort Id { get; }
 
-		//int GetSize(object instance);
 		int GetSize(object instance, LinkedList<int> sizes);
-
-		void SetValue(object instance, object value);
-
-		//void WriteValue(object instance, byte[] data, ref int startIndex);
 		void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes);
-
 		void ReadValue(object instance, byte[] data, ref int startIndex);
+		void SetValue(object instance, object value);
+	}
+
+	const byte IgnoreDataSizeBlockMark = 128;
+
+	private class SizeGetter
+	{
+		private GetValueSizeDelegate m_getValueTypeSize = null;
+		private GetReferenceSizeDelegate m_getReferenceTypeSize = null;
+
+		public SizeGetter(GetValueSizeDelegate getValueTypeSize)
+		{
+			m_getValueTypeSize = getValueTypeSize;
+		}
+
+		public SizeGetter(GetReferenceSizeDelegate getReferenceTypeSize)
+		{
+			m_getReferenceTypeSize = getReferenceTypeSize;
+		}
+
+		public int GetSize(object instance, LinkedList<int> sizes)
+		{
+			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes);
+		}
+	}
+
+	private class DataWriter
+	{
+		private WriteValueDelegate m_writeValueType = null;
+		private WriteReferenceDelegate m_writeReferenceType = null;
+
+		public DataWriter(WriteValueDelegate writeValueType)
+		{
+			m_writeValueType = writeValueType;
+		}
+
+		public DataWriter(WriteReferenceDelegate writeReferenceType)
+		{
+			m_writeReferenceType = writeReferenceType;
+		}
+
+		public void Write(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		{
+			if (m_writeValueType != null)
+				m_writeValueType(value, data, ref startIndex);
+			else
+				m_writeReferenceType(value, data, ref startIndex, sizes);
+		}
 	}
 
 	// Aot-compile
@@ -38,9 +80,12 @@ public static partial class Spark
 		public bool IsField { get { return m_fieldInfo != null; } }
 		public bool IsProperty { get { return m_propertyInfo != null; } }
 
-		protected readonly GetSizeDelegate getSize = null;
-		protected readonly WriteDataDelegate writeData = null;
+		//protected readonly GetSizeDelegate getSize = null;
+		//protected readonly WriteValueDelegate writeData = null;
 		protected readonly ReadDataDelegate readData = null;
+
+		protected readonly DataWriter m_dataWriter = null;
+		protected readonly SizeGetter m_sizeGetter = null;
 
 		public DataMember(ushort id, FieldInfo fieldInfo)
 			: this(id, fieldInfo.FieldType)
@@ -67,8 +112,19 @@ public static partial class Spark
 			if ((typeFlags & TypeFlags.Enum) == TypeFlags.Enum)
 				EnumTypeHelper.Instance.Register(type);
 
-			getSize = SizeCalculator.Get(m_type);
-			writeData = Writer.Get(m_type);
+			bool isValueType = type.IsValueType;
+
+			m_sizeGetter = isValueType
+				? new SizeGetter(SizeCalculator.GetForValueType(type))
+				: new SizeGetter(SizeCalculator.GetForReferenceType(type));
+
+			m_dataWriter = isValueType
+				? new DataWriter(Writer.GetDelegateForValueType(type))
+				: new DataWriter(Writer.GetDelegateForReferenceType(type));
+
+			//getSize = SizeCalculator.Get(m_type);
+			//writeData = Writer.Get(m_type);
+
 			readData = Reader.Get(m_type);
 		}
 
@@ -97,7 +153,7 @@ public static partial class Spark
 		{
 			object value = GetValue(instance);
 
-			return HeaderSize + getSize(value, sizes);
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
 		}
 
 		//public virtual void WriteValue(object instance, byte[] data, ref int startIndex)
@@ -113,7 +169,7 @@ public static partial class Spark
 			object value = GetValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			writeData(value, data, ref startIndex, sizes);
+			m_dataWriter.Write(value, data, ref startIndex, sizes);
 		}
 
 		public virtual void ReadValue(object instance, byte[] data, ref int startIndex)
@@ -150,8 +206,6 @@ public static partial class Spark
 		private DynamicGetValueDelegate m_getValue = null;
 		private DynamicSetValueDelegate m_setValue = null;
 
-		private TypeFlags m_typeFlags = TypeFlags.Reference;
-
 		public DataMember(ushort id, FieldInfo fieldInfo)
 			: base(id, fieldInfo)
 		{
@@ -164,8 +218,6 @@ public static partial class Spark
 			il.Emit(OpCodes.Ret);
 
 			m_getValue = (DynamicGetValueDelegate)dynamicMethod.CreateDelegate(typeof(DynamicGetValueDelegate));
-
-			m_typeFlags = GetTypeFlags(typeof(T));
 		}
 
 		public DataMember(ushort id, PropertyInfo propertyInfo)
@@ -173,8 +225,6 @@ public static partial class Spark
 		{
 			m_getValue = CreateGetMethod(m_propertyInfo);
 			//m_setPropertyValue = CreateSetMethod(m_propertyInfo);
-
-			m_typeFlags = GetTypeFlags(typeof(T));
 		}
 
 		private static DynamicGetValueDelegate CreateGetMethod(PropertyInfo propertyInfo)
@@ -261,7 +311,7 @@ public static partial class Spark
 		{
 			T value = m_getValue(instance);
 
-			return HeaderSize + getSize(value, sizes);
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
 		}
 
 		//public override void WriteValue(object instance, byte[] data, ref int startIndex)
@@ -277,7 +327,7 @@ public static partial class Spark
 			T value = m_getValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			writeData(value, data, ref startIndex, sizes);
+			m_dataWriter.Write(value, data, ref startIndex, sizes);
 		}
 	}
 }

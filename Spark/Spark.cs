@@ -5,11 +5,6 @@ public static partial class Spark
 {
 	public static bool FullAot = false;
 
-	static Spark()
-	{
-		InitLowLevelTypes();
-	}
-
 	public static byte[] Serialize(object instance)
 	{
 		if (instance == null)
@@ -24,26 +19,31 @@ public static partial class Spark
 		{
 			DataType dataType = DataType.Get(type);
 
-			LinkedList<int> m_sizes = new LinkedList<int>();
+			LinkedList<int> sizes = new LinkedList<int>();
 
-			int dataSize = dataType.GetDataSize(instance, m_sizes);
+			int dataSize = dataType.GetDataSize(instance, sizes);
 			byte[] data = new byte[dataSize];
 
-			dataType.WriteValues(instance, data, ref index, m_sizes);
+			dataType.WriteValues(instance, data, ref index, sizes);
 
 			return data;
 		}
 		else
 		{
-			LinkedList<int> m_sizes = new LinkedList<int>();
+			LinkedList<int> sizes = new LinkedList<int>();
 
-			var GetDataSize = SizeCalculator.Get(type);
-			int dataSize = GetDataSize(instance, m_sizes);
+			bool isValueType = type.IsValueType;
+
+			int dataSize = (isValueType)
+				? SizeCalculator.GetForValueType(type)(instance)
+				: SizeCalculator.GetForReferenceType(type)(instance, sizes);
 
 			byte[] data = new byte[dataSize];
 
-			var WriteData = Writer.Get(type);
-			WriteData(instance, data, ref index, m_sizes);
+			if (isValueType)
+				Writer.GetDelegateForValueType(type)(instance, data, ref index);
+			else
+				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes);
 
 			return data;
 		}

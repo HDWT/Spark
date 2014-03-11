@@ -4,121 +4,81 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
-	private delegate int GetSizeDelegate(object value, LinkedList<int> sizes);
-	private delegate int GetSizeDelegate<T>(T value, LinkedList<int> sizes);
+	private delegate int GetSizeDelegate(object value);
+	private delegate int GetSizeDelegate<T>(T value);
+
+	private delegate int GetValueSizeDelegate(object instance);
+	private delegate int GetValueSizeDelegate<T>(T instance);
+
+	private delegate int GetReferenceSizeDelegate(object instance, LinkedList<int> sizes);
+	private delegate int GetReferenceSizeDelegate<T>(T instance, LinkedList<int> sizes);
 
 	private static class SizeCalculator
 	{
-		private static readonly Dictionary<Type, GetSizeDelegate> s_getSizeDelegatesByType = new Dictionary<Type, GetSizeDelegate>(16);
-
-		public static GetSizeDelegate Get(Type type)
+		private static readonly Dictionary<Type, GetValueSizeDelegate> s_getValueSizeDelegates = new Dictionary<Type,GetValueSizeDelegate>(16)
 		{
-			GetSizeDelegate sizeGetter = null;
+			{ typeof(bool),		TypeHelper.Bool.GetSize },
+			{ typeof(byte),		TypeHelper.Byte.GetSize },
+			{ typeof(sbyte),	TypeHelper.SByte.GetSize },
+			{ typeof(char),		TypeHelper.Char.GetSize },
+			{ typeof(short),	TypeHelper.Short.GetSize },
+			{ typeof(ushort),	TypeHelper.UShort.GetSize },
+			{ typeof(int),		TypeHelper.Int.GetSize },
+			{ typeof(uint),		TypeHelper.UInt.GetSize },
+			{ typeof(float),	TypeHelper.Float.GetSize },
+			{ typeof(double),	TypeHelper.Double.GetSize },
+			{ typeof(long),		TypeHelper.Long.GetSize },
+			{ typeof(ulong),	TypeHelper.ULong.GetSize },
+			{ typeof(decimal),	TypeHelper.Decimal.GetSize },
+			{ typeof(DateTime), TypeHelper.DateTime.GetSize },
+		};
 
-			if (!s_getSizeDelegatesByType.TryGetValue(type, out sizeGetter))
+		private static readonly Dictionary<Type, GetReferenceSizeDelegate> s_getReferenceSizeDelegates = new Dictionary<Type, GetReferenceSizeDelegate>(16)
+		{
+			{ typeof(string), TypeHelper.String.GetSizeGetter(null).GetObjectSize }
+		};
+
+		public static GetValueSizeDelegate GetForValueType(Type type)
+		{
+			GetValueSizeDelegate getSizeDelegate = null;
+
+			if (!s_getValueSizeDelegates.TryGetValue(type, out getSizeDelegate))
 			{
-				lock (s_getSizeDelegatesByType)
+				if (type.IsEnum) // BaseType == Enum ?
 				{
-					sizeGetter = GetDelegate(type);
-					s_getSizeDelegatesByType.Add(type, sizeGetter);
+					getSizeDelegate = EnumTypeHelper.Instance.GetSize;
+					s_getValueSizeDelegates[type] = getSizeDelegate;
+				}
+				else
+				{
+					throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 				}
 			}
 
-			return sizeGetter;
+			return getSizeDelegate;
 		}
 
-		private static GetSizeDelegate GetDelegate(Type type)
+		public static GetReferenceSizeDelegate GetForReferenceType(Type type)
 		{
-			if (type.IsValueType)
+			GetReferenceSizeDelegate getSizeDelegate = null;
+
+			if (!s_getReferenceSizeDelegates.TryGetValue(type, out getSizeDelegate))
 			{
-				if (type == typeof(int))
-					return TypeHelper.Int.GetSize;
-
-				if (type == typeof(float))
-					return TypeHelper.Float.GetSize;;
-
-				if (type == typeof(bool))
-					return TypeHelper.Bool.GetSize;;
-
-				if (type.IsEnum)
-					return EnumTypeHelper.Instance.GetSize;
-
-				if (type == typeof(DateTime))
-					return TypeHelper.DateTime.GetSize;
-
-				if (type == typeof(short))
-					return TypeHelper.Short.GetSize;
-
-				if (type == typeof(long))
-					return TypeHelper.Long.GetSize;
-
-				if (type == typeof(double))
-					return TypeHelper.Double.GetSize;
-
-				if (type == typeof(byte))
-					return TypeHelper.Byte.GetSize;
-
-				if (type == typeof(char))
-					return TypeHelper.Char.GetSize;
-
-				if (type == typeof(uint))
-					return TypeHelper.UInt.GetSize;
-
-				if (type == typeof(ushort))
-					return TypeHelper.UShort.GetSize;
-
-				if (type == typeof(ulong))
-					return TypeHelper.ULong.GetSize;
-
-				if (type == typeof(decimal))
-					return TypeHelper.Decimal.GetSize;
-
-				if (type == typeof(sbyte))
-					return TypeHelper.SByte.GetSize;
-
-				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
-			}
-			else
-			{
-				if (type == typeof(string))
-					return TypeHelper.String.GetSize;
-
 				if (type.IsArray)
-					return TypeHelper.Array.GetSize;
+					getSizeDelegate = TypeHelper.Array.GetSizeGetter(type).GetObjectSize;
 
-				if (IsGenericList(type))
-					return TypeHelper.List.GetSize;
+				else if (IsGenericList(type))
+					getSizeDelegate = TypeHelper.List.GetSizeGetter(type).GetObjectSize;
 
-				if (type.IsClass)
-					return TypeHelper.ObjectType.GetGetSizeDelegate(type);// Object.GetSize;
+				else if (type.IsClass)
+					getSizeDelegate = TypeHelper.Object.GetSizeGetter(type).GetObjectSize;
 
-				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
+				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
+
+				s_getReferenceSizeDelegates[type] = getSizeDelegate;
 			}
-		}
 
-		public static GetSizeDelegate<T> Get<T>()
-		{
-			//if (typeof(T).BaseType == typeof(Array))
-			//	return Evaluate<T>;
-
-			return LowLevelType<T>.GetSize;
-		}
-
-		public static int Evaluate<T>(T value, LinkedList<int> sizes)
-		{
-			//if (!IsLowLevelType(typeof(T)))
-			//	return EvaluateClass(value);
-
-			//if (typeof(T).BaseType == typeof(Enum))
-			//	return EvaluateEnum(value);
-
-			//if (typeof(T).BaseType == typeof(Array))
-			//	return EvaluateArray(value);
-
-			//if (IsGenericList(typeof(T)))
-			//	return EvaluateList(value);
-
-			return LowLevelType<T>.GetSize(value, sizes);
+			return getSizeDelegate;
 		}
 
 		// Возвращает минимальное количество байт, которое необходимо для записи [dataSize]

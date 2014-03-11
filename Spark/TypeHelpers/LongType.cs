@@ -42,17 +42,17 @@ public static partial class Spark
 
 		private class LongType : ITypeHelper<long>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((long)value, sizes);
+				return GetSize((long)value);
 			}
 
-			public int GetSize(long value, LinkedList<int> sizes)
+			public int GetSize(long value)
 			{
 				LongTypeMapper mapper = new LongTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.ULong.GetSize(mapper.ulongValue, sizes);
+				return TypeHelper.ULong.GetSize(mapper.ulongValue);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -68,17 +68,17 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((long)value, data, ref startIndex, sizes);
+				Write((long)value, data, ref startIndex);
 			}
 
-			public void Write(long value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(long value, byte[] data, ref int startIndex)
 			{
 				LongTypeMapper mapper = new LongTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.ULong.Write(mapper.ulongValue, data, ref startIndex, sizes);
+				TypeHelper.ULong.Write(mapper.ulongValue, data, ref startIndex);
 			}
 		}
 	}

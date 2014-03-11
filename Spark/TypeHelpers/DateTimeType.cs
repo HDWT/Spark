@@ -8,14 +8,14 @@ public static partial class Spark
 	{
 		private class DateTimeType : ITypeHelper<DateTime>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((DateTime)value, sizes);
+				return GetSize((DateTime)value);
 			}
 
-			public int GetSize(DateTime value, LinkedList<int> sizes)
+			public int GetSize(DateTime value)
 			{
-				return TypeHelper.Long.GetSize(value.Ticks, sizes);
+				return TypeHelper.Long.GetSize(value.Ticks);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -30,14 +30,14 @@ public static partial class Spark
 				return new DateTime(ticks);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((DateTime)value, data, ref startIndex, sizes);
+				Write((DateTime)value, data, ref startIndex);
 			}
 
-			public void Write(DateTime value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(DateTime value, byte[] data, ref int startIndex)
 			{
-				TypeHelper.Long.Write(value.Ticks, data, ref startIndex, sizes);
+				TypeHelper.Long.Write(value.Ticks, data, ref startIndex);
 			}
 		}
 	}

@@ -21,12 +21,12 @@ public static partial class Spark
 
 		private class CharType : ITypeHelper<char>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((char)value, sizes);
+				return GetSize((char)value);
 			}
 
-			public int GetSize(char value, LinkedList<int> sizes)
+			public int GetSize(char value)
 			{
 				return 2;
 			}
@@ -46,12 +46,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((char)value, data, ref startIndex, sizes);
+				Write((char)value, data, ref startIndex);
 			}
 
-			public void Write(char value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(char value, byte[] data, ref int startIndex)
 			{
 				CharMapper mapper = new CharMapper();
 				mapper.value = value;

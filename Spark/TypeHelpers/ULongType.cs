@@ -55,12 +55,12 @@ public static partial class Spark
 			const byte Size2		= 0x38;		// 0 0111 000
 			const byte Size1		= 0x30;		// 0 0110 000
 
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((ulong)value, sizes);
+				return GetSize((ulong)value);
 			}
 
-			public int GetSize(ulong value, LinkedList<int> sizes)
+			public int GetSize(ulong value)
 			{
 				if (value > 0xFFFFFFFF00000000UL)
 					value = ~value;
@@ -204,12 +204,12 @@ public static partial class Spark
 				return (invert) ? (~mapper.value) : (mapper.value);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((ulong)value, data, ref startIndex, sizes);
+				Write((ulong)value, data, ref startIndex);
 			}
 
-			public void Write(ulong value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(ulong value, byte[] data, ref int startIndex)
 			{
 				if (value > 0xFFFFFFFF00000000UL)
 				{

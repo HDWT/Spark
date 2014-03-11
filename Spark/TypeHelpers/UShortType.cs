@@ -21,12 +21,12 @@ public static partial class Spark
 
 		private class UShortType : ITypeHelper<ushort>
 		{
-			public int GetSize(object value, LinkedList<int> sizes)
+			public int GetSize(object value)
 			{
-				return GetSize((ushort)value, sizes);
+				return GetSize((ushort)value);
 			}
 
-			public int GetSize(ushort value, LinkedList<int> sizes)
+			public int GetSize(ushort value)
 			{
 				return 2;
 			}
@@ -46,12 +46,12 @@ public static partial class Spark
 				return Read(data, ref startIndex);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((ushort)value, data, ref startIndex, sizes);
+				Write((ushort)value, data, ref startIndex);
 			}
 
-			public void Write(ushort value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+			public void Write(ushort value, byte[] data, ref int startIndex)
 			{
 				UShortTypeMapper mapper = new UShortTypeMapper();
 				mapper.value = value;
