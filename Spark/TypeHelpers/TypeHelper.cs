@@ -9,6 +9,9 @@ public static partial class Spark
 		int GetSize(object value);
 		int GetSize(T value);
 
+		//object FromBytesToObject(byte[] data, int startIndex);
+		T FromBytes(byte[] data, int startIndex);
+
 		object ReadObject(Type type, byte[] data, ref int startIndex);
 		T Read(byte[] data, ref int startIndex);
 		

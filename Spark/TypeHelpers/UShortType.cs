@@ -31,6 +31,16 @@ public static partial class Spark
 				return 2;
 			}
 
+			public ushort FromBytes(byte[] data, int startIndex)
+			{
+				UShortTypeMapper mapper = new UShortTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public ushort Read(byte[] data, ref int startIndex)
 			{
 				UShortTypeMapper mapper = new UShortTypeMapper();

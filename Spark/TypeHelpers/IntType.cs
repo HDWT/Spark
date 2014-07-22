@@ -13,9 +13,6 @@ public static partial class Spark
 			public int value;
 
 			[FieldOffset(0)]
-			public uint uintValue;
-
-			[FieldOffset(0)]
 			public byte byte1;
 
 			[FieldOffset(1)]
@@ -70,6 +67,18 @@ public static partial class Spark
 					return (mapper.byte1 > UnionSize) ? 2 : 1;
 
 				return 1;
+			}
+
+			public static object FromBytes(byte[] data, int startIndex)
+			{
+				IntTypeMapper mapper = new IntTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+				mapper.byte3 = data[startIndex++];
+				mapper.byte4 = data[startIndex++];
+
+				return mapper.value;
 			}
 
 			public static object ReadObject(Type type, byte[] data, ref int startIndex)

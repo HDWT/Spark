@@ -142,6 +142,32 @@ public static partial class Spark
 				return 1;
 			}
 
+			public decimal FromBytes(byte[] data, int startIndex)
+			{
+				DecimalTypeMapper mapper = new DecimalTypeMapper();
+				//mapper.value = 5;
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+				mapper.byte3 = data[startIndex++];
+				mapper.byte4 = data[startIndex++];
+				mapper.byte5 = data[startIndex++];
+				mapper.byte6 = data[startIndex++];
+				mapper.byte7 = data[startIndex++];
+				mapper.byte8 = data[startIndex++];
+				mapper.byte9 = data[startIndex++];
+
+				mapper.byte10 = data[startIndex++];
+				mapper.byte11 = data[startIndex++];
+				mapper.byte12 = data[startIndex++];
+				mapper.byte13 = data[startIndex++];
+				mapper.byte14 = data[startIndex++];
+				mapper.byte15 = data[startIndex++];
+				mapper.byte16 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

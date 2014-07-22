@@ -104,6 +104,22 @@ public static partial class Spark
 				}
 			}
 
+			public ulong FromBytes(byte[] data, int startIndex)
+			{
+				ULongTypeMapper mapper = new ULongTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+				mapper.byte3 = data[startIndex++];
+				mapper.byte4 = data[startIndex++];
+				mapper.byte5 = data[startIndex++];
+				mapper.byte6 = data[startIndex++];
+				mapper.byte7 = data[startIndex++];
+				mapper.byte8 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

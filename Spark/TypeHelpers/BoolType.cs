@@ -28,6 +28,14 @@ public static partial class Spark
 				return 1;
 			}
 
+			public bool FromBytes(byte[] data, int startIndex)
+			{
+				BoolTypeMapper mapper = new BoolTypeMapper();
+				mapper.byte1 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

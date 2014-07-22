@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
-	public static bool FullAot = false;
+	private const int IntPtrSize = 4; // x86
+
+	public static bool FullAot = true;
 
 	public static byte[] Serialize(object instance)
 	{

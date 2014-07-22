@@ -16,6 +16,15 @@ public static partial class Spark
 		private static readonly Type[] DataMemberConstructorParamTypes_IdProperty = { typeof(ushort), typeof(PropertyInfo) };
 		private static readonly object[] DataMemberConstructorParameters_IdType = new object[2];
 
+		// 16, 8, 4, 2, 1, ref
+		private static readonly List<FieldInfo>[] s_fieldsByOrder = new List<FieldInfo>[15]; // 15 orders now
+
+		static DataType()
+		{
+			for (int i = 0; i < s_fieldsByOrder.Length; ++i)
+				s_fieldsByOrder[i] = new List<FieldInfo>();
+		}
+
 		private static readonly Dictionary<Type, DataType> s_dataTypes = new Dictionary<Type, DataType>(16);
 
 		private readonly IDataMember[] m_members = null;
@@ -46,17 +55,123 @@ public static partial class Spark
 			}
 		}
 
+		private int GetFieldOrder(FieldInfo field)
+		{
+			System.Type fieldType = field.FieldType;
+
+			if (fieldType.IsEnum)
+				fieldType = EnumTypeHelper.GetUnderlyingType(fieldType);
+
+			if (fieldType == typeof(long))		return 0;
+			if (fieldType == typeof(double))	return 1;
+			if (fieldType == typeof(ulong))		return 2;
+			if (fieldType.IsClass)				return 3;
+			if (fieldType == typeof(int))		return 4;
+			if (fieldType == typeof(uint))		return 5;
+			if (fieldType == typeof(float))		return 6;
+			if (fieldType == typeof(short))		return 7;
+			if (fieldType == typeof(ushort))	return 8;
+			if (fieldType == typeof(char))		return 9;
+			if (fieldType == typeof(bool))		return 10;
+			if (fieldType == typeof(sbyte))		return 11;	
+			if (fieldType == typeof(byte))		return 12;
+			if (fieldType == typeof(decimal))	return 13;
+			if (fieldType == typeof(DateTime))	return 14;
+			
+			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
+		}
+
+		private int CompareFields(FieldInfo f1, FieldInfo f2)
+		{
+			int f1Order = GetFieldOrder(f1);
+			int f2Order = GetFieldOrder(f2);
+
+			return f1Order.CompareTo(f2Order);
+		}
+
+		private FieldInfo[] GetSortedFields(Type type)
+		{
+			foreach (var list in s_fieldsByOrder)
+				list.Clear();
+
+			FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+			foreach (var field in fields)
+			{
+				int fieldOrder = GetFieldOrder(field);
+
+				s_fieldsByOrder[fieldOrder].Add(field);
+			}
+
+			for (int i = 0, row = 0, col = 0; i < fields.Length; ++i, ++col)
+			{
+				while (col >= s_fieldsByOrder[row].Count)
+				{
+					row++;
+					col = 0;
+				}
+
+				fields[i] = s_fieldsByOrder[row][col];
+			}
+
+			return fields;
+		}
+
 		public DataType(Type type)
 		{
-			FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			FieldInfo[] fields = GetSortedFields(type);// type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
 			List<IDataMember> members = new List<IDataMember>(fields.Length);
 
 			ushort memberId = 0;
 
+			int valueFieldOffset = 0;
+			int referenceFieldOffset = 0;
+
+			System.Type previousFieldType = null;
+
 			foreach (var field in fields)
 			{
+				if (previousFieldType != null)
+				{
+					//if (previousFieldType.IsClass)
+					//{
+					//	referenceFieldOffset = valueFieldOffset / 4;
+					//	//if (referenceFieldOffset > 1)
+					//	valueFieldOffset += IntPtrSize;
+					//}
+					//else
+					{
+						if (previousFieldType.IsEnum)
+							previousFieldType = EnumTypeHelper.GetUnderlyingType(previousFieldType);
+
+						if (previousFieldType.IsClass)
+							valueFieldOffset += IntPtrSize;
+						else if (previousFieldType == typeof(int) || previousFieldType == typeof(uint) || previousFieldType == typeof(float))
+							valueFieldOffset += 4;
+						else if (previousFieldType == typeof(short) || previousFieldType == typeof(ushort) || previousFieldType == typeof(char))
+							valueFieldOffset += 2;
+						else if (previousFieldType == typeof(byte) || previousFieldType == typeof(sbyte) || previousFieldType == typeof(bool))
+							valueFieldOffset += 1;
+						else if (previousFieldType == typeof(long) || previousFieldType == typeof(ulong) || previousFieldType == typeof(double) || previousFieldType == typeof(DateTime))
+							valueFieldOffset += 8;
+						else if (previousFieldType == typeof(decimal))
+							valueFieldOffset += 16;
+							
+						else
+							throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", previousFieldType));
+
+						referenceFieldOffset = valueFieldOffset / 4;
+					}
+				}
+
+				previousFieldType = field.FieldType;
+
+				// align decimal
+				if (field.FieldType == typeof(decimal))
+					valueFieldOffset += 4 - valueFieldOffset % 4;
+
 				if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
 					continue;
 
@@ -68,7 +183,7 @@ public static partial class Spark
 
 				if (FullAot)
 				{
-					members.Add(new DataMember(memberId, field));
+					members.Add(new DataMember(memberId, field, field.FieldType.IsClass ? referenceFieldOffset : valueFieldOffset));
 				}
 				else
 				{
