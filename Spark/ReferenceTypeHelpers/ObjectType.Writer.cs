@@ -18,7 +18,7 @@ public static partial class Spark
 					m_dataType = DataType.Get(type);
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					if (instance == null)
 					{
@@ -26,9 +26,7 @@ public static partial class Spark
 						return;
 					}
 
-					int dataSize = sizes.First.Value;
-					sizes.RemoveFirst();
-
+					int dataSize = sizes.Dequeue();
 					byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 					// Сколько байт занимает поле dataSize
@@ -45,7 +43,7 @@ public static partial class Spark
 					m_dataType.WriteValues(instance, data, ref startIndex, sizes);
 				}
 
-				public void Write(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				public void Write(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					WriteObject(instance, data, ref startIndex, sizes);
 				}

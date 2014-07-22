@@ -9,8 +9,8 @@ public static partial class Spark
 	{
 		ushort Id { get; }
 
-		int GetSize(object instance, LinkedList<int> sizes);
-		void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes);
+		int GetSize(object instance, QueueWithIndexer sizes);
+		void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes);
 		void ReadValue(object instance, byte[] data, ref int startIndex);
 		void SetValue(object instance, object value);
 	}
@@ -32,7 +32,7 @@ public static partial class Spark
 			m_getReferenceTypeSize = getReferenceTypeSize;
 		}
 
-		public int GetSize(object instance, LinkedList<int> sizes)
+		public int GetSize(object instance, QueueWithIndexer sizes)
 		{
 			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes);
 		}
@@ -53,7 +53,7 @@ public static partial class Spark
 			m_writeReferenceType = writeReferenceType;
 		}
 
-		public void Write(object value, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		public void Write(object value, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			if (m_writeValueType != null)
 				m_writeValueType(value, data, ref startIndex);
@@ -149,7 +149,7 @@ public static partial class Spark
 		//	return HeaderSize + getSize(value);
 		//}
 
-		public virtual int GetSize(object instance, LinkedList<int> sizes)
+		public virtual int GetSize(object instance, QueueWithIndexer sizes)
 		{
 			object value = GetValue(instance);
 
@@ -164,7 +164,7 @@ public static partial class Spark
 		//	writeData(value, data, ref startIndex, null);
 		//}
 
-		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			object value = GetValue(instance);
 
@@ -229,7 +229,9 @@ public static partial class Spark
 
 		private static DynamicGetValueDelegate CreateGetMethod(PropertyInfo propertyInfo)
 		{
-			DynamicMethod getter = new DynamicMethod("DynamicGet_" + propertyInfo.Name, typeof(T), DynamicGetMethodParameters, typeof(DataMember<T>), true);
+			DynamicMethod getter = new DynamicMethod("DynamicGet_" + propertyInfo.Name, 
+				MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, 
+				typeof(T), DynamicGetMethodParameters, propertyInfo.DeclaringType, false);
 
 			ILGenerator getIL = getter.GetILGenerator();
 
@@ -237,7 +239,9 @@ public static partial class Spark
 			getIL.Emit(OpCodes.Ldarg_0); //Load the first argument
 			//(target object)
 			//Cast to the source type
-			getIL.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
+			//getIL.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
+
+
 			//Get the property value
 			getIL.EmitCall(OpCodes.Call, propertyInfo.GetGetMethod(), null);
 			//if (typeof(T).IsValueType)
@@ -307,11 +311,16 @@ public static partial class Spark
 		//	return HeaderSize + getSize(value);
 		//}
 
-		public override int GetSize(object instance, LinkedList<int> sizes)
+		public override int GetSize(object instance, QueueWithIndexer sizes)
 		{
+			//Stopwatch.Start();
 			T value = m_getValue(instance);
+			//object value = m_getValue(instance);
 
-			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
+			int size = HeaderSize + m_sizeGetter.GetSize(value, sizes);
+			//Stopwatch.Stop();
+
+			return size;
 		}
 
 		//public override void WriteValue(object instance, byte[] data, ref int startIndex)
@@ -322,9 +331,10 @@ public static partial class Spark
 		//	writeData(value, data, ref startIndex, null);
 		//}
 
-		public override void WriteValue(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			T value = m_getValue(instance);
+			//object value = m_getValue(instance);
 
 			WriteHeader(data, ref startIndex);
 			m_dataWriter.Write(value, data, ref startIndex, sizes);

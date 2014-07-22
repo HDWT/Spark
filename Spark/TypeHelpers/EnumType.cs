@@ -7,16 +7,20 @@ public static partial class Spark
 	{
 		public static readonly EnumTypeHelper Instance = new EnumTypeHelper();
 
-		private readonly Values<byte>	m_byteValues	= new Values<byte>(TypeHelper.Byte);
-		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>(TypeHelper.SByte);
-		private readonly Values<short>	m_shortValues	= new Values<short>(TypeHelper.Short);
-		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(TypeHelper.UShort);
-		private readonly Values<int>	m_intValues		= new Values<int>(TypeHelper.Int);
-		private readonly Values<uint>	m_uintValues	= new Values<uint>(TypeHelper.UInt);
-		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.Long);
-		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULong);
+		private readonly Values<byte>	m_byteValues	= new Values<byte>(TypeHelper.Byte.GetSize, TypeHelper.Byte.ReadObject);
+		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>(TypeHelper.SByte.GetSize, TypeHelper.SByte.ReadObject);
+		private readonly Values<short>	m_shortValues	= new Values<short>(TypeHelper.Short.GetSize, TypeHelper.Short.ReadObject);
+		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(TypeHelper.UShort.GetSize, TypeHelper.UShort.ReadObject);
+		private readonly Values<int>	m_intValues		= new Values<int>(TypeHelper.IntType.GetSize, TypeHelper.IntType.ReadObject);
+		private readonly Values<uint>	m_uintValues	= new Values<uint>(TypeHelper.UInt.GetSize, TypeHelper.UInt.ReadObject);
+		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.Long.GetSize, TypeHelper.Long.ReadObject);
+		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULong.GetSize, TypeHelper.ULong.ReadObject);
 
 		private static readonly Dictionary<Type, Type> s_underlyingTypesByEnumType = new Dictionary<Type, Type>(16);
+
+		private static readonly Dictionary<Type, GetValueSizeDelegate> s_getSizeDelegatesByEnumType = new Dictionary<Type, GetValueSizeDelegate>(16);
+		private static readonly Dictionary<Type, WriteValueDelegate> s_writeDataDelegatesByEnumType = new Dictionary<Type, WriteValueDelegate>(16);
+		private static readonly Dictionary<Type, ReadDataDelegate> s_readDataDelegatesByEnumType = new Dictionary<Type, ReadDataDelegate>(16);
 
 		public void Register(Type enumType)
 		{
@@ -49,130 +53,74 @@ public static partial class Spark
 			else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 		}
 
+		public GetValueSizeDelegate GetGetSizeDelegate(Type enumType)
+		{
+			GetValueSizeDelegate getSizeDelegate = null;
+
+			if (!s_getSizeDelegatesByEnumType.TryGetValue(enumType, out getSizeDelegate))
+			{
+				Type underlyingType = GetUnderlyingType(enumType);
+
+				getSizeDelegate = SizeCalculator.GetForValueType(underlyingType);
+				s_getSizeDelegatesByEnumType[enumType] = getSizeDelegate;
+			}
+
+			return getSizeDelegate;
+		}
+
 		public WriteValueDelegate GetWriter(Type enumType)
 		{
-			Type underlyingType = GetUnderlyingType(enumType);
+			WriteValueDelegate writeData = null;
 
-			if (underlyingType == typeof(int))
-				return m_intValues.Write;
+			if (!s_writeDataDelegatesByEnumType.TryGetValue(enumType, out writeData))
+			{
+				Type underlyingType = GetUnderlyingType(enumType);
 
-			if (underlyingType == typeof(short))
-				return m_shortValues.Write;
+				writeData = Writer.GetDelegateForValueType(underlyingType);
+				s_writeDataDelegatesByEnumType[enumType] = writeData;
+			}
 
-			if (underlyingType == typeof(byte))
-				return m_byteValues.Write;
-
-			if (underlyingType == typeof(long))
-				return m_longValues.Write;
-
-			if (underlyingType == typeof(uint))
-				return m_uintValues.Write;
-
-			if (underlyingType == typeof(ushort))
-				return m_ushortValues.Write;
-
-			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.Write;
-
-			if (underlyingType == typeof(ulong))
-				return m_ulongValues.Write;
-
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
+			return writeData;
 		}
 
 		public ReadDataDelegate GetReader(Type enumType)
 		{
-			Type underlyingType = GetUnderlyingType(enumType);
+			ReadDataDelegate reader = null;
 
-			if (underlyingType == typeof(int))
-				return m_intValues.Read;
+			if (!s_readDataDelegatesByEnumType.TryGetValue(enumType, out reader))
+			{
+				Type underlyingType = GetUnderlyingType(enumType);
 
-			if (underlyingType == typeof(short))
-				return m_shortValues.Read;
+				if (underlyingType == typeof(int))
+					reader = m_intValues.Read;
 
-			if (underlyingType == typeof(byte))
-				return m_byteValues.Read;
+				else if (underlyingType == typeof(short))
+					reader = m_shortValues.Read;
 
-			if (underlyingType == typeof(long))
-				return m_longValues.Read;
+				else if (underlyingType == typeof(byte))
+					reader = m_byteValues.Read;
 
-			if (underlyingType == typeof(uint))
-				return m_uintValues.Read;
+				else if (underlyingType == typeof(long))
+					reader = m_longValues.Read;
 
-			if (underlyingType == typeof(ushort))
-				return m_ushortValues.Read;
+				else if (underlyingType == typeof(uint))
+					reader = m_uintValues.Read;
 
-			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.Read;
+				else if (underlyingType == typeof(ushort))
+					reader = m_ushortValues.Read;
 
-			if (underlyingType == typeof(ulong))
-				return m_ulongValues.Read;
+				else if (underlyingType == typeof(sbyte))
+					reader = m_sbyteValues.Read;
 
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
-		}
+				else if (underlyingType == typeof(ulong))
+					reader = m_ulongValues.Read;
 
-		/*
-		public GetValueSizeDelegate GetSizeDelegate(Type enumType)
-		{
-			Type underlyingType = GetUnderlyingType(enumType);
+				else throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
 
-			if (underlyingType == typeof(int))
-				return m_intValues.GetSize;
+				s_readDataDelegatesByEnumType[enumType] = reader;
+			}
 
-			if (underlyingType == typeof(short))
-				return m_shortValues.GetSize((short)value);
-
-			if (underlyingType == typeof(byte))
-				return m_byteValues.GetSize((byte)value);
-
-			if (underlyingType == typeof(long))
-				return m_longValues.GetSize((long)value);
-
-			if (underlyingType == typeof(uint))
-				return m_uintValues.GetSize((uint)value);
-
-			if (underlyingType == typeof(ushort))
-				return m_ushortValues.GetSize((ushort)value);
-
-			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.GetSize((sbyte)value);
-
-			if (underlyingType == typeof(ulong))
-				return m_ulongValues.GetSize((ulong)value);
-
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
-		}*/
-
-		public int GetSize(object value)
-		{
-			Type enumType = value.GetType();
-			Type underlyingType = GetUnderlyingType(enumType);
-
-			if (underlyingType == typeof(int))
-				return m_intValues.GetSize((int)value);
-
-			if (underlyingType == typeof(short))
-				return m_shortValues.GetSize((short)value);
-
-			if (underlyingType == typeof(byte))
-				return m_byteValues.GetSize((byte)value);
-
-			if (underlyingType == typeof(long))
-				return m_longValues.GetSize((long)value);
-
-			if (underlyingType == typeof(uint))
-				return m_uintValues.GetSize((uint)value);
-
-			if (underlyingType == typeof(ushort))
-				return m_ushortValues.GetSize((ushort)value);
-
-			if (underlyingType == typeof(sbyte))
-				return m_sbyteValues.GetSize((sbyte)value);
-
-			if (underlyingType == typeof(ulong))
-				return m_ulongValues.GetSize((ulong)value);
-
-			throw new System.ArgumentException(string.Format("Enum with underlying type '{0}' is not supported", underlyingType));
+			return reader;
 		}
 
 		private static Type GetUnderlyingType(Type enumType)
@@ -195,7 +143,7 @@ public static partial class Spark
 		{
 			private readonly Dictionary<Type, EnumInfo> m_enumsInfo = new Dictionary<Type, EnumInfo>();
 
-			private ITypeHelper<T> m_typeHelper = null;
+			//private ITypeHelper<T> m_typeHelper = null;
 
 			private class EnumInfo
 			{
@@ -232,10 +180,16 @@ public static partial class Spark
 				}
 			}
 
-			public Values(ITypeHelper<T> typeHelper)
+			public Values(GetSizeDelegate getSize, ReadDataDelegate readObject)
 			{
-				m_typeHelper = typeHelper;
+				//m_typeHelper = typeHelper;
+				m_getSize = getSize;
+				m_readObject = readObject;
+
 			}
+
+			GetSizeDelegate m_getSize = null;
+			ReadDataDelegate m_readObject = null;
 
 			public void Register(Type enumType)
 			{
@@ -244,23 +198,13 @@ public static partial class Spark
 					if (m_enumsInfo.ContainsKey(enumType))
 						return;
 
-					m_enumsInfo[enumType] = new EnumInfo(enumType, m_typeHelper.GetSize);
+					m_enumsInfo[enumType] = new EnumInfo(enumType, m_getSize);
 				}
-			}
-
-			public int GetSize(T value)
-			{
-				return m_typeHelper.GetSize(value);
-			}
-
-			public int GetSize(object value)
-			{
-				return GetSize((T)value);
 			}
 
 			public object Read(Type enumType, byte[] data, ref int startIndex)
 			{
-				T underlyingValue = (T)m_typeHelper.ReadObject(enumType, data, ref startIndex);
+				T underlyingValue = (T)m_readObject(enumType, data, ref startIndex);
 
 				EnumInfo enumInfo = null;
 
@@ -268,17 +212,12 @@ public static partial class Spark
 				{
 					lock (m_enumsInfo)
 					{
-						enumInfo = new EnumInfo(enumType, m_typeHelper.GetSize);
+						enumInfo = new EnumInfo(enumType, m_getSize);
 						m_enumsInfo[enumType] = enumInfo;
 					}
 				}
 
 				return enumInfo.GetValue(underlyingValue);
-			}
-
-			public WriteValueDelegate Write
-			{
-				get { return m_typeHelper.WriteObject; }
 			}
 		}
 	}

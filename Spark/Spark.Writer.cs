@@ -8,8 +8,8 @@ public static partial class Spark
 	private delegate void WriteValueDelegate(object value, byte[] data, ref int startIndex);
 	private delegate void WriteValueDelegate<T>(T value, byte[] data, ref int startIndex);
 
-	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, LinkedList<int> sizes);
-	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, LinkedList<int> sizes);
+	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, QueueWithIndexer sizes);
+	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, QueueWithIndexer sizes);
 
 	private static class Writer
 	{
@@ -21,7 +21,7 @@ public static partial class Spark
 			{ typeof(char),		TypeHelper.Char.WriteObject },
 			{ typeof(short),	TypeHelper.Short.WriteObject },
 			{ typeof(ushort),	TypeHelper.UShort.WriteObject },
-			{ typeof(int),		TypeHelper.Int.WriteObject },
+			{ typeof(int),		TypeHelper.IntType.WriteObject },
 			{ typeof(uint),		TypeHelper.UInt.WriteObject },
 			{ typeof(float),	TypeHelper.Float.WriteObject },
 			{ typeof(double),	TypeHelper.Double.WriteObject },
@@ -44,7 +44,7 @@ public static partial class Spark
 
 			if (!s_writeValueDelegates.TryGetValue(type, out writeValueDelegate))
 			{
-				if (type.IsEnum) // BaseType == Enum ?
+				if (type.BaseType == typeof(Enum))// IsEnum) // BaseType == Enum ?
 				{
 					writeValueDelegate = EnumTypeHelper.Instance.GetWriter(type);
 					s_writeValueDelegates[type] = writeValueDelegate;

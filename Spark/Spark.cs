@@ -19,18 +19,18 @@ public static partial class Spark
 		{
 			DataType dataType = DataType.Get(type);
 
-			LinkedList<int> sizes = new LinkedList<int>();
+			QueueWithIndexer sizes = new QueueWithIndexer();
 
 			int dataSize = dataType.GetDataSize(instance, sizes);
 			byte[] data = new byte[dataSize];
-
+			
 			dataType.WriteValues(instance, data, ref index, sizes);
 
 			return data;
 		}
 		else
 		{
-			LinkedList<int> sizes = new LinkedList<int>();
+			QueueWithIndexer sizes = new QueueWithIndexer();
 
 			bool isValueType = type.IsValueType;
 

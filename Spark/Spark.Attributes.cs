@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 public static partial class Spark
 {
@@ -11,18 +12,24 @@ public static partial class Spark
 		{
 			this.Id = identifier;
 		}
+
+		private static FieldInfo s_idField = typeof(MemberAttribute).GetField("Id");
+		public static ushort GetId(object obj)
+		{
+			return (ushort)s_idField.GetValue(obj);
+		}
 	}
 
 	private static bool TryGetMemberAttributeId(object[] attributes, out ushort memberId)
 	{
-		foreach (var attribute in attributes)
+		for (int i = 0; i < attributes.Length; ++i)
 		{
-			Type attributeType = attribute.GetType();
+			Type attributeType = attributes[i].GetType();
 
 			if (attributeType != typeof(MemberAttribute))
 				continue;
 
-			memberId = (ushort)attributeType.GetField("Id").GetValue(attribute);
+			memberId = MemberAttribute.GetId(attributes[i]);
 
 			if (memberId >= 32768)
 				throw new System.ArgumentException("Member identifier must be less then 32768");

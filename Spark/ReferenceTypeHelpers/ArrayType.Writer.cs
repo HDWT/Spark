@@ -15,7 +15,7 @@ public static partial class Spark
 				{ typeof(char[]),		new DataWriter<char>	(TypeHelper.Char.Write) },
 				{ typeof(short[]),		new DataWriter<short>	(TypeHelper.Short.Write) },
 				{ typeof(ushort[]),		new DataWriter<ushort>	(TypeHelper.UShort.Write) },
-				{ typeof(int[]),		new DataWriter<int>		(TypeHelper.Int.Write) },
+				{ typeof(int[]),		new DataWriter<int>		(IntType.Write) },
 				{ typeof(uint[]),		new DataWriter<uint>	(TypeHelper.UInt.Write) },
 				{ typeof(float[]),		new DataWriter<float>	(TypeHelper.Float.Write) },
 				{ typeof(double[]),		new DataWriter<double>	(TypeHelper.Double.Write) },
@@ -37,12 +37,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					Write(instance as Array, data, ref startIndex, sizes);
 				}
 
-				public void Write(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				public void Write(Array array, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					if (array == null)
 					{
@@ -50,9 +50,7 @@ public static partial class Spark
 						return;
 					}
 
-					int dataSize = sizes.First.Value;
-					sizes.RemoveFirst();
-
+					int dataSize = sizes.Dequeue();
 					byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 					// Сколько байт занимает поле dataSize
@@ -83,14 +81,22 @@ public static partial class Spark
 						}
 					}
 
+					
+
 					if (m_isValueType)
+					{
+						//Stopwatch.Start();
 						WriteValue(array, data, ref startIndex);
+						//Stopwatch.Stop();
+					}
 					else
 						WriteReference(array, data, ref startIndex, sizes);
+
+					
 				}
 
 				protected abstract void WriteValue(Array array, byte[] data, ref int startIndex);
-				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes);
+				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer sizes);
 			}
 
 			//
@@ -117,7 +123,7 @@ public static partial class Spark
 						m_writeValue(item, data, ref startIndex);
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					foreach (var item in array)
 						m_writeReference(item, data, ref startIndex, sizes);
@@ -147,8 +153,14 @@ public static partial class Spark
 					switch (array.Rank)
 					{
 						case 1:
-							foreach (var item in (T[])array)
+							T[] anArray = (T[])array;
+
+							foreach (var item in anArray)
+							{
+								//Stopwatch.Start();
 								m_writeValue(item, data, ref startIndex);
+								//Stopwatch.Stop();
+							}
 							break;
 
 						case 2:
@@ -171,7 +183,7 @@ public static partial class Spark
 					}
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, LinkedList<int> sizes)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 				{
 					switch (array.Rank)
 					{

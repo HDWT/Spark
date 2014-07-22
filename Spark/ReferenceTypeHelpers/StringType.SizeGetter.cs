@@ -9,19 +9,20 @@ public static partial class Spark
 		{
 			private class SizeGetter : ISizeGetter<string>
 			{
-				public int GetObjectSize(object instance, LinkedList<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer sizes)
 				{
 					return GetSize(instance as string, sizes);
 				}
 
-				public int GetSize(string aString, LinkedList<int> sizes)
+				public int GetSize(string aString, QueueWithIndexer sizes)
 				{
 					if (aString == null)
 						return MinDataSize;
 
 					int dataSize = MinDataSize + aString.Length * sizeof(char) + 1; // +1 for padding
+					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
-					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					return size; // dataSize + SizeCalculator.GetMinSize2(dataSize);// SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 				}
 			}
 		}

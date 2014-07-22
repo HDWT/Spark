@@ -18,25 +18,23 @@ public static partial class Spark
 					m_dataType = DataType.Get(objectType);
 				}
 
-				public int GetObjectSize(object instance, LinkedList<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer sizes)
 				{
 					if (instance == null)
 						return MinDataSize;
 
-					var lastNode = sizes.Last;
+					int sizeIndex = sizes.Count;
+					sizes.Enqueue(0);
 
 					int dataSize = MinDataSize + m_dataType.GetDataSize(instance, sizes);
 					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 
-					if (lastNode == null)
-						sizes.AddFirst(size);
-					else
-						sizes.AddAfter(lastNode, size);
+					sizes[sizeIndex] = size;
 
 					return size;
 				}
 
-				public int GetSize(object value, LinkedList<int> sizes)
+				public int GetSize(object value, QueueWithIndexer sizes)
 				{
 					return GetObjectSize(value, sizes);
 				}

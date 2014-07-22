@@ -25,16 +25,16 @@ public static partial class Spark
 		T Read(byte[] data, ref int startIndex);
 	}
 
-	public interface ISizeGetter<T>
+	private interface ISizeGetter<T>
 	{
-		int GetObjectSize(object instance, LinkedList<int> sizes);
-		int GetSize(T instance, LinkedList<int> sizes);
+		int GetObjectSize(object instance, QueueWithIndexer sizes);
+		int GetSize(T instance, QueueWithIndexer sizes);
 	}
 
-	public interface IDataWriter<T>
+	private interface IDataWriter<T>
 	{
-		void WriteObject(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes);
-		void Write(T instance, byte[] data, ref int startIndex, LinkedList<int> sizes);
+		void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes);
+		void Write(T instance, byte[] data, ref int startIndex, QueueWithIndexer sizes);
 	}
 
 	private static partial class TypeHelper
@@ -45,7 +45,7 @@ public static partial class Spark
 		public static readonly ITypeHelper<char>			Char		= new CharType();
 		public static readonly ITypeHelper<short>			Short		= new ShortType();
 		public static readonly ITypeHelper<ushort>			UShort		= new UShortType();
-		public static readonly ITypeHelper<int>				Int			= new IntType();
+		//public static readonly ITypeHelper<int>				Int			= new IntType1();
 		public static readonly ITypeHelper<uint>			UInt		= new UIntType();
 		public static readonly ITypeHelper<long>			Long		= new LongType();
 		public static readonly ITypeHelper<ulong>			ULong		= new ULongType();

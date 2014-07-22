@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 public static partial class Spark
 {
@@ -16,7 +17,7 @@ public static partial class Spark
 				{ typeof(List<char>),		new SizeGetter<char>	(TypeHelper.Char.GetSize) },
 				{ typeof(List<short>),		new SizeGetter<short>	(TypeHelper.Short.GetSize) },
 				{ typeof(List<ushort>),		new SizeGetter<ushort>	(TypeHelper.UShort.GetSize) },
-				{ typeof(List<int>),		new SizeGetter<int>		(TypeHelper.Int.GetSize) },
+				{ typeof(List<int>),		new SizeGetter<int>		(IntType.GetSize) },
 				{ typeof(List<uint>),		new SizeGetter<uint>	(TypeHelper.UInt.GetSize) },
 				{ typeof(List<float>),		new SizeGetter<float>	(TypeHelper.Float.GetSize) },
 				{ typeof(List<double>),		new SizeGetter<double>	(TypeHelper.Double.GetSize) },
@@ -38,18 +39,19 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, LinkedList<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer sizes)
 				{
 					return GetSize(instance as IList, sizes);
 				}
 
-				public int GetSize(IList list, LinkedList<int> sizes)
+				public int GetSize(IList list, QueueWithIndexer sizes)
 				{
 					if (list == null)
 						return MinDataSize;
 
 					// Get last node before get elements size
-					var lastNode = sizes.Last;
+					int sizeIndex = sizes.Count;
+					sizes.Enqueue(0);
 
 					int dataSize = MinDataSize + 1 + SizeCalculator.GetMinSize(list.Count);
 
@@ -59,16 +61,13 @@ public static partial class Spark
 
 					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 
-					if (lastNode == null)
-						sizes.AddFirst(size);
-					else
-						sizes.AddAfter(lastNode, size);
+					sizes[sizeIndex] = size;
 
 					return size;
 				}
 
 				protected abstract int GetElementsSize(IList list);
-				protected abstract int GetElementsSize(IList list, LinkedList<int> sizes);
+				protected abstract int GetElementsSize(IList list, QueueWithIndexer sizes);
 			}
 
 			//
@@ -99,7 +98,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, LinkedList<int> sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer sizes)
 				{
 					int size = 0;
 
@@ -139,7 +138,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, LinkedList<int> sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer sizes)
 				{
 					List<T> aList = (List<T>)list;
 					int size = 0;

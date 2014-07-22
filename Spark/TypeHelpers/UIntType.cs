@@ -41,10 +41,20 @@ public static partial class Spark
 
 			public int GetSize(object value)
 			{
-				return GetSize((uint)value);
+				return GetSize1(value);
 			}
 
 			public int GetSize(uint value)
+			{
+				return GetSize1(value);
+			}
+
+			public static int GetSize1(object value)
+			{
+				return GetSize1((uint)value);
+			}
+
+			public static int GetSize1(uint value)
 			{
 				if (value > 0xFFFF0000U)
 					value = ~value;
@@ -128,10 +138,20 @@ public static partial class Spark
 
 			public void WriteObject(object value, byte[] data, ref int startIndex)
 			{
-				Write((uint)value, data, ref startIndex);
+				WriteObject1(value, data, ref startIndex);
 			}
 
 			public void Write(uint value, byte[] data, ref int startIndex)
+			{
+				Write1(value, data, ref startIndex);
+			}
+
+			public static void WriteObject1(object value, byte[] data, ref int startIndex)
+			{
+				Write1((uint)value, data, ref startIndex);
+			}
+
+			public static void Write1(uint value, byte[] data, ref int startIndex)
 			{
 				if (value > 0xFFFF0000U)
 				{

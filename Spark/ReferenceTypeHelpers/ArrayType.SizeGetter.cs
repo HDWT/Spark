@@ -15,7 +15,7 @@ public static partial class Spark
 				{ typeof(char[]),		new SizeGetter<char>	(TypeHelper.Char.GetSize) },
 				{ typeof(short[]),		new SizeGetter<short>	(TypeHelper.Short.GetSize) },
 				{ typeof(ushort[]),		new SizeGetter<ushort>	(TypeHelper.UShort.GetSize) },
-				{ typeof(int[]),		new SizeGetter<int>		(TypeHelper.Int.GetSize) },
+				{ typeof(int[]),		new SizeGetter<int>		(IntType.GetSize) },
 				{ typeof(uint[]),		new SizeGetter<uint>	(TypeHelper.UInt.GetSize) },
 				{ typeof(float[]),		new SizeGetter<float>	(TypeHelper.Float.GetSize) },
 				{ typeof(double[]),		new SizeGetter<double>	(TypeHelper.Double.GetSize) },
@@ -37,18 +37,19 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, LinkedList<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer sizes)
 				{
 					return GetSize(instance as Array, sizes);
 				}
 
-				public int GetSize(Array array, LinkedList<int> sizes)
+				public int GetSize(Array array, QueueWithIndexer sizes)
 				{
 					if (array == null)
 						return MinDataSize;
 
 					// Get last node before get elements size
-					var lastNode = sizes.Last;
+					int sizeIndex = sizes.Count;
+					sizes.Enqueue(0);
 
 					int dataSize = MinDataSize + 1; // +1 byte for Rank - An array can have a maximum of 32 dimensions(MSDN)
 
@@ -61,16 +62,13 @@ public static partial class Spark
 
 					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 
-					if (lastNode == null)
-						sizes.AddFirst(size);
-					else
-						sizes.AddAfter(lastNode, size);
+					sizes[sizeIndex] = size;
 
 					return size;
 				}
 
 				protected abstract int GetElementsSize(Array array);
-				protected abstract int GetElementsSize(Array array, LinkedList<int> sizes);
+				protected abstract int GetElementsSize(Array array, QueueWithIndexer sizes);
 			}
 
 			//
@@ -101,7 +99,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, LinkedList<int> sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer sizes)
 				{
 					int size = 0;
 
@@ -163,7 +161,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, LinkedList<int> sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer sizes)
 				{
 					int size = 0;
 

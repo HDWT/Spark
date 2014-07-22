@@ -14,7 +14,7 @@ public static partial class Spark
 			if (type.IsValueType)
 			{
 				if (type == typeof(int))
-					return TypeHelper.Int.ReadObject;
+					return TypeHelper.IntType.ReadObject;
 
 				if (type == typeof(float))
 					return TypeHelper.Float.ReadObject;

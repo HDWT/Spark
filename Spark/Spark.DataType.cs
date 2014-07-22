@@ -210,7 +210,7 @@ public static partial class Spark
 		//		m_members[i].WriteValue(instance, data, ref startIndex);
 		//}
 
-		public void WriteValues(object instance, byte[] data, ref int startIndex, LinkedList<int> sizes)
+		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			for (int i = 0; i < m_members.Length; ++i)
 				m_members[i].WriteValue(instance, data, ref startIndex, sizes);
@@ -227,7 +227,7 @@ public static partial class Spark
 		//	return size;
 		//}
 
-		public int GetDataSize(object instance, LinkedList<int> sizes)
+		public int GetDataSize(object instance, QueueWithIndexer sizes)
 		{
 			int size = 0;
 
