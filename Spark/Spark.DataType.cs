@@ -63,20 +63,20 @@ public static partial class Spark
 				fieldType = EnumTypeHelper.GetUnderlyingType(fieldType);
 
 			if (fieldType == typeof(long))		return 0;
-			if (fieldType == typeof(double))	return 1;
-			if (fieldType == typeof(ulong))		return 2;
-			if (fieldType.IsClass)				return 3;
-			if (fieldType == typeof(int))		return 4;
-			if (fieldType == typeof(uint))		return 5;
-			if (fieldType == typeof(float))		return 6;
-			if (fieldType == typeof(short))		return 7;
-			if (fieldType == typeof(ushort))	return 8;
-			if (fieldType == typeof(char))		return 9;
-			if (fieldType == typeof(bool))		return 10;
-			if (fieldType == typeof(sbyte))		return 11;	
-			if (fieldType == typeof(byte))		return 12;
-			if (fieldType == typeof(decimal))	return 13;
-			if (fieldType == typeof(DateTime))	return 14;
+			if (fieldType == typeof(double))	return 0;
+			if (fieldType == typeof(ulong))		return 0;
+			if (fieldType.IsClass)				return 1;
+			if (fieldType == typeof(int))		return 2;
+			if (fieldType == typeof(uint))		return 2;
+			if (fieldType == typeof(float))		return 2;
+			if (fieldType == typeof(short))		return 3;
+			if (fieldType == typeof(ushort))	return 3;
+			if (fieldType == typeof(char))		return 3;
+			if (fieldType == typeof(bool))		return 4;
+			if (fieldType == typeof(sbyte))		return 4;	
+			if (fieldType == typeof(byte))		return 4;
+			if (fieldType == typeof(decimal))	return 5;
+			if (fieldType == typeof(DateTime))	return 6;
 			
 			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 		}
@@ -170,7 +170,12 @@ public static partial class Spark
 
 				// align decimal
 				if (field.FieldType == typeof(decimal))
-					valueFieldOffset += 4 - valueFieldOffset % 4;
+				{
+					int overhead = valueFieldOffset % 4;
+
+					if (overhead != 0)
+						valueFieldOffset += 4 - overhead;
+				}
 
 				if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
 					continue;
