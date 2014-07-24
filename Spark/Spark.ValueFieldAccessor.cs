@@ -7,6 +7,7 @@ public static partial class Spark
 	private struct ValueFieldAccessor
 	{
 		private const int MaxFieldSize = sizeof(decimal);
+		private static readonly int FieldOffset = IsMono ? 8 : 4;
 
 		[FieldOffset(0)]
 		public object instance;
@@ -21,7 +22,10 @@ public static partial class Spark
 		private class ArrayFields
 		{
 			[FieldOffset(0)]
-			public int length;
+			public int length0;
+
+			[FieldOffset(4)]
+			public int length4;
 
 			[FieldOffset(0)]
 			public byte byte1;
@@ -34,33 +38,58 @@ public static partial class Spark
 
 			[FieldOffset(3)]
 			public byte byte4;
+
+			[FieldOffset(4)]
+			public byte byte5;
+
+			[FieldOffset(5)]
+			public byte byte6;
+
+			[FieldOffset(6)]
+			public byte byte7;
+
+			[FieldOffset(7)]
+			public byte byte8;
 		}
 
 		public object Get(Type fieldType, int offset)
 		{
 			byte[] bytes = null;
+			int realLength = 0;
 
-			if (offset < 4)
+			if (offset < FieldOffset)
 			{
-				bytes = new byte[MaxFieldSize + 60];
+				bytes = new byte[MaxFieldSize];
 
 				bytes[0] = m_arrayFields.byte1;
 				bytes[1] = m_arrayFields.byte2;
 				bytes[2] = m_arrayFields.byte3;
 				bytes[3] = m_arrayFields.byte4;
+				bytes[4] = m_arrayFields.byte5;
+				bytes[5] = m_arrayFields.byte6;
+				bytes[6] = m_arrayFields.byte7;
+				bytes[7] = m_arrayFields.byte8;
 			}
 			else
 			{
-				offset -= 4;
+				offset -= FieldOffset;
 			}
 
-			var realLength = m_arrayFields.length;
-			m_arrayFields.length = offset + MaxFieldSize + 100;
+			if (IsMono)
+			{
+				realLength = m_arrayFields.length4;
+				m_arrayFields.length4 = offset + MaxFieldSize;
+			}
+			else
+			{
+				realLength = m_arrayFields.length0;
+				m_arrayFields.length0 = offset + MaxFieldSize;
+			}
 
 			if (bytes != null)
 			{
-				for (int i = 0; (i < m_arrayFields.length) && (i + 4 < bytes.Length); ++i)
-					bytes[i + 4] = m_bytes[i];
+				for (int i = 0; (i < m_arrayFields.length0) && (i + FieldOffset < bytes.Length); ++i)
+					bytes[i + FieldOffset] = m_bytes[i];
 			}
 			else
 			{
@@ -120,7 +149,12 @@ public static partial class Spark
 
 			else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 
-			m_arrayFields.length = realLength;
+			//
+			if (IsMono)
+				m_arrayFields.length4 = realLength;
+			else
+				m_arrayFields.length0 = realLength;
+
 			return toRet;
 		}
 	}

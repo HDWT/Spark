@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public static partial class Spark
 {
 	private const int IntPtrSize = 4; // x86
+	private static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
 
 	public static bool FullAot = true;
 
