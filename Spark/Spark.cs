@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
+	// Restriction: (MaxMemberId * InheritanceDepth - 1) < 32768
+	private const ushort MaxMemberId = 1024; // Zero-Based
+	private const ushort MaxInheritanceDepth = 32;
+
 	public static bool FullAot = false;
 
 	public static byte[] Serialize(object instance)

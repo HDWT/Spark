@@ -49,77 +49,6 @@ public static partial class Spark
 
 		public DataType(Type type)
 		{
-			FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-			PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-			List<IDataMember> members = new List<IDataMember>(fields.Length);
-
-			ushort memberId = 0;
-
-			foreach (var field in fields)
-			{
-				if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
-					continue;
-
-				foreach (var member in members)
-				{
-					if (member.Id == memberId)
-						throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId));
-				}
-
-				if (FullAot)
-				{
-					members.Add(new DataMember(memberId, field));
-				}
-				else
-				{
-					DataMemberGenericType[0] = field.FieldType;
-
-					Type specificType = typeof(DataMember<>).MakeGenericType(DataMemberGenericType);
-					ConstructorInfo constructor = specificType.GetConstructor(DataMemberConstructorParamTypes_IdField);
-
-					DataMemberConstructorParameters_IdType[0] = memberId;
-					DataMemberConstructorParameters_IdType[1] = field;
-
-					IDataMember dataMember = constructor.Invoke(DataMemberConstructorParameters_IdType) as IDataMember;
-
-					members.Add(dataMember);
-				}
-			}
-
-			foreach (var property in properties)
-			{
-				if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
-					continue;
-
-				foreach (var member in members)
-				{
-					if (member.Id == memberId)
-						throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId));
-				}
-
-				if (FullAot)
-				{
-					members.Add(new DataMember(memberId, property));
-				}
-				else
-				{
-					DataMemberGenericType[0] = property.PropertyType;
-
-					Type specificType = typeof(DataMember<>).MakeGenericType(DataMemberGenericType);
-					ConstructorInfo constructor = specificType.GetConstructor(DataMemberConstructorParamTypes_IdProperty);
-
-					DataMemberConstructorParameters_IdType[0] = memberId;
-					DataMemberConstructorParameters_IdType[1] = property;
-
-					IDataMember dataMember = constructor.Invoke(DataMemberConstructorParameters_IdType) as IDataMember;
-
-					members.Add(dataMember);
-				}
-			}
-
-			m_members = members.ToArray();
-
 			if (IsGenericList(type) || IsGenericDictionary(type))
 			{
 				ConstructorParameterType[0] = typeof(int);
@@ -131,7 +60,97 @@ public static partial class Spark
 			}
 
 			if (m_constructor == null)
-				throw new ArgumentException("Required default constructor for type '" + type + "'");
+				throw new ArgumentException(string.Format("Required default constructor for type '{0}'", type));
+
+			//
+			List<IDataMember> members = null;
+			int typeIndex = 0;
+
+			while (type != typeof(System.Object))
+			{
+				if (typeIndex > MaxInheritanceDepth)
+					throw new System.ArgumentException(string.Format("Max inheritance depth = {0}", MaxInheritanceDepth));
+
+				FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+				if (members == null)
+					members = new List<IDataMember>(fields.Length + properties.Length);
+
+				ushort memberId = 0;
+				int firstMemberOfThisType = members.Count;
+
+				foreach (var field in fields)
+				{
+					if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
+						continue;
+
+					memberId += (ushort)(typeIndex * MaxMemberId);
+
+					for (int i = firstMemberOfThisType; i < members.Count; ++i)
+					{
+						if (members[i].Id == memberId)
+							throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId % MaxMemberId));
+					}
+
+					if (FullAot)
+					{
+						members.Add(new DataMember(memberId, field));
+					}
+					else
+					{
+						DataMemberGenericType[0] = field.FieldType;
+
+						Type specificType = typeof(DataMember<>).MakeGenericType(DataMemberGenericType);
+						ConstructorInfo constructor = specificType.GetConstructor(DataMemberConstructorParamTypes_IdField);
+
+						DataMemberConstructorParameters_IdType[0] = memberId;
+						DataMemberConstructorParameters_IdType[1] = field;
+
+						IDataMember dataMember = constructor.Invoke(DataMemberConstructorParameters_IdType) as IDataMember;
+
+						members.Add(dataMember);
+					}
+				}
+
+				foreach (var property in properties)
+				{
+					if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
+						continue;
+
+					memberId += (ushort)(typeIndex * 1024);
+
+					for (int i = firstMemberOfThisType; i < members.Count; ++i)
+					{
+						if (members[i].Id == memberId)
+							throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} is already declared", type, memberId % MaxMemberId));
+					}
+
+					if (FullAot)
+					{
+						members.Add(new DataMember(memberId, property));
+					}
+					else
+					{
+						DataMemberGenericType[0] = property.PropertyType;
+
+						Type specificType = typeof(DataMember<>).MakeGenericType(DataMemberGenericType);
+						ConstructorInfo constructor = specificType.GetConstructor(DataMemberConstructorParamTypes_IdProperty);
+
+						DataMemberConstructorParameters_IdType[0] = memberId;
+						DataMemberConstructorParameters_IdType[1] = property;
+
+						IDataMember dataMember = constructor.Invoke(DataMemberConstructorParameters_IdType) as IDataMember;
+
+						members.Add(dataMember);
+					}
+				}
+
+				type = type.BaseType;
+				typeIndex++;
+			}
+
+			m_members = members.ToArray();
 		}
 
 		public object CreateInstance()
@@ -205,12 +224,6 @@ public static partial class Spark
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
-		//public void WriteValues(object instance, byte[] data, ref int startIndex)
-		//{
-		//	for (int i = 0; i < m_members.Length; ++i)
-		//		m_members[i].WriteValue(instance, data, ref startIndex);
-		//}
-
 		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			for (int i = 0; i < m_members.Length; ++i)
@@ -218,16 +231,6 @@ public static partial class Spark
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
-		//public int GetDataSize(object instance)
-		//{
-		//	int size = 0;
-
-		//	for (int i = 0; i < m_members.Length; ++i)
-		//		size += m_members[i].GetSize(instance);
-
-		//	return size;
-		//}
-
 		public int GetDataSize(object instance, QueueWithIndexer sizes)
 		{
 			int size = 0;

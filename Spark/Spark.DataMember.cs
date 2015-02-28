@@ -71,7 +71,6 @@ public static partial class Spark
 		private bool m_ignoreDataSizeBlock = false;
 
 		private Type m_type = null;
-		private ConstructorInfo m_constructor = null;
 
 		protected FieldInfo m_fieldInfo = null;
 		protected PropertyInfo m_propertyInfo = null;
@@ -80,8 +79,6 @@ public static partial class Spark
 		public bool IsField { get { return m_fieldInfo != null; } }
 		public bool IsProperty { get { return m_propertyInfo != null; } }
 
-		//protected readonly GetSizeDelegate getSize = null;
-		//protected readonly WriteValueDelegate writeData = null;
 		protected readonly ReadDataDelegate readData = null;
 
 		protected readonly DataWriter m_dataWriter = null;
@@ -107,7 +104,6 @@ public static partial class Spark
 			m_ignoreDataSizeBlock = ((typeFlags & TypeFlags.Value) == TypeFlags.Value) && (typeFlags != TypeFlags.Value);
 
 			m_type = type;
-			m_constructor = m_type.GetConstructor(Type.EmptyTypes);
 
 			if ((typeFlags & TypeFlags.Enum) == TypeFlags.Enum)
 				EnumTypeHelper.Instance.Register(type);
@@ -121,9 +117,6 @@ public static partial class Spark
 			m_dataWriter = isValueType
 				? new DataWriter(Writer.GetDelegateForValueType(type))
 				: new DataWriter(Writer.GetDelegateForReferenceType(type));
-
-			//getSize = SizeCalculator.Get(m_type);
-			//writeData = Writer.Get(m_type);
 
 			readData = Reader.Get(m_type);
 		}
@@ -142,27 +135,12 @@ public static partial class Spark
 				m_propertyInfo.SetValue(instance, value, null); // Indexer ??
 		}
 
-		//public virtual int GetSize(object instance)
-		//{
-		//	object value = GetValue(instance);
-
-		//	return HeaderSize + getSize(value);
-		//}
-
 		public virtual int GetSize(object instance, QueueWithIndexer sizes)
 		{
 			object value = GetValue(instance);
 
 			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
 		}
-
-		//public virtual void WriteValue(object instance, byte[] data, ref int startIndex)
-		//{
-		//	object value = GetValue(instance);
-
-		//	WriteHeader(data, ref startIndex);
-		//	writeData(value, data, ref startIndex, null);
-		//}
 
 		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
@@ -209,76 +187,63 @@ public static partial class Spark
 		public DataMember(ushort id, FieldInfo fieldInfo)
 			: base(id, fieldInfo)
 		{
-			DynamicMethod dynamicMethod = new DynamicMethod("DynamicGet_" + fieldInfo.Name, typeof(T), DynamicGetMethodParameters, typeof(DataMember<T>), true);
-
-			ILGenerator il = dynamicMethod.GetILGenerator();
-
-			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, fieldInfo);
-			il.Emit(OpCodes.Ret);
-
-			m_getValue = (DynamicGetValueDelegate)dynamicMethod.CreateDelegate(typeof(DynamicGetValueDelegate));
+			m_getValue = CreateGetMethod(fieldInfo);
+			m_setValue = CreateSetMethod(fieldInfo);
 		}
 
 		public DataMember(ushort id, PropertyInfo propertyInfo)
 			: base(id, propertyInfo)
 		{
 			m_getValue = CreateGetMethod(m_propertyInfo);
-			//m_setPropertyValue = CreateSetMethod(m_propertyInfo);
+			m_setValue = CreateSetMethod(m_propertyInfo);
+		}
+
+		private static DynamicGetValueDelegate CreateGetMethod(FieldInfo fieldInfo)
+		{
+			DynamicMethod dynamicMethod = new DynamicMethod("DynamicGet_" + fieldInfo.Name, typeof(T), DynamicGetMethodParameters, typeof(DataMember<T>), true);
+
+			ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
+
+			ilGenerator.Emit(OpCodes.Ldarg_0);
+			ilGenerator.Emit(OpCodes.Ldfld, fieldInfo);
+			ilGenerator.Emit(OpCodes.Ret);
+
+			return (DynamicGetValueDelegate)dynamicMethod.CreateDelegate(typeof(DynamicGetValueDelegate));
 		}
 
 		private static DynamicGetValueDelegate CreateGetMethod(PropertyInfo propertyInfo)
 		{
-			DynamicMethod getter = new DynamicMethod("DynamicGet_" + propertyInfo.Name, 
-				MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, 
-				typeof(T), DynamicGetMethodParameters, propertyInfo.DeclaringType, false);
+			DynamicMethod getter = new DynamicMethod("DynamicGet_" + propertyInfo.Name, typeof(T), DynamicGetMethodParameters, typeof(DataMember<T>), true);
 
-			ILGenerator getIL = getter.GetILGenerator();
-
-			//getIL.DeclareLocal(typeof(T));
-			getIL.Emit(OpCodes.Ldarg_0); //Load the first argument
-			//(target object)
-			//Cast to the source type
-			//getIL.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-
-
-			//Get the property value
-			getIL.EmitCall(OpCodes.Call, propertyInfo.GetGetMethod(), null);
-			//if (typeof(T).IsValueType)
-			//{
-			//	getIL.Emit(OpCodes.Box, typeof(T));
-			//	//Box if necessary
-			//}
-			//getIL.Emit(OpCodes.Stloc_0); //Store it
-
-			//getIL.Emit(OpCodes.Ldloc_0);
-			getIL.Emit(OpCodes.Ret);
-
-			/*
 			ILGenerator ilGenerator = getter.GetILGenerator();
 
-			ilGenerator.DeclareLocal(typeof(T));
 			ilGenerator.Emit(OpCodes.Ldarg_0);
+			ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
 
-			if (propertyInfo.ReflectedType.IsClass || propertyInfo.ReflectedType.IsInterface)
-				ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-			else
-				ilGenerator.Emit(OpCodes.Unbox, propertyInfo.ReflectedType);
-
-			//ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetGetMethod(), null);
-
-			//if (!propertyInfo.PropertyType.IsClass)
-			//	ilGenerator.Emit(OpCodes.Box, propertyInfo.PropertyType);
-
-			ilGenerator.Emit(OpCodes.Ret);*/
+			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetGetMethod(true), null);
+			ilGenerator.Emit(OpCodes.Ret);
 
 			return (DynamicGetValueDelegate)getter.CreateDelegate(typeof(DynamicGetValueDelegate));
 		}
 
+		private static DynamicSetValueDelegate CreateSetMethod(FieldInfo fieldInfo)
+		{
+			DynamicMethod setter = new DynamicMethod("DynamicSet_" + fieldInfo.Name, null, DynamicSetMethodParameters, typeof(DataMember<T>), true);
+
+			ILGenerator ilGenerator = setter.GetILGenerator();
+
+			ilGenerator.Emit(OpCodes.Ldarg_0);
+			ilGenerator.Emit(OpCodes.Ldarg_1);
+			ilGenerator.Emit(OpCodes.Stfld, fieldInfo);
+
+			ilGenerator.Emit(OpCodes.Ret);
+
+			return (DynamicSetValueDelegate)setter.CreateDelegate(typeof(DynamicSetValueDelegate));
+		}
+
 		private static DynamicSetValueDelegate CreateSetMethod(PropertyInfo propertyInfo)
 		{
-			DynamicMethod setter = new DynamicMethod("DynamicSet_" + propertyInfo.Name, typeof(void), DynamicSetMethodParameters, propertyInfo.DeclaringType);
+			DynamicMethod setter = new DynamicMethod("DynamicSet_" + propertyInfo.Name, null, DynamicSetMethodParameters, typeof(DataMember<T>), true);
 
 			ILGenerator ilGenerator = setter.GetILGenerator();
 
@@ -286,55 +251,30 @@ public static partial class Spark
 			ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
 			ilGenerator.Emit(OpCodes.Ldarg_1);
 
-			if (propertyInfo.PropertyType.IsClass)
-				ilGenerator.Emit(OpCodes.Castclass, propertyInfo.PropertyType);
-			else
-				ilGenerator.Emit(OpCodes.Unbox_Any, propertyInfo.PropertyType);
-
-			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetSetMethod(), null);
+			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetSetMethod(true), null);
 			ilGenerator.Emit(OpCodes.Ret);
 
 			return (DynamicSetValueDelegate)setter.CreateDelegate(typeof(DynamicSetValueDelegate));
 		}
 
-		//private T GetValue(object instance)
-		//{
-		//	return IsField ? m_getFieldValue(instance) : m_getPropertyValue(instance);
-
-		//	//return IsField ? m_getFieldValue(instance) : (T)m_propertyInfo.GetValue(instance, null); // Indexer ??
-		//}
-
-		//public override int GetSize(object instance)
-		//{
-		//	T value = m_getValue(instance);
-
-		//	return HeaderSize + getSize(value);
-		//}
-
 		public override int GetSize(object instance, QueueWithIndexer sizes)
 		{
-			//Stopwatch.Start();
 			T value = m_getValue(instance);
-			//object value = m_getValue(instance);
 
-			int size = HeaderSize + m_sizeGetter.GetSize(value, sizes);
-			//Stopwatch.Stop();
-
-			return size;
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
 		}
 
-		//public override void WriteValue(object instance, byte[] data, ref int startIndex)
-		//{
-		//	T value = m_getValue(instance);
-
-		//	WriteHeader(data, ref startIndex);
-		//	writeData(value, data, ref startIndex, null);
-		//}
+		public override void SetValue(object instance, object value)
+		{
+			if (m_setValue == null)
+				base.SetValue(instance, value);
+			else
+				m_setValue(instance, (T)value);
+		}
 
 		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
 			T value = m_getValue(instance);
-			//object value = m_getValue(instance);
 
 			WriteHeader(data, ref startIndex);
 			m_dataWriter.Write(value, data, ref startIndex, sizes);

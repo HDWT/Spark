@@ -31,8 +31,8 @@ public static partial class Spark
 
 			memberId = MemberAttribute.GetId(attributes[i]);
 
-			if (memberId >= 32768)
-				throw new System.ArgumentException("Member identifier must be less then 32768");
+			if (memberId >= MaxMemberId)
+				 throw new System.ArgumentException(string.Format("Member identifier must be less then {0}", MaxMemberId));
 
 			return true;
 		}
