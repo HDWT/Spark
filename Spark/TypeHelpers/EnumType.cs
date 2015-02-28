@@ -142,6 +142,7 @@ public static partial class Spark
 		private class Values<T> where T : IComparable<T>, IEquatable<T>
 		{
 			private readonly Dictionary<Type, EnumInfo> m_enumsInfo = new Dictionary<Type, EnumInfo>();
+			private static readonly object m_mutex = new object();
 
 			//private ITypeHelper<T> m_typeHelper = null;
 
@@ -193,7 +194,7 @@ public static partial class Spark
 
 			public void Register(Type enumType)
 			{
-				lock (m_enumsInfo)
+				lock (m_mutex)
 				{
 					if (m_enumsInfo.ContainsKey(enumType))
 						return;
@@ -210,7 +211,7 @@ public static partial class Spark
 
 				if (!m_enumsInfo.TryGetValue(enumType, out enumInfo))
 				{
-					lock (m_enumsInfo)
+					lock (m_mutex)
 					{
 						enumInfo = new EnumInfo(enumType, m_getSize);
 						m_enumsInfo[enumType] = enumInfo;

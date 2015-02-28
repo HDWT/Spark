@@ -70,6 +70,9 @@ public static partial class Spark
 				else if (IsGenericList(type))
 					writeDelegate = TypeHelper.List.GetDataWriter(type).WriteObject;
 
+				else if (IsGenericDictionary(type))
+					writeDelegate = TypeHelper.Dictionary.GetDataWriter(type).WriteObject;
+
 				else if (type.IsClass)
 					writeDelegate = TypeHelper.Object.GetDataWriter(type).WriteObject;
 

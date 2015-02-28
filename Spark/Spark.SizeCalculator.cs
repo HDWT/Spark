@@ -164,6 +164,9 @@ public static partial class Spark
 				else if (IsGenericList(type))
 					getSizeDelegate = TypeHelper.List.GetSizeGetter(type).GetObjectSize;
 
+				else if (IsGenericDictionary(type))
+					getSizeDelegate = TypeHelper.Dictionary.GetSizeGetter(type).GetObjectSize;
+
 				else if (type.IsClass)
 					getSizeDelegate = TypeHelper.Object.GetSizeGetter(type).GetObjectSize;
 

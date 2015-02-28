@@ -42,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReferenceTypeHelpers\DictionaryType.cs" />
+    <Compile Include="ReferenceTypeHelpers\DictionaryType.SizeGetter.cs" />
+    <Compile Include="ReferenceTypeHelpers\DictionaryType.Writer.cs" />
     <Compile Include="ReferenceTypeHelpers\StringType.SizeGetter.cs" />
     <Compile Include="ReferenceTypeHelpers\StringType.Writer.cs" />
     <Compile Include="Spark.Attributes.cs" />

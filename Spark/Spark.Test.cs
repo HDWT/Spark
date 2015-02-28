@@ -30,9 +30,10 @@ public static partial class Spark
 
 		public static void Run()
 		{
-			TestSingle();
-			TestArray();
-			TestList();
+			//TestSingle();
+			//TestArray();
+			//TestList();
+			TestDictionary();
 
 			TestGenericClass();
 		}
@@ -134,6 +135,13 @@ public static partial class Spark
 			}
 		}
 
+		public static void TestDictionary()
+		{
+			TestDictionary<bool, int>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomByte, () => { return (int)GetRandomDouble(); }));
+			TestDictionary<string, int>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomString, () => { return (int)GetRandomDouble(); }));
+			TestDictionary<decimal, string>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomDecimal, GetRandomString));
+		}
+
 		private static void TestGenericClass()
 		{
 			byte[] data = Serialize(new GenericValue<int>(10));
@@ -221,6 +229,46 @@ public static partial class Spark
 			}
 		}
 
+		private static void TestDictionary<TKey, TValue>(Dictionary<TKey, TValue> dictionary)
+			where TKey : IComparable<TKey>
+			where TValue : IComparable<TValue>
+		{
+			byte[] data = Serialize(dictionary);
+			Dictionary<TKey, TValue> newDictionary = Deserialize<Dictionary<TKey, TValue>>(data);
+
+			if (dictionary == null && newDictionary == null)
+				return;
+
+			Console.WriteLine(string.Format("{0} / {1} / {2}", dictionary.Count, newDictionary.Count, data.Length));
+
+			if (dictionary.Count != newDictionary.Count)
+				throw new InvalidProgramException(string.Format("Test {0} fail: size {1} / {2} expected", typeof(Dictionary<TKey, TValue>), newDictionary.Count, dictionary.Count));
+
+			//
+			TKey[] keys = new TKey[dictionary.Count];
+			TValue[] values = new TValue[dictionary.Count];
+
+			dictionary.Keys.CopyTo(keys, 0);
+			dictionary.Values.CopyTo(values, 0);
+
+			//
+			TKey[] newKeys = new TKey[newDictionary.Count];
+			TValue[] newValues = new TValue[newDictionary.Count];
+
+			newDictionary.Keys.CopyTo(newKeys, 0);
+			newDictionary.Values.CopyTo(newValues, 0);
+
+			//
+			for (int i = 0; i < dictionary.Count; ++i)
+			{
+				if (keys[i].CompareTo(newKeys[i]) != 0)
+					throw new InvalidProgramException(string.Format("Test {0} fail: key {1} / {2} expected", typeof(Dictionary<TKey, TValue>), newKeys[i], keys[i]));
+
+				if (values[i].CompareTo(newValues[i])!= 0)
+					throw new InvalidProgramException(string.Format("Test {0} fail: value {1} / {2} expected", typeof(Dictionary<TKey, TValue>), newValues[i], values[i]));
+			}
+		}
+
 		private static T[] GetArrayWithRandomValues<T>(int size, Func<T> getRandomValue)
 		{
 			T[] array = new T[size];
@@ -239,6 +287,21 @@ public static partial class Spark
 				list.Add(getRandomValue());
 
 			return list;
+		}
+
+		private static Dictionary<TKey, TValue> GetDictionaryWithRandomValues<TKey, TValue>(int size, Func<TKey> getRandomKey, Func<TValue> getRandomValue)
+		{
+			Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
+
+			for (int i = 0; i < size; ++i)
+				dictionary[getRandomKey()] = getRandomValue();
+
+			return dictionary;
+		}
+
+		private static bool GetRandomByte()
+		{
+			return random.Next() % 2 > 0;
 		}
 
 		private static double GetRandomDouble()

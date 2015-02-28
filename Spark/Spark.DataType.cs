@@ -17,17 +17,18 @@ public static partial class Spark
 		private static readonly object[] DataMemberConstructorParameters_IdType = new object[2];
 
 		private static readonly Dictionary<Type, DataType> s_dataTypes = new Dictionary<Type, DataType>(16);
-
+		private static readonly object m_mutex = new object();
+		
 		private readonly IDataMember[] m_members = null;
 		private readonly ConstructorInfo m_constructor = null;
-
+		
 		public static DataType Get(Type type)
 		{
 			DataType dataType = null;
 
 			if (!s_dataTypes.TryGetValue(type, out dataType))
 			{
-				lock (s_dataTypes)
+				lock (m_mutex)
 				{
 					dataType = new DataType(type);
 					s_dataTypes[type] = dataType;
@@ -39,7 +40,7 @@ public static partial class Spark
 
 		public static void Register(Type type)
 		{
-			lock (s_dataTypes)
+			lock (m_mutex)
 			{
 				if (!s_dataTypes.ContainsKey(type))
 					s_dataTypes[type] = new DataType(type);
@@ -119,14 +120,14 @@ public static partial class Spark
 
 			m_members = members.ToArray();
 
-			if (IsGenericList(type))
+			if (IsGenericList(type) || IsGenericDictionary(type))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);
 			}
 			else
 			{
-				m_constructor = type.GetConstructor(Type.EmptyTypes);
+				m_constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
 			}
 
 			if (m_constructor == null)

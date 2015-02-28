@@ -85,9 +85,10 @@ public static partial class Spark
 		Enum		= 1 << 10 | Value,
 		Array		= 1 << 11 | Reference,
 		List		= 1 << 12 | Reference,
+		Dictionary	= 1 << 13 | Reference,
 
-		String		= 1 << 13 | Basic | Reference,
-		DateTime	= 1 << 14 | Basic | Value,
+		String		= 1 << 15 | Basic | Reference,
+		DateTime	= 1 << 16 | Basic | Value,
 
 		Bool		= 1 << 19 | Basic | Value,
 		Byte		= 1 << 20 | Basic | Value,
@@ -154,6 +155,9 @@ public static partial class Spark
 		if (IsGenericList(type))
 			return TypeFlags.List;
 
+		if (IsGenericDictionary(type))
+			return TypeFlags.Dictionary;
+
 		Type baseType = type.BaseType;
 
 		if (baseType != null)
@@ -171,5 +175,10 @@ public static partial class Spark
 	private static bool IsGenericList(Type type)
 	{
 		return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>));
+	}
+
+	private static bool IsGenericDictionary(Type type)
+	{
+		return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>));
 	}
 }

@@ -70,6 +70,9 @@ public static partial class Spark
 			if (IsGenericList(type))
 				return TypeHelper.List.ReadObject;
 
+			if (IsGenericDictionary(type))
+				return TypeHelper.Dictionary.ReadObject;
+
 			if (type.IsClass)
 				return TypeHelper.Object.ReadObject;
 
