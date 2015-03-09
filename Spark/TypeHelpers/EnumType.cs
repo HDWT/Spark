@@ -151,6 +151,7 @@ public static partial class Spark
 				private Array	m_values			= null;
 				private T[]		m_underlyingValues	= null;
 				private int[]	m_sizes				= null;
+				private bool	m_flags				= false;
 
 				public EnumInfo(Type enumType, GetSizeDelegate getSize)
 				{
@@ -158,6 +159,15 @@ public static partial class Spark
 
 					m_underlyingValues = new T[m_values.Length];
 					m_sizes = new int[m_values.Length];
+
+					foreach (var attribute in enumType.GetCustomAttributes(false))
+					{
+						if (attribute.GetType() == typeof(System.FlagsAttribute))
+						{
+							m_flags = true;
+							break;
+						}
+					}
 
 					int index = 0;
 					foreach (T value in m_values)
@@ -171,10 +181,17 @@ public static partial class Spark
 
 				public object GetValue(T underlyingValue)
 				{
-					for (int index = 0; index < m_underlyingValues.Length; ++index)
+					if (m_flags)
 					{
-						if (m_underlyingValues[index].CompareTo(underlyingValue) == 0)
-							return m_values.GetValue(index);
+						return underlyingValue;
+					}
+					else
+					{
+						for (int index = 0; index < m_underlyingValues.Length; ++index)
+						{
+							if (m_underlyingValues[index].CompareTo(underlyingValue) == 0)
+								return m_values.GetValue(index);
+						}
 					}
 
 					return m_values.GetValue(0);

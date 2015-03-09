@@ -28,11 +28,20 @@ public static partial class Spark
 			AlphaChanel = 1000000,
 		}
 
+		[System.Flags]
+		private enum EFlag
+		{
+			Flag1 = 1 << 0,
+			Flag2 = 1 << 1,
+			Flag3 = 1 << 2,
+			Flag4 = 1 << 3,
+		}
+
 		public static void Run()
 		{
-			//TestSingle();
-			//TestArray();
-			//TestList();
+			TestSingle();
+			TestArray();
+			TestList();
 			TestDictionary();
 
 			TestGenericClass();
@@ -80,6 +89,8 @@ public static partial class Spark
 
 			foreach (Color color in Enum.GetValues(typeof(Color)))
 				TestValues<Color>((lhs, rhs) => { return lhs == rhs; }, color);
+
+			TestEnumFlags();
 
 			for (int i = 0; i < sizeof(long) * 8; ++i)
 				TestValues<DateTime>((lhs, rhs) => { return lhs == rhs; }, new DateTime((long)(DateTime.MaxValue.Ticks >> i)));
@@ -193,6 +204,18 @@ public static partial class Spark
 				if (!comparer(value, newValue))
 					throw new InvalidProgramException("Test " + typeof(T) + " fail: " + newValue + " / " + value + " expected");
 			}
+		}
+
+		private static void TestEnumFlags()
+		{
+			EFlag flags = EFlag.Flag1 | EFlag.Flag2 | EFlag.Flag3;
+
+			byte[] bytes = Spark.Serialize(flags);
+
+			EFlag result = Spark.Deserialize<EFlag>(bytes);
+
+			if (result != flags)
+				throw new InvalidProgramException("Test " + typeof(EFlag) + " fail: " + result + " / " + flags + " expected");
 		}
 
 		private static void TestArray<T>(System.Func<T, T, bool> elementComparer, T[] array)
