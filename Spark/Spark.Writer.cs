@@ -73,7 +73,7 @@ public static partial class Spark
 				else if (IsGenericDictionary(type))
 					writeDelegate = TypeHelper.Dictionary.GetDataWriter(type).WriteObject;
 
-				else if (type.IsClass)
+				else if (type.IsClass || type.IsInterface)
 					writeDelegate = TypeHelper.Object.GetDataWriter(type).WriteObject;
 
 				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

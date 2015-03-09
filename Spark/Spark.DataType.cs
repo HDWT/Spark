@@ -47,9 +47,27 @@ public static partial class Spark
 			}
 		}
 
+		private Type m_type = null;
+		private byte m_typeId = 0;
+		private List<TypeId> m_assignableTypes = null;
+
 		public DataType(Type type)
 		{
-			if (IsGenericList(type) || IsGenericDictionary(type))
+			m_type = type;
+			m_typeId = GetTypeId(type);
+
+			m_assignableTypes = TryGetAsAttributeParams(type.GetCustomAttributes(false));
+
+			if (m_assignableTypes != null)
+			{
+				for (int i = 0; i < m_assignableTypes.Count; ++i)
+				{
+					if (!type.IsAssignableFrom(m_assignableTypes[i].Type))
+						throw new ArgumentException(string.Format("Type '{0}' is not assignable from {1}", type, m_assignableTypes[i].Type));
+				}
+			}
+
+			if ((m_assignableTypes == null) && (IsGenericList(type) || IsGenericDictionary(type)))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);
@@ -59,16 +77,16 @@ public static partial class Spark
 				m_constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
 			}
 
-			if (m_constructor == null)
+			if ((m_constructor == null) && (m_assignableTypes == null))
 				throw new ArgumentException(string.Format("Required default constructor for type '{0}'", type));
 
 			//
 			List<IDataMember> members = null;
-			int typeIndex = 0;
+			int inheritanceDepth = 0;
 
-			while (type != typeof(System.Object))
+			while (type != null && type != typeof(System.Object))
 			{
-				if (typeIndex > MaxInheritanceDepth)
+				if (inheritanceDepth > MaxInheritanceDepth)
 					throw new System.ArgumentException(string.Format("Max inheritance depth = {0}", MaxInheritanceDepth));
 
 				FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -85,7 +103,7 @@ public static partial class Spark
 					if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
 						continue;
 
-					memberId += (ushort)(typeIndex * MaxMemberId);
+					memberId += (ushort)(inheritanceDepth * MaxMemberId);
 
 					for (int i = firstMemberOfThisType; i < members.Count; ++i)
 					{
@@ -118,7 +136,7 @@ public static partial class Spark
 					if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
 						continue;
 
-					memberId += (ushort)(typeIndex * 1024);
+					memberId += (ushort)(inheritanceDepth * 1024);
 
 					for (int i = firstMemberOfThisType; i < members.Count; ++i)
 					{
@@ -147,15 +165,31 @@ public static partial class Spark
 				}
 
 				type = type.BaseType;
-				typeIndex++;
+				inheritanceDepth++;
 			}
 
 			m_members = members.ToArray();
 		}
 
-		public object CreateInstance()
+		public bool TryCreateInstance(byte typeId, out object instance)
 		{
-			return m_constructor.Invoke(null);
+			if (typeId == 0)
+			{
+				if (m_constructor == null)
+					throw new ArgumentException(string.Format("Required default constructor for type '{0}'", m_type));
+
+				instance = m_constructor.Invoke(null);
+				return true;
+			}
+
+			for (int i = 0; i < m_assignableTypes.Count; ++i)
+			{
+				if (m_assignableTypes[i].Id == typeId)
+					return m_assignableTypes[i].GetDataType().TryCreateInstance(0, out instance);
+			}
+
+			instance = null;
+			return false; // m_constructor.Invoke(null);
 		}
 
 		public object CreateInstance(object parameter)
@@ -171,6 +205,28 @@ public static partial class Spark
 		{
 			if (endIndex < startIndex)
 				throw new ArgumentException(string.Format("Read values failed. StartIndex = {0}, EndIndex = {1}", startIndex, endIndex));
+
+			byte typeId = data[startIndex++];
+
+			if (typeId != 0)
+			{
+				if (m_assignableTypes != null)
+				{
+					for (int i = 0; i < m_assignableTypes.Count; ++i)
+					{
+						if (m_assignableTypes[i].Id != typeId)
+							continue;
+						
+						data[--startIndex] = 0; // Полиморфизм. Читаем поля в другой класс
+
+						m_assignableTypes[i].GetDataType().ReadValues(instance, data, ref startIndex, endIndex);
+						return;
+					}
+				}
+
+				startIndex = endIndex;
+				return;
+			}
 
 			while (startIndex != endIndex)
 			{
@@ -226,6 +282,25 @@ public static partial class Spark
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
 		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
 		{
+			if (m_assignableTypes != null)
+			{
+				Type instanceType = instance.GetType();
+
+				if (instanceType != m_type)
+				{
+					for (int i = 0; i < m_assignableTypes.Count; ++i)
+					{
+						if (m_assignableTypes[i].Type != instanceType)
+							continue;
+
+						m_assignableTypes[i].GetDataType().WriteValues(instance, data, ref startIndex, sizes);
+						return;
+					}
+				}
+			}
+
+			data[startIndex++] = m_typeId;
+
 			for (int i = 0; i < m_members.Length; ++i)
 				m_members[i].WriteValue(instance, data, ref startIndex, sizes);
 		}
@@ -233,7 +308,23 @@ public static partial class Spark
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
 		public int GetDataSize(object instance, QueueWithIndexer sizes)
 		{
-			int size = 0;
+			if (m_assignableTypes != null)
+			{
+				Type instanceType = instance.GetType();
+
+				if (instanceType != m_type)
+				{
+					for (int i = 0; i < m_assignableTypes.Count; ++i)
+					{
+						if (m_assignableTypes[i].Type != instanceType)
+							continue;
+
+						return m_assignableTypes[i].GetDataType().GetDataSize(instance, sizes);
+					}
+				}
+			}
+
+			int size = sizeof(byte); // Один байт для опредения полиморфизма
 
 			for (int i = 0; i < m_members.Length; ++i)
 				size += m_members[i].GetSize(instance, sizes);

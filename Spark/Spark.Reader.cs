@@ -73,7 +73,7 @@ public static partial class Spark
 			if (IsGenericDictionary(type))
 				return TypeHelper.Dictionary.ReadObject;
 
-			if (type.IsClass)
+			if (type.IsClass || type.IsInterface)
 				return TypeHelper.Object.ReadObject;
 
 			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

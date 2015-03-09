@@ -54,12 +54,14 @@ public static partial class Spark
 
 				// Создаем новый экземпляр класса
 				DataType dataType = DataType.Get(type);
+				object newInstance = null;
 
-				var value = dataType.CreateInstance();
+				if (dataType.TryCreateInstance(data[startIndex], out newInstance))
+					dataType.ReadValues(newInstance, data, ref startIndex, index + dataSize); // Читаем все поля класса
+				else
+					startIndex = index + dataSize; // Класс с таким ID не найден
 
-				// Читаем все поля класса
-				dataType.ReadValues(value, data, ref startIndex, index + dataSize);
-				return value;
+				return newInstance;
 			}
 
 			//
@@ -67,7 +69,6 @@ public static partial class Spark
 			{
 				throw new NotImplementedException();
 			}
-
 		}
 	}
 }

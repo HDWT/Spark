@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 public static partial class Spark
@@ -32,12 +33,125 @@ public static partial class Spark
 			memberId = MemberAttribute.GetId(attributes[i]);
 
 			if (memberId >= MaxMemberId)
-				 throw new System.ArgumentException(string.Format("Member identifier must be less then {0}", MaxMemberId));
+				 throw new System.ArgumentException(string.Format("Member identifier must be less than {0}", MaxMemberId));
 
 			return true;
 		}
 
 		memberId = 0;
 		return false;
+	}
+
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
+	public class AsAttribute : Attribute
+	{
+		public readonly byte Id = 0;
+		public readonly System.Type Type = null;
+
+		public AsAttribute(byte identifier, System.Type type)
+		{
+			this.Id = identifier;
+			this.Type = type;
+		}
+
+		private static FieldInfo s_idField = typeof(AsAttribute).GetField("Id");
+		public static byte GetId(object obj)
+		{
+			return (byte)s_idField.GetValue(obj);
+		}
+
+		private static FieldInfo s_typeField = typeof(AsAttribute).GetField("Type");
+		public static System.Type GetType(object obj)
+		{
+			return (System.Type)s_typeField.GetValue(obj);
+		}
+	}
+
+	private class TypeId
+	{
+		public byte Id { get; private set; }
+		public System.Type Type { get; private set; }
+
+		private DataType m_dataType = null;
+
+		public TypeId(byte id, System.Type type)
+		{
+			this.Id = id;
+			this.Type = type;
+		}
+
+		public DataType GetDataType()
+		{
+			if (m_dataType == null)
+				m_dataType = DataType.Get(this.Type);
+
+			return m_dataType;
+		}
+	}
+
+	private static byte GetTypeId(Type type)
+	{
+		byte id = 0;
+		
+		Type currentType = type;
+		Type[] interfaces = type.GetInterfaces();
+
+		for (int index = -1; index < interfaces.Length; ++index)
+		{
+			if (index >= 0)
+				currentType = interfaces[index];
+
+			object[] attributes = currentType.GetCustomAttributes(index < 0);
+
+			for (int i = 0; i < attributes.Length; ++i)
+			{
+				Type attributeType = attributes[i].GetType();
+
+				if (attributeType != typeof(AsAttribute))
+					continue;
+
+				byte typeId = AsAttribute.GetId(attributes[i]);
+				System.Type classType = AsAttribute.GetType(attributes[i]);
+
+				if (typeId == 0)
+					throw new System.ArgumentException("Type identifier must be greater than 0");
+
+				if (type == classType)
+				{
+					if (id != 0)
+						throw new System.ArgumentException(string.Format("Type identifier declared more than once for type {0}", type));
+
+					id = typeId;
+				}
+			}
+		}
+
+		return id;
+	}
+
+	private static List<TypeId> TryGetAsAttributeParams(object[] attributes)
+	{
+		List<TypeId> attributeParams = null;
+
+		for (int i = 0; i < attributes.Length; ++i)
+		{
+			Type attributeType = attributes[i].GetType();
+
+			if (attributeType != typeof(AsAttribute))
+				continue;
+
+			if (attributeParams == null)
+				attributeParams = new List<TypeId>();
+
+			byte typeId = AsAttribute.GetId(attributes[i]);
+			System.Type classType = AsAttribute.GetType(attributes[i]);
+
+			if (typeId == 0)
+				throw new System.ArgumentException("Type identifier must be greater than 0");
+
+			attributeParams.Add(new TypeId(typeId, classType));
+		}
+
+		return attributeParams;
 	}
 }

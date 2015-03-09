@@ -167,7 +167,7 @@ public static partial class Spark
 				else if (IsGenericDictionary(type))
 					getSizeDelegate = TypeHelper.Dictionary.GetSizeGetter(type).GetObjectSize;
 
-				else if (type.IsClass)
+				else if (type.IsClass || type.IsInterface)
 					getSizeDelegate = TypeHelper.Object.GetSizeGetter(type).GetObjectSize;
 
 				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

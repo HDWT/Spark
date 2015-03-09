@@ -7,7 +7,7 @@ public static partial class Spark
 	private const ushort MaxMemberId = 1024; // Zero-Based
 	private const ushort MaxInheritanceDepth = 32;
 
-	public static bool FullAot = false;
+	public static bool FullAot = true;
 
 	public static byte[] Serialize(object instance)
 	{
@@ -66,11 +66,15 @@ public static partial class Spark
 		if ((typeFlags == TypeFlags.Reference) || (typeFlags == TypeFlags.Value))
 		{
 			DataType dataType = DataType.Get(type);
+			object newInstance = null;
 
-			T instance = (T)dataType.CreateInstance();
+			if (dataType.TryCreateInstance(data[index], out newInstance))
+				dataType.ReadValues(newInstance, data, ref index, data.Length);
 
-			dataType.ReadValues(instance, data, ref index, data.Length);
-			return instance;
+			if (typeFlags == TypeFlags.Reference)
+				return (newInstance != null) ? (T)newInstance : default(T);
+
+			return (T)newInstance;
 		}
 		else
 		{
