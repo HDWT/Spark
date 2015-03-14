@@ -37,12 +37,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					return GetSize(instance as Array, sizes);
+					return GetSize(instance as Array, sizes, values);
 				}
 
-				public int GetSize(Array array, QueueWithIndexer<int> sizes)
+				public int GetSize(Array array, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (array == null)
 						return MinDataSize;
@@ -55,7 +55,7 @@ public static partial class Spark
 
 					dataSize += (m_isValueType)
 						? GetElementsSize(array)
-						: GetElementsSize(array, sizes);
+						: GetElementsSize(array, sizes, values);
 
 					for (int i = 0; i < array.Rank; ++i)
 						dataSize += 1 + SizeCalculator.GetMinSize(array.GetLength(i));
@@ -68,7 +68,7 @@ public static partial class Spark
 				}
 
 				protected abstract int GetElementsSize(Array array);
-				protected abstract int GetElementsSize(Array array, QueueWithIndexer<int> sizes);
+				protected abstract int GetElementsSize(Array array, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 			}
 
 			//
@@ -99,12 +99,12 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					int size = 0;
 
 					foreach (var item in array)
-						size += m_getReferenceSize(item, sizes);
+						size += m_getReferenceSize(item, sizes, values);
 
 					return size;
 				}
@@ -161,7 +161,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					int size = 0;
 
@@ -169,22 +169,22 @@ public static partial class Spark
 					{
 						case 1:
 							foreach (T item in (T[])array)
-								size += m_getReferenceSize(item, sizes);
+								size += m_getReferenceSize(item, sizes, values);
 							break;
 
 						case 2:
 							foreach (T item in (T[,])array)
-								size += m_getReferenceSize(item, sizes);
+								size += m_getReferenceSize(item, sizes, values);
 							break;
 
 						case 3:
 							foreach (T item in (T[, ,])array)
-								size += m_getReferenceSize(item, sizes);
+								size += m_getReferenceSize(item, sizes, values);
 							break;
 
 						case 4:
 							foreach (T item in (T[, , ,])array)
-								size += m_getReferenceSize(item, sizes);
+								size += m_getReferenceSize(item, sizes, values);
 							break;
 
 						default:

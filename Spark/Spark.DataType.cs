@@ -303,7 +303,7 @@ public static partial class Spark
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
-		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			if (m_assignableTypes != null)
 			{
@@ -316,7 +316,7 @@ public static partial class Spark
 						if (m_assignableTypes[i].Type != instanceType)
 							continue;
 
-						m_assignableTypes[i].GetDataType().WriteValues(instance, data, ref startIndex, sizes);
+						m_assignableTypes[i].GetDataType().WriteValues(instance, data, ref startIndex, sizes, values);
 						return;
 					}
 				}
@@ -325,11 +325,11 @@ public static partial class Spark
 			data[startIndex++] = m_typeId;
 
 			for (int i = 0; i < m_members.Length; ++i)
-				m_members[i].WriteValue(instance, data, ref startIndex, sizes);
+				m_members[i].WriteValue(instance, data, ref startIndex, sizes, values);
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
-		public int GetDataSize(object instance, QueueWithIndexer<int> sizes)
+		public int GetDataSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			if (m_assignableTypes != null)
 			{
@@ -342,7 +342,7 @@ public static partial class Spark
 						if (m_assignableTypes[i].Type != instanceType)
 							continue;
 
-						return m_assignableTypes[i].GetDataType().GetDataSize(instance, sizes);
+						return m_assignableTypes[i].GetDataType().GetDataSize(instance, sizes, values);
 					}
 				}
 			}
@@ -350,7 +350,7 @@ public static partial class Spark
 			int size = sizeof(byte); // Один байт для опредения полиморфизма
 
 			for (int i = 0; i < m_members.Length; ++i)
-				size += m_members[i].GetSize(instance, sizes);
+				size += m_members[i].GetSize(instance, sizes, values);
 
 			return size;
 		}

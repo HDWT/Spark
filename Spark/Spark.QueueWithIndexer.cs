@@ -20,6 +20,7 @@ public static partial class Spark
 		private int m_lastIndexInArray = 0;
 
 		private int m_count = 0;
+		private int m_capacity = 0;
 
 		public QueueWithIndexer()
 		{
@@ -34,6 +35,11 @@ public static partial class Spark
 		public int Count
 		{
 			get { return m_count; }
+		}
+
+		public int Capacity
+		{
+			get { return m_capacity; }// m_list.Count* ArraySize; }
 		}
 
 		public T this[int index]
@@ -68,6 +74,7 @@ public static partial class Spark
 			}
 
 			m_count++;
+			m_capacity++;
 		}
 
 		public T Dequeue()

@@ -4,6 +4,10 @@ using System.Reflection;
 
 public static partial class Spark
 {
+	// Restriction: (MaxMemberId * InheritanceDepth - 1) < 32768
+	private const ushort MaxMemberId = 1024;
+	private const ushort MaxInheritanceDepth = 32;
+
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class MemberAttribute : Attribute
 	{

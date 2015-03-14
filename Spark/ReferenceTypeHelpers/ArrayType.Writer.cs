@@ -37,12 +37,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					Write(instance as Array, data, ref startIndex, sizes);
+					Write(instance as Array, data, ref startIndex, sizes, values);
 				}
 
-				public void Write(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void Write(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (array == null)
 					{
@@ -81,22 +81,14 @@ public static partial class Spark
 						}
 					}
 
-					
-
 					if (m_isValueType)
-					{
-						//Stopwatch.Start();
 						WriteValue(array, data, ref startIndex);
-						//Stopwatch.Stop();
-					}
 					else
-						WriteReference(array, data, ref startIndex, sizes);
-
-					
+						WriteReference(array, data, ref startIndex, sizes, values);
 				}
 
 				protected abstract void WriteValue(Array array, byte[] data, ref int startIndex);
-				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
+				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 			}
 
 			//
@@ -123,10 +115,10 @@ public static partial class Spark
 						m_writeValue(item, data, ref startIndex);
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					foreach (var item in array)
-						m_writeReference(item, data, ref startIndex, sizes);
+						m_writeReference(item, data, ref startIndex, sizes, values);
 				}
 			}
 
@@ -153,14 +145,8 @@ public static partial class Spark
 					switch (array.Rank)
 					{
 						case 1:
-							T[] anArray = (T[])array;
-
-							foreach (var item in anArray)
-							{
-								//Stopwatch.Start();
+							foreach (var item in (T[])array)
 								m_writeValue(item, data, ref startIndex);
-								//Stopwatch.Stop();
-							}
 							break;
 
 						case 2:
@@ -183,28 +169,28 @@ public static partial class Spark
 					}
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					switch (array.Rank)
 					{
 						case 1:
 							foreach (var item in (T[])array)
-								m_writeReference(item, data, ref startIndex, sizes);
+								m_writeReference(item, data, ref startIndex, sizes, values);
 							break;
 
 						case 2:
 							foreach (var item in (T[,])array)
-								m_writeReference(item, data, ref startIndex, sizes);
+								m_writeReference(item, data, ref startIndex, sizes, values);
 							break;
 
 						case 3:
 							foreach (var item in (T[, ,])array)
-								m_writeReference(item, data, ref startIndex, sizes);
+								m_writeReference(item, data, ref startIndex, sizes, values);
 							break;
 
 						case 4:
 							foreach (var item in (T[, , ,])array)
-								m_writeReference(item, data, ref startIndex, sizes);
+								m_writeReference(item, data, ref startIndex, sizes, values);
 							break;
 
 						default:

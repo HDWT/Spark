@@ -18,7 +18,7 @@ public static partial class Spark
 					m_dataType = DataType.Get(objectType);
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (instance == null)
 						return MinDataSize;
@@ -26,7 +26,7 @@ public static partial class Spark
 					int sizeIndex = sizes.Count;
 					sizes.Enqueue(0);
 
-					int dataSize = MinDataSize + m_dataType.GetDataSize(instance, sizes);
+					int dataSize = MinDataSize + m_dataType.GetDataSize(instance, sizes, values);
 					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 
 					sizes[sizeIndex] = size;
@@ -34,9 +34,9 @@ public static partial class Spark
 					return size;
 				}
 
-				public int GetSize(object value, QueueWithIndexer<int> sizes)
+				public int GetSize(object value, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					return GetObjectSize(value, sizes);
+					return GetObjectSize(value, sizes, values);
 				}
 			}
 		}

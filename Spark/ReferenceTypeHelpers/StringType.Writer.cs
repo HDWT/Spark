@@ -9,12 +9,12 @@ public static partial class Spark
 		{
 			private class DataWriter : IDataWriter<string>
 			{
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					Write(instance as string, data, ref startIndex, sizes);
+					Write(instance as string, data, ref startIndex, sizes, values);
 				}
 
-				public void Write(string aString, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void Write(string aString, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (aString == null)
 					{
@@ -22,7 +22,7 @@ public static partial class Spark
 						return;
 					}
 
-					int dataSize = s_sizeGetter.GetSize(aString, sizes);
+					int dataSize = s_sizeGetter.GetSize(aString, sizes, values);
 					byte dataSizeBlock = SizeCalculator.GetMinSize(dataSize);
 
 					// Сколько байт занимает поле dataSize

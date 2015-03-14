@@ -38,12 +38,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					Write(instance as IList, data, ref startIndex, sizes);
+					Write(instance as IList, data, ref startIndex, sizes, values);
 				}
 
-				public void Write(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void Write(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (list == null)
 					{
@@ -80,11 +80,11 @@ public static partial class Spark
 					if (m_isValueType)
 						WriteValue(list, data, ref startIndex);
 					else
-						WriteReference(list, data, ref startIndex, sizes);
+						WriteReference(list, data, ref startIndex, sizes, values);
 				}
 
 				protected abstract void WriteValue(IList list, byte[] data, ref int startIndex);
-				protected abstract void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
+				protected abstract void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 			}
 
 			//
@@ -111,10 +111,10 @@ public static partial class Spark
 						m_writeValue(list[i], data, ref startIndex);
 				}
 
-				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					for (int i = 0; i < list.Count; ++i)
-						m_writeReference(list[i], data, ref startIndex, sizes);
+						m_writeReference(list[i], data, ref startIndex, sizes, values);
 				}
 			}
 
@@ -144,12 +144,12 @@ public static partial class Spark
 						m_writeValue(theList[i], data, ref startIndex);
 				}
 
-				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					List<T> theList = (List<T>)list;
 
 					for (int i = 0; i < theList.Count; ++i)
-						m_writeReference(theList[i], data, ref startIndex, sizes);
+						m_writeReference(theList[i], data, ref startIndex, sizes, values);
 				}
 			}
 		}

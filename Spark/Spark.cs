@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public static partial class Spark
 {
+	private const byte Version = 1;
+	private const int HeaderSize = 2;
+
 	[System.Flags]
 	private enum FormatFlags : byte
 	{
@@ -10,16 +14,9 @@ public static partial class Spark
 		LZ4Compression = 1 << 0,
 	}
 
-	private static readonly byte s_version = 1;
-	private static readonly int s_headerSize = 2;
 	private static FormatFlags s_formatFlags = FormatFlags.None;// FormatFlags.LZ4Compression;
 
 	public static bool UTF8Encoding = false;
-
-	// Restriction: (MaxMemberId * InheritanceDepth - 1) < 32768
-	private const ushort MaxMemberId = 1024; // Zero-Based
-	private const ushort MaxInheritanceDepth = 32;
-
 	public static bool FullAot = true;
 
 	public static byte[] Serialize(object instance)
@@ -32,17 +29,18 @@ public static partial class Spark
 
 		TypeFlags typeFlags = GetTypeFlags(type);
 
-		if ((typeFlags == TypeFlags.Reference) || (typeFlags == TypeFlags.Value))
+		if ((typeFlags == TypeFlags.Class) || (typeFlags == TypeFlags.Abstract) || (typeFlags == TypeFlags.Interface))
 		{
 			DataType dataType = DataType.Get(type);
 
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
+			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
 
-			int dataSize = s_headerSize + dataType.GetDataSize(instance, sizes);
+			int dataSize = HeaderSize + dataType.GetDataSize(instance, sizes, values);
 			byte[] data = new byte[dataSize];
 
 			WriteHeader(data, ref index);
-			dataType.WriteValues(instance, data, ref index, sizes);
+			dataType.WriteValues(instance, data, ref index, sizes, values);
 
 			if (LZ4Compression)
 				data = LZ4Encode(data);
@@ -52,13 +50,14 @@ public static partial class Spark
 		else
 		{
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
+			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
 
-			bool isValueType = type.IsValueType;
+			bool isValueType = ((typeFlags & TypeFlags.Value) == TypeFlags.Value);
 
-			int dataSize = s_headerSize;
+			int dataSize = HeaderSize;
 			dataSize += (isValueType)
 				? SizeCalculator.GetForValueType(type)(instance)
-				: SizeCalculator.GetForReferenceType(type)(instance, sizes);
+				: SizeCalculator.GetForReferenceType(type)(instance, sizes, values);
 
 			byte[] data = new byte[dataSize];
 
@@ -67,7 +66,7 @@ public static partial class Spark
 			if (isValueType)
 				Writer.GetDelegateForValueType(type)(instance, data, ref index);
 			else
-				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes);
+				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes, values);
 
 			if (LZ4Compression)
 				data = LZ4Encode(data);
@@ -95,7 +94,7 @@ public static partial class Spark
 
 		TypeFlags typeFlags = GetTypeFlags(type);
 
-		if ((typeFlags == TypeFlags.Reference) || (typeFlags == TypeFlags.Value))
+		if ((typeFlags == TypeFlags.Class) || (typeFlags == TypeFlags.Abstract) || (typeFlags == TypeFlags.Interface))
 		{
 			DataType dataType = DataType.Get(type);
 			object newInstance = null;
@@ -117,105 +116,8 @@ public static partial class Spark
 
 	private static void WriteHeader(byte[] data, ref int index)
 	{
-		data[index++] = s_version;
+		data[index++] = Version;
 		data[index++] = (byte)s_formatFlags;
-	}
-
-	[Flags]
-	private enum TypeFlags
-	{
-		Reference	= 1 << 0,
-		Value		= 1 << 1,
-		Basic		= 1 << 2,
-
-		Enum		= 1 << 10 | Value,
-		Array		= 1 << 11 | Reference,
-		List		= 1 << 12 | Reference,
-		Dictionary	= 1 << 13 | Reference,
-
-		String		= 1 << 15 | Basic | Reference,
-		DateTime	= 1 << 16 | Basic | Value,
-
-		Bool		= 1 << 19 | Basic | Value,
-		Byte		= 1 << 20 | Basic | Value,
-		SByte		= 1 << 21 | Basic | Value,
-		Char		= 1 << 22 | Basic | Value,
-		Short		= 1 << 23 | Basic | Value,
-		UShort		= 1 << 24 | Basic | Value,
-		Int			= 1 << 25 | Basic | Value,
-		UInt		= 1 << 26 | Basic | Value,
-		Long		= 1 << 27 | Basic | Value,
-		ULong		= 1 << 28 | Basic | Value,
-		Float		= 1 << 29 | Basic | Value,
-		Double		= 1 << 30 | Basic | Value,
-		Decimal		= 1 << 31 | Basic | Value,
-	}
-
-	private static TypeFlags GetTypeFlags(Type type)
-	{
-		if (type == typeof(int))
-			return TypeFlags.Int;
-
-		if (type == typeof(float))
-			return TypeFlags.Float;
-
-		if (type == typeof(bool))
-			return TypeFlags.Bool;
-
-		if (type == typeof(char))
-			return TypeFlags.Char;
-
-		if (type == typeof(long))
-			return TypeFlags.Long;
-
-		if (type == typeof(short))
-			return TypeFlags.Short;
-
-		if (type == typeof(byte))
-			return TypeFlags.Byte;
-
-		if (type == typeof(double))
-			return TypeFlags.Double;
-
-		if (type == typeof(DateTime))
-			return TypeFlags.DateTime;
-
-		if (type == typeof(uint))
-			return TypeFlags.UInt;
-
-		if (type == typeof(ushort))
-			return TypeFlags.UShort;
-
-		if (type == typeof(ulong))
-			return TypeFlags.ULong;
-
-		if (type == typeof(sbyte))
-			return TypeFlags.SByte;
-
-		if (type == typeof(decimal))
-			return TypeFlags.Decimal;
-
-		if (type == typeof(string))
-			return TypeFlags.String;
-
-		if (IsGenericList(type))
-			return TypeFlags.List;
-
-		if (IsGenericDictionary(type))
-			return TypeFlags.Dictionary;
-
-		Type baseType = type.BaseType;
-
-		if (baseType != null)
-		{
-			if (baseType == typeof(Enum))
-				return TypeFlags.Enum;
-
-			if (baseType == typeof(Array))
-				return TypeFlags.Array;
-		}
-
-		return TypeFlags.Reference;
 	}
 
 	private static bool IsGenericList(Type type)

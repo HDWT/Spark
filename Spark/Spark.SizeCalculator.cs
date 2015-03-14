@@ -12,8 +12,8 @@ public static partial class Spark
 	private delegate int GetValueSizeDelegate(object instance);
 	private delegate int GetValueSizeDelegate<T>(T instance);
 
-	private delegate int GetReferenceSizeDelegate(object instance, QueueWithIndexer<int> sizes);
-	private delegate int GetReferenceSizeDelegate<T>(T instance, QueueWithIndexer<int> sizes);
+	private delegate int GetReferenceSizeDelegate(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+	private delegate int GetReferenceSizeDelegate<T>(T instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 
 	private static class SizeCalculator
 	{

@@ -39,12 +39,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					return GetSize(instance as IList, sizes);
+					return GetSize(instance as IList, sizes, values);
 				}
 
-				public int GetSize(IList list, QueueWithIndexer<int> sizes)
+				public int GetSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (list == null)
 						return MinDataSize;
@@ -57,7 +57,7 @@ public static partial class Spark
 
 					dataSize += (m_isValueType)
 						? GetElementsSize(list)
-						: GetElementsSize(list, sizes);
+						: GetElementsSize(list, sizes, values);
 
 					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 
@@ -67,7 +67,7 @@ public static partial class Spark
 				}
 
 				protected abstract int GetElementsSize(IList list);
-				protected abstract int GetElementsSize(IList list, QueueWithIndexer<int> sizes);
+				protected abstract int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 			}
 
 			//
@@ -98,12 +98,12 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					int size = 0;
 
 					for (int i = 0; i < list.Count; ++i)
-						size += m_getReferenceSize(list[i], sizes);
+						size += m_getReferenceSize(list[i], sizes, values);
 
 					return size;
 				}
@@ -138,13 +138,13 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					List<T> aList = (List<T>)list;
 					int size = 0;
 
 					for (int i = 0; i < aList.Count; ++i)
-						size += m_getReferenceSize(aList[i], sizes);
+						size += m_getReferenceSize(aList[i], sizes, values);
 
 					return size;
 				}

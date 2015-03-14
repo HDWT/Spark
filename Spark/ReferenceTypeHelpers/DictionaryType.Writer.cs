@@ -10,12 +10,12 @@ public static partial class Spark
 		{
 			private class DataWriter : IDataWriter<IDictionary>
 			{
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					Write(instance as IDictionary, data, ref startIndex, sizes);
+					Write(instance as IDictionary, data, ref startIndex, sizes, values);
 				}
 
-				public void Write(IDictionary dictionary, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+				public void Write(IDictionary dictionary, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (dictionary == null)
 					{
@@ -63,12 +63,12 @@ public static partial class Spark
 						if (writeKeySizeAsValueType != null)
 							writeKeySizeAsValueType(pair.Key, data, ref startIndex);
 						else
-							writeKeySizeAsReferenceType(pair.Key, data, ref startIndex, sizes);
+							writeKeySizeAsReferenceType(pair.Key, data, ref startIndex, sizes, values);
 
 						if (writeValueSizeAsValueType != null)
 							writeValueSizeAsValueType(pair.Value, data, ref startIndex);
 						else
-							writeValueSizeAsReferenceType(pair.Value, data, ref startIndex, sizes);
+							writeValueSizeAsReferenceType(pair.Value, data, ref startIndex, sizes, values);
 					}
 				}
 			}

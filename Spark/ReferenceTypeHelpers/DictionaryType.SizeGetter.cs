@@ -11,24 +11,24 @@ public static partial class Spark
 		{
 			private class SizeGetter : ISizeGetter<IDictionary>
 			{
-				public int GetObjectSize(object dictionary, QueueWithIndexer<int> sizes)
+				public int GetObjectSize(object dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
-					return GetSize(dictionary as IDictionary, sizes);
+					return GetSize(dictionary as IDictionary, sizes, values);
 				}
 
-				public int GetSize(IDictionary dictionary, QueueWithIndexer<int> sizes)
+				public int GetSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					if (dictionary == null)
 						return MinDataSize;
 
-					int dataSize = MinDataSize + GetElementsSize(dictionary, sizes);
+					int dataSize = MinDataSize + GetElementsSize(dictionary, sizes, values);
 
 					dataSize += 1 + SizeCalculator.GetMinSize(dictionary.Count);
 
 					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 				}
 
-				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes)
+				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					Type keyType = dictionary.GetType().GetGenericArguments()[0];
 					Type valueType = dictionary.GetType().GetGenericArguments()[1];
@@ -43,8 +43,8 @@ public static partial class Spark
 
 					foreach (DictionaryEntry pair in dictionary)
 					{
-						size += (getKeySizeAsValueType != null) ? getKeySizeAsValueType(pair.Key) : getKeySizeAsReferenceType(pair.Key, sizes);
-						size += (getValueSizeAsValueType != null) ? getValueSizeAsValueType(pair.Value) : getValueSizeAsReferenceType(pair.Value, sizes);
+						size += (getKeySizeAsValueType != null) ? getKeySizeAsValueType(pair.Key) : getKeySizeAsReferenceType(pair.Key, sizes, values);
+						size += (getValueSizeAsValueType != null) ? getValueSizeAsValueType(pair.Value) : getValueSizeAsReferenceType(pair.Value, sizes, values);
 					}
 
 					return size;

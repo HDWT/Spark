@@ -14,20 +14,20 @@ public static partial class Spark
 	private static byte[] LZ4Encode(byte[] data)
 	{
 		TypeHelper.IntTypeMapper mapper = new TypeHelper.IntTypeMapper();
-		mapper.value = data.Length - s_headerSize;
+		mapper.value = data.Length - HeaderSize;
 
-		byte[] encodedData = LZ4EncodeFunc(data, s_headerSize, data.Length - s_headerSize); // Cut header
-		byte[] output = new byte[encodedData.Length + s_headerSize + sizeof(int)];
+		byte[] encodedData = LZ4EncodeFunc(data, HeaderSize, data.Length - HeaderSize); // Cut header
+		byte[] output = new byte[encodedData.Length + HeaderSize + sizeof(int)];
 
 		int index = 0;
 		WriteHeader(output, ref index);
 
-		output[s_headerSize + 0] = mapper.byte1;
-		output[s_headerSize + 1] = mapper.byte2;
-		output[s_headerSize + 2] = mapper.byte3;
-		output[s_headerSize + 3] = mapper.byte4;
+		output[HeaderSize + 0] = mapper.byte1;
+		output[HeaderSize + 1] = mapper.byte2;
+		output[HeaderSize + 2] = mapper.byte3;
+		output[HeaderSize + 3] = mapper.byte4;
 
-		Array.Copy(encodedData, 0, output, s_headerSize + sizeof(int), encodedData.Length);
+		Array.Copy(encodedData, 0, output, HeaderSize + sizeof(int), encodedData.Length);
 
 		return output;
 	}
@@ -36,20 +36,20 @@ public static partial class Spark
 	{
 		TypeHelper.IntTypeMapper mapper = new TypeHelper.IntTypeMapper();
 
-		mapper.byte1 = data[s_headerSize + 0];
-		mapper.byte2 = data[s_headerSize + 1];
-		mapper.byte3 = data[s_headerSize + 2];
-		mapper.byte4 = data[s_headerSize + 3];
+		mapper.byte1 = data[HeaderSize + 0];
+		mapper.byte2 = data[HeaderSize + 1];
+		mapper.byte3 = data[HeaderSize + 2];
+		mapper.byte4 = data[HeaderSize + 3];
 
 		int dataSize = mapper.value;
 
-		byte[] decodedData = LZ4DecodeFunc(data, s_headerSize + sizeof(int), data.Length - s_headerSize - sizeof(int), dataSize);
-		byte[] output = new byte[s_headerSize + decodedData.Length];
+		byte[] decodedData = LZ4DecodeFunc(data, HeaderSize + sizeof(int), data.Length - HeaderSize - sizeof(int), dataSize);
+		byte[] output = new byte[HeaderSize + decodedData.Length];
 
-		for (int i = 0; i < s_headerSize; ++i)
+		for (int i = 0; i < HeaderSize; ++i)
 			output[i] = data[i];
 
-		Array.Copy(decodedData, 0, output, s_headerSize, decodedData.Length);
+		Array.Copy(decodedData, 0, output, HeaderSize, decodedData.Length);
 
 		return output;
 	}

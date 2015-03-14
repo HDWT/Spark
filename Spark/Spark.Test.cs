@@ -39,14 +39,14 @@ public static partial class Spark
 
 		public static void Run()
 		{
-			//TestSingle();
-			//TestArray();
-			//TestList();
-			//TestDictionary();
+			TestSingle();
+			TestArray();
+			TestList();
+			TestDictionary();
 			TestPolymorphism();
 			TestAbstractClass();
 
-			//TestGenericClass();
+			TestGenericClass();
 		}
 
 		public static void TestSingle()

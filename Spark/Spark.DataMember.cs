@@ -8,9 +8,10 @@ public static partial class Spark
 	private interface IDataMember
 	{
 		ushort Id { get; }
+		System.Type Type { get; }
 
-		int GetSize(object instance, QueueWithIndexer<int> sizes);
-		void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
+		int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+		void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
 		void ReadValue(object instance, byte[] data, ref int startIndex);
 		void SetValue(object instance, object value);
 	}
@@ -32,9 +33,9 @@ public static partial class Spark
 			m_getReferenceTypeSize = getReferenceTypeSize;
 		}
 
-		public int GetSize(object instance, QueueWithIndexer<int> sizes)
+		public int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
-			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes);
+			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes, values);
 		}
 	}
 
@@ -53,12 +54,12 @@ public static partial class Spark
 			m_writeReferenceType = writeReferenceType;
 		}
 
-		public void Write(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+		public void Write(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			if (m_writeValueType != null)
 				m_writeValueType(value, data, ref startIndex);
 			else
-				m_writeReferenceType(value, data, ref startIndex, sizes);
+				m_writeReferenceType(value, data, ref startIndex, sizes, values);
 		}
 	}
 
@@ -71,11 +72,13 @@ public static partial class Spark
 		private bool m_ignoreDataSizeBlock = false;
 
 		private Type m_type = null;
+		private TypeFlags m_typeFlags;
 
 		protected FieldInfo m_fieldInfo = null;
 		protected PropertyInfo m_propertyInfo = null;
 
 		public ushort Id { get { return m_id; } }
+		public Type Type { get { return m_type; } }
 		public bool IsField { get { return m_fieldInfo != null; } }
 		public bool IsProperty { get { return m_propertyInfo != null; } }
 
@@ -99,16 +102,15 @@ public static partial class Spark
 		private DataMember(ushort id, Type type)
 		{
 			m_id = id;
-
-			TypeFlags typeFlags = GetTypeFlags(type);
-			m_ignoreDataSizeBlock = ((typeFlags & TypeFlags.Value) == TypeFlags.Value) && (typeFlags != TypeFlags.Value);
-
 			m_type = type;
+			m_typeFlags = GetTypeFlags(type);
 
-			if ((typeFlags & TypeFlags.Enum) == TypeFlags.Enum)
+			bool isValueType = ((m_typeFlags & TypeFlags.Value) == TypeFlags.Value);
+
+			if ((m_typeFlags & TypeFlags.Enum) == TypeFlags.Enum)
 				EnumTypeHelper.Instance.Register(type);
 
-			bool isValueType = type.IsValueType;
+			m_ignoreDataSizeBlock = isValueType;
 
 			m_sizeGetter = isValueType
 				? new SizeGetter(SizeCalculator.GetForValueType(type))
@@ -135,19 +137,21 @@ public static partial class Spark
 				m_propertyInfo.SetValue(instance, value, null); // Indexer ??
 		}
 
-		public virtual int GetSize(object instance, QueueWithIndexer<int> sizes)
+		public virtual int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			object value = GetValue(instance);
 
-			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
+			values.Enqueue(value);
+
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values);
 		}
 
-		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
-			object value = GetValue(instance);
+			object value = values.Dequeue();// GetValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			m_dataWriter.Write(value, data, ref startIndex, sizes);
+			m_dataWriter.Write(value, data, ref startIndex, sizes, values);
 		}
 
 		public virtual void ReadValue(object instance, byte[] data, ref int startIndex)
@@ -257,11 +261,11 @@ public static partial class Spark
 			return (DynamicSetValueDelegate)setter.CreateDelegate(typeof(DynamicSetValueDelegate));
 		}
 
-		public override int GetSize(object instance, QueueWithIndexer<int> sizes)
+		public override int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			T value = m_getValue(instance);
 
-			return HeaderSize + m_sizeGetter.GetSize(value, sizes);
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values);
 		}
 
 		public override void SetValue(object instance, object value)
@@ -272,12 +276,12 @@ public static partial class Spark
 				m_setValue(instance, (T)value);
 		}
 
-		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
+		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
 			T value = m_getValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			m_dataWriter.Write(value, data, ref startIndex, sizes);
+			m_dataWriter.Write(value, data, ref startIndex, sizes, values);
 		}
 	}
 }

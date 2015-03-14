@@ -55,6 +55,7 @@
     <Compile Include="ReferenceTypeHelpers\ArrayType.SizeGetter.cs" />
     <Compile Include="ReferenceTypeHelpers\ArrayType.Writer.cs" />
     <Compile Include="Spark.QueueWithIndexer.cs" />
+    <Compile Include="Spark.TypeFlags.cs" />
     <Compile Include="TypeHelpers\EnumType.cs" />
     <Compile Include="Spark.SizeCalculator.cs" />
     <Compile Include="Spark.Test.cs" />
