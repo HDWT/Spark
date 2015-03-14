@@ -173,6 +173,9 @@ public static partial class Spark
 
 		public bool TryCreateInstance(byte typeId, out object instance)
 		{
+			if (typeId == m_typeId)
+				typeId = 0;
+
 			if (typeId == 0)
 			{
 				if (m_constructor == null)
@@ -206,7 +209,15 @@ public static partial class Spark
 			if (endIndex < startIndex)
 				throw new ArgumentException(string.Format("Read values failed. StartIndex = {0}, EndIndex = {1}", startIndex, endIndex));
 
+			ICallbacks callbacks = instance as ICallbacks;
+
+			if (callbacks != null)
+				callbacks.BeforeDeserialize(instance);
+
 			byte typeId = data[startIndex++];
+
+			if (typeId == m_typeId)
+				typeId = 0;
 
 			if (typeId != 0)
 			{
@@ -216,10 +227,13 @@ public static partial class Spark
 					{
 						if (m_assignableTypes[i].Id != typeId)
 							continue;
-						
-						data[--startIndex] = 0; // Полиморфизм. Читаем поля в другой класс
+
+						int typeIdIndex = --startIndex;
+						data[typeIdIndex] = 0; // Полиморфизм. Читаем поля в другой класс
 
 						m_assignableTypes[i].GetDataType().ReadValues(instance, data, ref startIndex, endIndex);
+
+						data[typeIdIndex] = typeId; // Восстанавливаем значение. byte[] data - не должен меняться
 						return;
 					}
 				}
@@ -243,6 +257,9 @@ public static partial class Spark
 
 				ushort memberId = (ushort)(memberIdL + (memberIdH << 8));
 				int memberIndex = GetMemberIndex(memberId);
+
+				if (callbacks != null)
+					callbacks.BeforeSetValue(instance, memberId, memberIndex != InvalidMemberIndex);
 
 				if (memberIndex == InvalidMemberIndex)
 				{
@@ -276,7 +293,13 @@ public static partial class Spark
 				{
 					m_members[memberIndex].ReadValue(instance, data, ref startIndex);
 				}
+
+				if (callbacks != null)
+					callbacks.AfterSetValue(instance, memberId, memberIndex != InvalidMemberIndex);
 			}
+
+			if (callbacks != null)
+				callbacks.AfterDeserialize(instance);
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>

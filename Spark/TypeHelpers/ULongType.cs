@@ -114,6 +114,9 @@ public static partial class Spark
 				ULongTypeMapper mapper = new ULongTypeMapper();
 
 				int dataSize = (data[startIndex] & SizeMask);
+				int startIndexBefore = startIndex;
+				byte startIndexValue = data[startIndex];
+
 				data[startIndex] -= (byte)dataSize;
 
 				bool invert = false;
@@ -200,6 +203,8 @@ public static partial class Spark
 				{
 					throw new System.ArgumentException(string.Format("Invalid data size = {0}", dataSize));
 				}
+
+				data[startIndexBefore] = startIndexValue;
 
 				return (invert) ? (~mapper.value) : (mapper.value);
 			}

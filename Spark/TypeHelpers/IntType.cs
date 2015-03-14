@@ -7,7 +7,7 @@ public static partial class Spark
 	private static partial class TypeHelper
 	{
 		[StructLayout(LayoutKind.Explicit)]
-		private struct IntTypeMapper
+		public struct IntTypeMapper
 		{
 			[FieldOffset(0)]
 			public int value;
@@ -82,6 +82,9 @@ public static partial class Spark
 				IntTypeMapper mapper = new IntTypeMapper();
 
 				int dataSize = (data[startIndex] & SizeMask);
+				int startIndexBefore = startIndex;
+				byte startIndexValue = data[startIndex];
+
 				data[startIndex] -= (byte)dataSize;
 
 				bool invert = false;
@@ -127,6 +130,8 @@ public static partial class Spark
 				{
 					throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 				}
+
+				data[startIndexBefore] = startIndexValue;
 
 				return (invert) ? (~mapper.value) : (mapper.value);
 			}

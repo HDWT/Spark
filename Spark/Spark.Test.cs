@@ -43,6 +43,7 @@ public static partial class Spark
 			TestArray();
 			TestList();
 			TestDictionary();
+			TestPolymorphism();
 
 			TestGenericClass();
 		}
@@ -197,7 +198,16 @@ public static partial class Spark
 			foreach (var value in values)
 			{
 				byte[] data = Serialize(value);
+				byte[] dataBeforeDeserialize = new byte[data.Length];
+				System.Array.Copy(data, dataBeforeDeserialize, data.Length);
+
 				T newValue = Deserialize<T>(data);
+
+				for (int i = 0; i < data.Length; ++i)
+				{
+					if (data[i] != dataBeforeDeserialize[i])
+						Console.WriteLine("Test " + typeof(T) + " fail: data changed on deserialization");
+				}
 
 				//Console.WriteLine(value + " / " + newValue);
 
@@ -210,9 +220,17 @@ public static partial class Spark
 		{
 			EFlag flags = EFlag.Flag1 | EFlag.Flag2 | EFlag.Flag3;
 
-			byte[] bytes = Spark.Serialize(flags);
+			byte[] data = Spark.Serialize(flags);
+			byte[] dataBeforeDeserialize = new byte[data.Length];
+			System.Array.Copy(data, dataBeforeDeserialize, data.Length);
 
-			EFlag result = Spark.Deserialize<EFlag>(bytes);
+			EFlag result = Spark.Deserialize<EFlag>(data);
+
+			for (int i = 0; i < data.Length; ++i)
+			{
+				if (data[i] != dataBeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(EFlag) + " fail: data changed on deserialization");
+			}
 
 			if (result != flags)
 				throw new InvalidProgramException("Test " + typeof(EFlag) + " fail: " + result + " / " + flags + " expected");
@@ -221,7 +239,16 @@ public static partial class Spark
 		private static void TestArray<T>(System.Func<T, T, bool> elementComparer, T[] array)
 		{
 			byte[] data = Serialize(array);
+			byte[] dataBeforeDeserialize = new byte[data.Length];
+			System.Array.Copy(data, dataBeforeDeserialize, data.Length);
+
 			T[] newArray = Deserialize<T[]>(data);
+
+			for (int i = 0; i < data.Length; ++i)
+			{
+				if (data[i] != dataBeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(T) + " fail: data changed on deserialization");
+			}
 
 			if (array == null && newArray == null)
 				return;
@@ -238,7 +265,16 @@ public static partial class Spark
 		private static void TestList<T>(System.Func<T, T, bool> elementComparer, List<T> list)
 		{
 			byte[] data = Serialize(list);
+			byte[] dataBeforeDeserialize = new byte[data.Length];
+			System.Array.Copy(data, dataBeforeDeserialize, data.Length);
+
 			List<T> newList = Deserialize<List<T>>(data);
+
+			for (int i = 0; i < data.Length; ++i)
+			{
+				if (data[i] != dataBeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(T) + " fail: data changed on deserialization");
+			}
 
 			if (list == null && newList == null)
 				return;
@@ -257,7 +293,16 @@ public static partial class Spark
 			where TValue : IComparable<TValue>
 		{
 			byte[] data = Serialize(dictionary);
+			byte[] dataBeforeDeserialize = new byte[data.Length];
+			System.Array.Copy(data, dataBeforeDeserialize, data.Length);
+
 			Dictionary<TKey, TValue> newDictionary = Deserialize<Dictionary<TKey, TValue>>(data);
+
+			for (int i = 0; i < data.Length; ++i)
+			{
+				if (data[i] != dataBeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(Dictionary<TKey, TValue>) + " fail: data changed on deserialization");
+			}
 
 			if (dictionary == null && newDictionary == null)
 				return;
@@ -368,6 +413,122 @@ public static partial class Spark
 				ticks = DateTime.MinValue.Ticks + random.Next(0, int.MaxValue);
 
 			return new DateTime(ticks);
+		}
+
+		[Spark.As(10, typeof(OneThing))]
+		[Spark.As(12, typeof(OtherThing))]
+		private interface ISomething
+		{
+			string secondThing { get; set; }
+		}
+
+		private class OneThing : ISomething
+		{
+			[Spark.Member(1)]
+			int firstThing;
+
+			[Spark.Member(2)]
+			public string secondThing { get; set; }
+
+			public bool IsEqual(OneThing other)
+			{
+				return (other.firstThing == firstThing) && (other.secondThing == secondThing);
+			}
+		}
+
+		private class OtherThing : ISomething
+		{
+			[Spark.Member(1)]
+			float firstThing;
+
+			[Spark.Member(2)]
+			public List<sbyte> someData = new List<sbyte>() { 1, 127, -1 };
+
+			[Spark.Member(3)]
+			public string secondThing { get; set; }
+
+			public bool IsEquial(OtherThing other)
+			{
+				if (other.firstThing != firstThing)
+					return false;
+
+				if (other.secondThing != secondThing)
+					return false;
+
+				if (other.someData.Count != someData.Count)
+					return false;
+
+				for (int i = 0; i < other.someData.Count; ++i)
+				{
+					if (other.someData[i] != someData[i])
+						return false;
+				}
+
+				return true;
+			}
+		}
+
+		private static void TestPolymorphism()
+		{
+			ISomething s1 = new OneThing();
+			s1.secondThing = "1:one";
+
+			byte[] b1 = Spark.Serialize(s1);
+			byte[] b1BeforeDeserialize = new byte[b1.Length];
+			System.Array.Copy(b1, b1BeforeDeserialize, b1.Length);
+			ISomething outS1 = Spark.Deserialize<ISomething>(b1);
+
+			for (int i = 0; i < b1.Length; ++i)
+			{
+				if (b1[i] != b1BeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(ISomething) + " fail: data changed on deserialization");
+			}
+
+			if (outS1.GetType() != typeof(OneThing))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if ((s1 as OneThing).IsEqual(outS1 as OneThing) == false)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			OneThing outS11 = Spark.Deserialize<OneThing>(b1);
+
+			if ((s1 as OneThing).IsEqual(outS11) == false)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			//
+			List<ISomething> list = new List<ISomething>();
+
+			list.Add(new OneThing());
+			list.Add(new OtherThing());
+			list.Add(new OtherThing());
+			list.Add(new OneThing());
+
+			byte[] b2 = Spark.Serialize(list);
+			byte[] b2BeforeDeserialize = new byte[b2.Length];
+			System.Array.Copy(b2, b2BeforeDeserialize, b2.Length);
+
+			List<ISomething> outList = Spark.Deserialize<List<ISomething>>(b2);
+
+			for (int i = 0; i < b2.Length; ++i)
+			{
+				if (b2[i] != b2BeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(List<ISomething>) + " fail: data changed on deserialization");
+			}
+
+			if (outList.Count != 4)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList[0].GetType() != typeof(OneThing))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList[1].GetType() != typeof(OtherThing))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList[2].GetType() != typeof(OtherThing))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList[3].GetType() != typeof(OneThing))
+				throw new System.ArgumentException("Polymorphism not working!");
 		}
 	}
 }

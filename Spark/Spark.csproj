@@ -48,6 +48,7 @@
     <Compile Include="ReferenceTypeHelpers\StringType.SizeGetter.cs" />
     <Compile Include="ReferenceTypeHelpers\StringType.Writer.cs" />
     <Compile Include="Spark.Attributes.cs" />
+    <Compile Include="Spark.Compression.cs" />
     <Compile Include="Spark.cs" />
     <Compile Include="Spark.DataMember.cs" />
     <Compile Include="Spark.DataType.cs" />

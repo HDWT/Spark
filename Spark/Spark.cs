@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
+	[System.Flags]
+	private enum FormatFlags : byte
+	{
+		None = 0,
+		LZ4Compression = 1 << 0,
+	}
+
+	private static readonly byte s_version = 1;
+	private static readonly int s_headerSize = 2;
+	private static FormatFlags s_formatFlags = FormatFlags.None;// FormatFlags.LZ4Compression;
+
+	public static bool UTF8Encoding = false;
+
 	// Restriction: (MaxMemberId * InheritanceDepth - 1) < 32768
 	private const ushort MaxMemberId = 1024; // Zero-Based
 	private const ushort MaxInheritanceDepth = 32;
@@ -25,10 +38,14 @@ public static partial class Spark
 
 			QueueWithIndexer sizes = new QueueWithIndexer();
 
-			int dataSize = dataType.GetDataSize(instance, sizes);
+			int dataSize = s_headerSize + dataType.GetDataSize(instance, sizes);
 			byte[] data = new byte[dataSize];
-			
+
+			WriteHeader(data, ref index);
 			dataType.WriteValues(instance, data, ref index, sizes);
+
+			if (LZ4Compression)
+				data = LZ4Encode(data);
 
 			return data;
 		}
@@ -38,16 +55,22 @@ public static partial class Spark
 
 			bool isValueType = type.IsValueType;
 
-			int dataSize = (isValueType)
+			int dataSize = s_headerSize;
+			dataSize += (isValueType)
 				? SizeCalculator.GetForValueType(type)(instance)
 				: SizeCalculator.GetForReferenceType(type)(instance, sizes);
 
 			byte[] data = new byte[dataSize];
 
+			WriteHeader(data, ref index);
+
 			if (isValueType)
 				Writer.GetDelegateForValueType(type)(instance, data, ref index);
 			else
 				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes);
+
+			if (LZ4Compression)
+				data = LZ4Encode(data);
 
 			return data;
 		}
@@ -60,6 +83,15 @@ public static partial class Spark
 
 		Type type = typeof(T);
 		int index = 0;
+
+		byte version = data[index++];
+		FormatFlags formatFlags = (FormatFlags)data[index++];
+
+		if (version != 1)
+			throw new System.ArgumentException("Invalid version " + version);
+
+		if ((formatFlags & FormatFlags.LZ4Compression) == FormatFlags.LZ4Compression)
+			data = LZ4Decode(data);
 
 		TypeFlags typeFlags = GetTypeFlags(type);
 
@@ -81,6 +113,12 @@ public static partial class Spark
 			var ReadData = Reader.Get(type);
 			return (T)ReadData(type, data, ref index);
 		}
+	}
+
+	private static void WriteHeader(byte[] data, ref int index)
+	{
+		data[index++] = s_version;
+		data[index++] = (byte)s_formatFlags;
 	}
 
 	[Flags]
@@ -188,5 +226,14 @@ public static partial class Spark
 	private static bool IsGenericDictionary(Type type)
 	{
 		return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>));
+	}
+
+	public interface ICallbacks
+	{
+		void BeforeDeserialize(object instance);
+		void AfterDeserialize(object instance);
+
+		void BeforeSetValue(object instance, ushort memberId, bool validMemberId);
+		void AfterSetValue(object instance, ushort memberId, bool validMemberId);
 	}
 }
