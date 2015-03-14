@@ -96,6 +96,8 @@ public static partial class Spark
 		Type currentType = type;
 		Type[] interfaces = type.GetInterfaces();
 
+		HashSet<int> knownIds = null;
+
 		for (int index = -1; index < interfaces.Length; ++index)
 		{
 			if (index >= 0)
@@ -116,10 +118,18 @@ public static partial class Spark
 				if (typeId == 0)
 					throw new System.ArgumentException("Type identifier must be greater than 0");
 
+				if (knownIds == null)
+					knownIds = new HashSet<int>();
+
+				if (knownIds.Contains(typeId))
+					throw new System.ArgumentException(string.Format("Type identifier '{0}' declared more than once for type {1}", typeId, currentType.Name));
+
+				knownIds.Add(typeId);
+
 				if (type == classType)
 				{
 					if (id != 0)
-						throw new System.ArgumentException(string.Format("Type identifier declared more than once for type {0}", type));
+						throw new System.ArgumentException(string.Format("Type identifier '{0}' declared more than once for type {1}", classType.Name, currentType.Name));
 
 					id = typeId;
 				}

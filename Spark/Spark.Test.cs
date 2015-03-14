@@ -39,13 +39,14 @@ public static partial class Spark
 
 		public static void Run()
 		{
-			TestSingle();
-			TestArray();
-			TestList();
-			TestDictionary();
+			//TestSingle();
+			//TestArray();
+			//TestList();
+			//TestDictionary();
 			TestPolymorphism();
+			TestAbstractClass();
 
-			TestGenericClass();
+			//TestGenericClass();
 		}
 
 		public static void TestSingle()
@@ -416,8 +417,16 @@ public static partial class Spark
 		}
 
 		[Spark.As(10, typeof(OneThing))]
-		[Spark.As(12, typeof(OtherThing))]
+		[Spark.As(11, typeof(OtherThing))]
 		private interface ISomething
+		{
+			string secondThing { get; set; }
+			bool IsEqual(ISomething s);
+		}
+
+		[Spark.As(10, typeof(OneThing2))]
+		[Spark.As(13, typeof(OtherThing2))]
+		private interface ISomething2
 		{
 			string secondThing { get; set; }
 		}
@@ -430,7 +439,29 @@ public static partial class Spark
 			[Spark.Member(2)]
 			public string secondThing { get; set; }
 
-			public bool IsEqual(OneThing other)
+			public bool IsEqual(ISomething s)
+			{
+				if (s == null)
+					return false;
+
+				if (s.GetType() != this.GetType())
+					return false;
+
+				OneThing other = s as OneThing;
+
+				return (other.firstThing == firstThing) && (other.secondThing == secondThing);
+			}
+		}
+
+		private class OneThing2 : ISomething2
+		{
+			[Spark.Member(1)]
+			int firstThing;
+
+			[Spark.Member(2)]
+			public string secondThing { get; set; }
+
+			public bool IsEqual(OneThing2 other)
 			{
 				return (other.firstThing == firstThing) && (other.secondThing == secondThing);
 			}
@@ -447,7 +478,47 @@ public static partial class Spark
 			[Spark.Member(3)]
 			public string secondThing { get; set; }
 
-			public bool IsEquial(OtherThing other)
+			public bool IsEqual(ISomething s)
+			{
+				if (s == null)
+					return false;
+
+				if (s.GetType() != this.GetType())
+					return false;
+
+				OtherThing other = s as OtherThing;
+
+				if (other.firstThing != firstThing)
+					return false;
+
+				if (other.secondThing != secondThing)
+					return false;
+
+				if (other.someData.Count != someData.Count)
+					return false;
+
+				for (int i = 0; i < other.someData.Count; ++i)
+				{
+					if (other.someData[i] != someData[i])
+						return false;
+				}
+
+				return true;
+			}
+		}
+
+		private class OtherThing2 : ISomething2
+		{
+			[Spark.Member(1)]
+			float firstThing;
+
+			[Spark.Member(2)]
+			public List<sbyte> someData = new List<sbyte>() { 1, 127, -1 };
+
+			[Spark.Member(3)]
+			public string secondThing { get; set; }
+
+			public bool IsEquial(OtherThing2 other)
 			{
 				if (other.firstThing != firstThing)
 					return false;
@@ -487,12 +558,12 @@ public static partial class Spark
 			if (outS1.GetType() != typeof(OneThing))
 				throw new System.ArgumentException("Polymorphism not working!");
 
-			if ((s1 as OneThing).IsEqual(outS1 as OneThing) == false)
+			if ((s1).IsEqual(outS1) == false)
 				throw new System.ArgumentException("Polymorphism not working!");
 
 			OneThing outS11 = Spark.Deserialize<OneThing>(b1);
 
-			if ((s1 as OneThing).IsEqual(outS11) == false)
+			if ((s1).IsEqual(outS11) == false)
 				throw new System.ArgumentException("Polymorphism not working!");
 
 			//
@@ -500,7 +571,7 @@ public static partial class Spark
 
 			list.Add(new OneThing());
 			list.Add(new OtherThing());
-			list.Add(new OtherThing());
+			list.Add(null);
 			list.Add(new OneThing());
 
 			byte[] b2 = Spark.Serialize(list);
@@ -524,11 +595,148 @@ public static partial class Spark
 			if (outList[1].GetType() != typeof(OtherThing))
 				throw new System.ArgumentException("Polymorphism not working!");
 
-			if (outList[2].GetType() != typeof(OtherThing))
+			if (outList[2] != null)
 				throw new System.ArgumentException("Polymorphism not working!");
 
 			if (outList[3].GetType() != typeof(OneThing))
 				throw new System.ArgumentException("Polymorphism not working!");
+
+			// Simulation: class id changed
+			List<ISomething2> outList2 = Spark.Deserialize<List<ISomething2>>(b2);
+
+			for (int i = 0; i < b2.Length; ++i)
+			{
+				if (b2[i] != b2BeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(List<ISomething2>) + " fail: data changed on deserialization");
+			}
+
+			if (outList2.Count != 4)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList2[0].GetType() != typeof(OneThing2))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList2[1] != null)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList2[2] != null)
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (outList2[3].GetType() != typeof(OneThing2))
+				throw new System.ArgumentException("Polymorphism not working!");
+		}
+
+		private static void TestAbstractClass()
+		{
+			OneThing oneThing = new OneThing();
+			oneThing.secondThing = "2:second";
+
+			OtherThing otherThing = new OtherThing();
+			otherThing.secondThing = "6:six";
+
+			AbstractIsBase ab = new AbstractIsBase();
+			AnAbstractClass a = ab;
+
+			a.int1 = 17;
+			a.SetSomething(oneThing);
+
+			ab.str = "str";
+			ab.SetMySomething(otherThing);
+
+			byte[] data = Spark.Serialize(a);
+			byte[] dataBeforeDeserialize = new byte[data.Length];
+			System.Array.Copy(data, dataBeforeDeserialize, data.Length);
+
+			AnAbstractClass outA = Spark.Deserialize<AnAbstractClass>(data);
+
+			for (int i = 0; i < data.Length; ++i)
+			{
+				if (data[i] != dataBeforeDeserialize[i])
+					Console.WriteLine("Test " + typeof(AnAbstractClass) + " fail: data changed on deserialization");
+			}
+
+			if (outA.GetType() != typeof(AbstractIsBase))
+				throw new System.ArgumentException("Polymorphism not working!");
+
+			if (!outA.IsEqual(a))
+				throw new System.ArgumentException("Polymorphism not working!");
+		}
+
+		[Spark.As(64, typeof(AbstractIsBase))]
+		private abstract class AnAbstractClass
+		{
+			[Spark.Member(1)]
+			public int int1 = 0;
+
+			[Spark.Member(2)]
+			protected float float1 = 0.5f;
+
+			[Spark.Member(3)]
+			private ISomething something = null;
+
+			public void SetSomething(ISomething s)
+			{
+				something = s;
+			}
+
+			public virtual bool IsEqual(AnAbstractClass a)
+			{
+				if (a.int1 != int1)
+					return false;
+
+				if (a.float1 != float1)
+					return false;
+
+				if (something == null && a.something != null)
+					return false;
+
+				if (something.GetType() != a.something.GetType())
+					return false;
+
+				return something.IsEqual(a.something);
+			}
+		}
+
+		private class AbstractIsBase : AnAbstractClass
+		{
+			[Spark.Member(1)]
+			public string str = string.Empty;
+
+			[Spark.Member(2)]
+			protected float float2 = 0.5f;
+
+			[Spark.Member(3)]
+			private ISomething something = null;
+
+			public void SetMySomething(ISomething s)
+			{
+				something = s;
+			}
+
+			public override bool IsEqual(AnAbstractClass a)
+			{
+				if (a == null)
+					return false;
+
+				if (a.GetType() != this.GetType())
+					return false;
+
+				if (!base.IsEqual(a))
+					return false;
+
+				AbstractIsBase thisClass = a as AbstractIsBase;
+
+				if (str != thisClass.str)
+					return false;
+
+				if (float2 != thisClass.float2)
+					return false;
+
+				if (something == thisClass.something)
+					return true;
+
+				return something.IsEqual(thisClass.something);
+			}
 		}
 	}
 }
