@@ -20,14 +20,11 @@ public static partial class Spark
 		{
 			public int GetSize(object value)
 			{
-				return GetSize((sbyte)value);
+				return 1;
 			}
 
 			public int GetSize(sbyte value)
 			{
-				SByteTypeMapper mapper = new SByteTypeMapper();
-				mapper.value = value;
-
 				return 1;
 			}
 

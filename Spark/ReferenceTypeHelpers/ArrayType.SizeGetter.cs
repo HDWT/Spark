@@ -37,12 +37,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
 				{
 					return GetSize(instance as Array, sizes);
 				}
 
-				public int GetSize(Array array, QueueWithIndexer sizes)
+				public int GetSize(Array array, QueueWithIndexer<int> sizes)
 				{
 					if (array == null)
 						return MinDataSize;
@@ -68,7 +68,7 @@ public static partial class Spark
 				}
 
 				protected abstract int GetElementsSize(Array array);
-				protected abstract int GetElementsSize(Array array, QueueWithIndexer sizes);
+				protected abstract int GetElementsSize(Array array, QueueWithIndexer<int> sizes);
 			}
 
 			//
@@ -99,7 +99,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, QueueWithIndexer sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes)
 				{
 					int size = 0;
 
@@ -161,7 +161,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(Array array, QueueWithIndexer sizes)
+				protected override int GetElementsSize(Array array, QueueWithIndexer<int> sizes)
 				{
 					int size = 0;
 

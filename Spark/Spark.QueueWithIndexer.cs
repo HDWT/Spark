@@ -4,14 +4,14 @@ using System.Collections.Generic;
 
 public static partial class Spark
 {
-	private class QueueWithIndexer
+	private class QueueWithIndexer<T>
 	{
 		private const int ArraySize = 32;
 
-		private List<int[]> m_list = null;
+		private List<T[]> m_list = null;
 
-		private int[] m_firstArray = null;
-		private int[] m_lastArray = null;
+		private T[] m_firstArray = null;
+		private T[] m_lastArray = null;
 
 		private int m_firstIndexInList = 0;
 		private int m_firstIndexInArray = 0;
@@ -23,9 +23,9 @@ public static partial class Spark
 
 		public QueueWithIndexer()
 		{
-			m_list = new List<int[]>(4);
+			m_list = new List<T[]>(4);
 
-			m_firstArray = new int[ArraySize];
+			m_firstArray = new T[ArraySize];
 			m_lastArray = m_firstArray;
 
 			m_list.Add(m_firstArray);
@@ -36,7 +36,7 @@ public static partial class Spark
 			get { return m_count; }
 		}
 
-		public int this[int index]
+		public T this[int index]
 		{
 			get
 			{
@@ -54,13 +54,13 @@ public static partial class Spark
 			}
 		}
 
-		public void Enqueue(int value)
+		public void Enqueue(T value)
 		{
 			m_lastArray[m_lastIndexInArray++] = value;
 
 			if (m_lastIndexInArray == ArraySize)
 			{
-				m_lastArray = new int[ArraySize];
+				m_lastArray = new T[ArraySize];
 				m_list.Add(m_lastArray);
 
 				m_lastIndexInList++;
@@ -70,9 +70,9 @@ public static partial class Spark
 			m_count++;
 		}
 
-		public int Dequeue()
+		public T Dequeue()
 		{
-			int value = m_firstArray[m_firstIndexInArray++];
+			T value = m_firstArray[m_firstIndexInArray++];
 
 			if (m_firstIndexInArray == ArraySize)
 			{

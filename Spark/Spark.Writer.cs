@@ -8,8 +8,8 @@ public static partial class Spark
 	private delegate void WriteValueDelegate(object value, byte[] data, ref int startIndex);
 	private delegate void WriteValueDelegate<T>(T value, byte[] data, ref int startIndex);
 
-	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, QueueWithIndexer sizes);
-	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, QueueWithIndexer sizes);
+	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
+	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
 
 	private static class Writer
 	{

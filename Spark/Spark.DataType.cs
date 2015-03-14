@@ -303,7 +303,7 @@ public static partial class Spark
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
-		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
+		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
 		{
 			if (m_assignableTypes != null)
 			{
@@ -329,7 +329,7 @@ public static partial class Spark
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
-		public int GetDataSize(object instance, QueueWithIndexer sizes)
+		public int GetDataSize(object instance, QueueWithIndexer<int> sizes)
 		{
 			if (m_assignableTypes != null)
 			{

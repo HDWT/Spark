@@ -39,12 +39,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
 				{
 					return GetSize(instance as IList, sizes);
 				}
 
-				public int GetSize(IList list, QueueWithIndexer sizes)
+				public int GetSize(IList list, QueueWithIndexer<int> sizes)
 				{
 					if (list == null)
 						return MinDataSize;
@@ -67,7 +67,7 @@ public static partial class Spark
 				}
 
 				protected abstract int GetElementsSize(IList list);
-				protected abstract int GetElementsSize(IList list, QueueWithIndexer sizes);
+				protected abstract int GetElementsSize(IList list, QueueWithIndexer<int> sizes);
 			}
 
 			//
@@ -98,7 +98,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes)
 				{
 					int size = 0;
 
@@ -138,7 +138,7 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer sizes)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes)
 				{
 					List<T> aList = (List<T>)list;
 					int size = 0;

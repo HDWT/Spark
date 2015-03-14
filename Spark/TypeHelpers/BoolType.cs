@@ -6,21 +6,14 @@ public static partial class Spark
 {
 	private static partial class TypeHelper
 	{
-		[StructLayout(LayoutKind.Explicit)]
-		private struct BoolTypeMapper
-		{
-			[FieldOffset(0)]
-			public bool value;
-
-			[FieldOffset(0)]
-			public byte byte1;
-		}
-
 		private class BoolType : ITypeHelper<bool>
 		{
+			private static byte zero = 0;
+			private static byte one = 1;
+
 			public int GetSize(object value)
 			{
-				return GetSize((bool)value);
+				return 1;
 			}
 
 			public int GetSize(bool value)
@@ -35,10 +28,7 @@ public static partial class Spark
 
 			public bool Read(byte[] data, ref int startIndex)
 			{
-				BoolTypeMapper mapper = new BoolTypeMapper();
-				mapper.byte1 = data[startIndex++];
-
-				return mapper.value;
+				return data[startIndex++] != zero;
 			}
 
 			public void WriteObject(object value, byte[] data, ref int startIndex)
@@ -48,10 +38,7 @@ public static partial class Spark
 
 			public void Write(bool value, byte[] data, ref int startIndex)
 			{
-				BoolTypeMapper mapper = new BoolTypeMapper();
-				mapper.value = value;
-
-				data[startIndex++] = mapper.byte1;
+				data[startIndex++] = value ? one : zero;
 			}
 		}
 	}

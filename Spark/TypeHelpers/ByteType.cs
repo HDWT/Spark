@@ -20,7 +20,7 @@ public static partial class Spark
 		{
 			public int GetSize(object value)
 			{
-				return GetSize((byte)value);
+				return 1;
 			}
 
 			public int GetSize(byte value)

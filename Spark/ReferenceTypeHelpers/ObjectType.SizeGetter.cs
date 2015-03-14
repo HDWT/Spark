@@ -18,7 +18,7 @@ public static partial class Spark
 					m_dataType = DataType.Get(objectType);
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
 				{
 					if (instance == null)
 						return MinDataSize;
@@ -34,7 +34,7 @@ public static partial class Spark
 					return size;
 				}
 
-				public int GetSize(object value, QueueWithIndexer sizes)
+				public int GetSize(object value, QueueWithIndexer<int> sizes)
 				{
 					return GetObjectSize(value, sizes);
 				}

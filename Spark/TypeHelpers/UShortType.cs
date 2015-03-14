@@ -23,7 +23,7 @@ public static partial class Spark
 		{
 			public int GetSize(object value)
 			{
-				return GetSize((ushort)value);
+				return 2;
 			}
 
 			public int GetSize(ushort value)

@@ -89,7 +89,6 @@ public static partial class Spark
 
 				bool invert = false;
 
-				//if ((data[startIndex] & InvertMask) == InvertMask)
 				if (data[startIndex] >= InvertMask)
 				{
 					invert = true;
@@ -210,8 +209,6 @@ public static partial class Spark
 					data[startIndex] += Size1;
 					data[startIndex++] += mapper.byte1;
 				}
-
-				//Stopwatch.Stop();
 			}
 		}
 	}

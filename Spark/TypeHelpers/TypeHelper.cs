@@ -27,14 +27,14 @@ public static partial class Spark
 
 	private interface ISizeGetter<T>
 	{
-		int GetObjectSize(object instance, QueueWithIndexer sizes);
-		int GetSize(T instance, QueueWithIndexer sizes);
+		int GetObjectSize(object instance, QueueWithIndexer<int> sizes);
+		int GetSize(T instance, QueueWithIndexer<int> sizes);
 	}
 
 	private interface IDataWriter<T>
 	{
-		void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes);
-		void Write(T instance, byte[] data, ref int startIndex, QueueWithIndexer sizes);
+		void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
+		void Write(T instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes);
 	}
 
 	private static partial class TypeHelper

@@ -36,7 +36,7 @@ public static partial class Spark
 		{
 			DataType dataType = DataType.Get(type);
 
-			QueueWithIndexer sizes = new QueueWithIndexer();
+			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
 
 			int dataSize = s_headerSize + dataType.GetDataSize(instance, sizes);
 			byte[] data = new byte[dataSize];
@@ -51,7 +51,7 @@ public static partial class Spark
 		}
 		else
 		{
-			QueueWithIndexer sizes = new QueueWithIndexer();
+			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
 
 			bool isValueType = type.IsValueType;
 

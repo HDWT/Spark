@@ -10,12 +10,12 @@ public static partial class Spark
 		{
 			private class DataWriter : IDataWriter<IDictionary>
 			{
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer sizes)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
 				{
 					Write(instance as IDictionary, data, ref startIndex, sizes);
 				}
 
-				public void Write(IDictionary dictionary, byte[] data, ref int startIndex, QueueWithIndexer sizes)
+				public void Write(IDictionary dictionary, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes)
 				{
 					if (dictionary == null)
 					{

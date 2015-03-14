@@ -11,12 +11,12 @@ public static partial class Spark
 		{
 			private class SizeGetter : ISizeGetter<IDictionary>
 			{
-				public int GetObjectSize(object dictionary, QueueWithIndexer sizes)
+				public int GetObjectSize(object dictionary, QueueWithIndexer<int> sizes)
 				{
 					return GetSize(dictionary as IDictionary, sizes);
 				}
 
-				public int GetSize(IDictionary dictionary, QueueWithIndexer sizes)
+				public int GetSize(IDictionary dictionary, QueueWithIndexer<int> sizes)
 				{
 					if (dictionary == null)
 						return MinDataSize;
@@ -28,7 +28,7 @@ public static partial class Spark
 					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
 				}
 
-				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer sizes)
+				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes)
 				{
 					Type keyType = dictionary.GetType().GetGenericArguments()[0];
 					Type valueType = dictionary.GetType().GetGenericArguments()[1];

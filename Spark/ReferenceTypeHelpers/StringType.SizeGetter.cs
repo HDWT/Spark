@@ -9,12 +9,12 @@ public static partial class Spark
 		{
 			private class SizeGetter : ISizeGetter<string>
 			{
-				public int GetObjectSize(object instance, QueueWithIndexer sizes)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes)
 				{
 					return GetSize(instance as string, sizes);
 				}
 
-				public int GetSize(string aString, QueueWithIndexer sizes)
+				public int GetSize(string aString, QueueWithIndexer<int> sizes)
 				{
 					if (aString == null)
 						return MinDataSize;
