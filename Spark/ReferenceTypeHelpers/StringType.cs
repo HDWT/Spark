@@ -60,12 +60,34 @@ public static partial class Spark
 
 				// Длина строки
 				int stringLength = (dataSize - 1 - dataSizeBlock - MinDataSize) / sizeof(char);
+				string str = null;
+
+				#if SILVERLIGHT
+
+				TypeHelper.CharMapper mapper = new TypeHelper.CharMapper();
+
+				char[] chars = new char[stringLength];
+
+				// Читаем все символы в строке
+				for (int i = 0; i < stringLength; ++i)
+				{
+					mapper.byte1 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+
+					chars[i] = mapper.value;
+				}
+
+				str = new string(chars);
+
+				#else
 
 				TypeHelper.ArrayMapper mapper = new TypeHelper.ArrayMapper();
 				mapper.byteArray = data;
 
-				string str = new string(mapper.charArray, startIndex / 2, stringLength);
+				str = new string(mapper.charArray, startIndex / 2, stringLength);
 				startIndex += stringLength * sizeof(char);
+
+				#endif
 
 				if (!forwardPadding)
 					startIndex++;

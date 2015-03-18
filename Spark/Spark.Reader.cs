@@ -11,69 +11,71 @@ public static partial class Spark
 	{
 		public static ReadDataDelegate Get(Type type)
 		{
-			if (type.IsValueType)
+			TypeFlags typeFlags = GetTypeFlags(type);
+
+			if (typeFlags.Has(TypeFlags.Value))
 			{
-				if (type == typeof(int))
+				if (typeFlags.Is(TypeFlags.Int))
 					return TypeHelper.IntType.ReadObject;
 
-				if (type == typeof(float))
+				if (typeFlags.Is(TypeFlags.Float))
 					return TypeHelper.Float.ReadObject;
 
-				if (type == typeof(bool))
+				if (typeFlags.Is(TypeFlags.Bool))
 					return TypeHelper.Bool.ReadObject;
 
-				if (type.IsEnum)
+				if (typeFlags.Is(TypeFlags.Enum))
 					return EnumTypeHelper.Instance.GetReader(type);
 
-				if (type == typeof(char))
+				if (typeFlags.Is(TypeFlags.Char))
 					return TypeHelper.Char.ReadObject;
 
-				if (type == typeof(long))
+				if (typeFlags.Is(TypeFlags.Long))
 					return TypeHelper.Long.ReadObject;
 
-				if (type == typeof(short))
+				if (typeFlags.Is(TypeFlags.Short))
 					return TypeHelper.Short.ReadObject;
 
-				if (type == typeof(byte))
+				if (typeFlags.Is(TypeFlags.Byte))
 					return TypeHelper.Byte.ReadObject;
 
-				if (type == typeof(DateTime))
+				if (typeFlags.Is(TypeFlags.DateTime))
 					return TypeHelper.DateTime.ReadObject;
 
-				if (type == typeof(double))
+				if (typeFlags.Is(TypeFlags.Double))
 					return TypeHelper.Double.ReadObject;
 
-				if (type == typeof(uint))
+				if (typeFlags.Is(TypeFlags.UInt))
 					return TypeHelper.UInt.ReadObject;
 
-				if (type == typeof(ushort))
+				if (typeFlags.Is(TypeFlags.UShort))
 					return TypeHelper.UShort.ReadObject;
 
-				if (type == typeof(ulong))
+				if (typeFlags.Is(TypeFlags.ULong))
 					return TypeHelper.ULong.ReadObject;
 
-				if (type == typeof(sbyte))
-					return TypeHelper.SByte.ReadObject; 
+				if (typeFlags.Is(TypeFlags.SByte))
+					return TypeHelper.SByte.ReadObject;
 
-				if (type == typeof(decimal))
+				if (typeFlags.Is(TypeFlags.Decimal))
 					return TypeHelper.Decimal.ReadObject;
 
 				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 
-			if (type == typeof(string))
+			if (typeFlags.Is(TypeFlags.String))
 				return TypeHelper.String.ReadObject;
 
-			if (type.IsArray)
+			if (typeFlags.Is(TypeFlags.Array))
 				return TypeHelper.Array.ReadObject;
 
-			if (IsGenericList(type))
+			if (typeFlags.Is(TypeFlags.List))
 				return TypeHelper.List.ReadObject;
 
-			if (IsGenericDictionary(type))
+			if (typeFlags.Is(TypeFlags.Dictionary))
 				return TypeHelper.Dictionary.ReadObject;
 
-			if (type.IsClass || type.IsInterface)
+			if (typeFlags.Is(TypeFlags.Class) || typeFlags.Is(TypeFlags.Abstract) || typeFlags.Is(TypeFlags.Interface))
 				return TypeHelper.Object.ReadObject;
 
 			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

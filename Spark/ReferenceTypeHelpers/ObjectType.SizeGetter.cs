@@ -27,7 +27,7 @@ public static partial class Spark
 					sizes.Enqueue(0);
 
 					int dataSize = MinDataSize + m_dataType.GetDataSize(instance, sizes, values);
-					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
 					sizes[sizeIndex] = size;
 

@@ -158,16 +158,18 @@ public static partial class Spark
 
 			if (!s_getReferenceSizeDelegates.TryGetValue(type, out getSizeDelegate))
 			{
-				if (type.IsArray)
+				TypeFlags typeFlags = GetTypeFlags(type);
+
+				if (typeFlags.Is(TypeFlags.Array))
 					getSizeDelegate = TypeHelper.Array.GetSizeGetter(type).GetObjectSize;
 
-				else if (IsGenericList(type))
+				else if (typeFlags.Is(TypeFlags.List))
 					getSizeDelegate = TypeHelper.List.GetSizeGetter(type).GetObjectSize;
 
-				else if (IsGenericDictionary(type))
+				else if (typeFlags.Is(TypeFlags.Dictionary))
 					getSizeDelegate = TypeHelper.Dictionary.GetSizeGetter(type).GetObjectSize;
 
-				else if (type.IsClass || type.IsInterface)
+				else if (typeFlags.Is(TypeFlags.Class) || typeFlags.Is(TypeFlags.Abstract) || typeFlags.Is(TypeFlags.Interface))
 					getSizeDelegate = TypeHelper.Object.GetSizeGetter(type).GetObjectSize;
 
 				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

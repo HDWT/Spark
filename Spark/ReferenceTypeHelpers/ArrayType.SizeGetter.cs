@@ -60,7 +60,7 @@ public static partial class Spark
 					for (int i = 0; i < array.Rank; ++i)
 						dataSize += 1 + SizeCalculator.GetMinSize(array.GetLength(i));
 
-					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
 					sizes[sizeIndex] = size;
 

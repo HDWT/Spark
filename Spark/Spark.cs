@@ -16,7 +16,6 @@ public static partial class Spark
 
 	private static FormatFlags s_formatFlags = FormatFlags.None;// FormatFlags.LZ4Compression;
 
-	public static bool UTF8Encoding = false;
 	public static bool FullAot = true;
 
 	public static byte[] Serialize(object instance)

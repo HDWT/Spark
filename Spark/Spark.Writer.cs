@@ -64,16 +64,18 @@ public static partial class Spark
 
 			if (!s_writeReferenceDelegates.TryGetValue(type, out writeDelegate))
 			{
-				if (type.IsArray)
+				TypeFlags typeFlags = GetTypeFlags(type);
+
+				if (typeFlags.Is(TypeFlags.Array))
 					writeDelegate = TypeHelper.Array.GetDataWriter(type).WriteObject;
 
-				else if (IsGenericList(type))
+				else if (typeFlags.Is(TypeFlags.List))
 					writeDelegate = TypeHelper.List.GetDataWriter(type).WriteObject;
 
-				else if (IsGenericDictionary(type))
+				else if (typeFlags.Is(TypeFlags.Dictionary))
 					writeDelegate = TypeHelper.Dictionary.GetDataWriter(type).WriteObject;
 
-				else if (type.IsClass || type.IsInterface)
+				else if (typeFlags.Is(TypeFlags.Class) || typeFlags.Is(TypeFlags.Abstract) || typeFlags.Is(TypeFlags.Interface))
 					writeDelegate = TypeHelper.Object.GetDataWriter(type).WriteObject;
 
 				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

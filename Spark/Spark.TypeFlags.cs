@@ -86,4 +86,14 @@ public static partial class Spark
 		s_flagsByType[type] = typeFlags;
 		return typeFlags;
 	}
+
+	private static bool Has(this TypeFlags obj, TypeFlags flag)
+	{
+		return (obj & flag) == flag;
+	}
+
+	private static bool Is(this TypeFlags obj, TypeFlags flag)
+	{
+		return obj == flag;
+	}
 }

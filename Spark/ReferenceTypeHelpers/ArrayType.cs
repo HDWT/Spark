@@ -19,8 +19,9 @@ public static partial class Spark
 				if (!s_sizeGettersByArrayType.TryGetValue(arrayType, out sizeGetter))
 				{
 					Type elementType = GetElementType(arrayType);
+					TypeFlags typeFlags = GetTypeFlags(elementType);
 
-					sizeGetter = (elementType.IsValueType)
+					sizeGetter = (typeFlags.Has(TypeFlags.Value))
 						? new SizeGetter(SizeCalculator.GetForValueType(elementType))
 						: new SizeGetter(SizeCalculator.GetForReferenceType(elementType));
 
@@ -37,8 +38,9 @@ public static partial class Spark
 				if (!s_dataWritersByArrayType.TryGetValue(arrayType, out dataWriter))
 				{
 					Type elementType = GetElementType(arrayType);
+					TypeFlags typeFlags = GetTypeFlags(elementType);
 
-					dataWriter = (elementType.IsValueType)
+					dataWriter = (typeFlags.Has(TypeFlags.Value))
 						? new DataWriter(Writer.GetDelegateForValueType(elementType))
 						: new DataWriter(Writer.GetDelegateForReferenceType(elementType));
 

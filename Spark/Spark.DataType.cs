@@ -67,7 +67,9 @@ public static partial class Spark
 				}
 			}
 
-			if ((m_assignableTypes == null) && (IsGenericList(type) || IsGenericDictionary(type)))
+			TypeFlags typeFlags = GetTypeFlags(type);
+
+			if ((m_assignableTypes == null) && (typeFlags.Is(TypeFlags.List) || typeFlags.Is(TypeFlags.Dictionary)))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);

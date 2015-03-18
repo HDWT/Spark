@@ -59,7 +59,7 @@ public static partial class Spark
 						? GetElementsSize(list)
 						: GetElementsSize(list, sizes, values);
 
-					int size = dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
 					sizes[sizeIndex] = size;
 

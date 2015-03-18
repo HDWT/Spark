@@ -25,18 +25,21 @@ public static partial class Spark
 
 					dataSize += 1 + SizeCalculator.GetMinSize(dictionary.Count);
 
-					return dataSize + SizeCalculator.GetMinSize(dataSize + SizeCalculator.GetMinSize(dataSize));
+					return dataSize + SizeCalculator.GetMinSize2(dataSize);
 				}
 
 				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 				{
 					Type keyType = dictionary.GetType().GetGenericArguments()[0];
-					Type valueType = dictionary.GetType().GetGenericArguments()[1];
+					TypeFlags keyTypeFlags = GetTypeFlags(keyType);
 
-					var getKeySizeAsValueType = keyType.IsValueType ? SizeCalculator.GetForValueType(keyType) : null;
+					Type valueType = dictionary.GetType().GetGenericArguments()[1];
+					TypeFlags valueTypeFlags = GetTypeFlags(valueType);
+
+					var getKeySizeAsValueType = keyTypeFlags.Has(TypeFlags.Value) ? SizeCalculator.GetForValueType(keyType) : null;
 					var getKeySizeAsReferenceType = (getKeySizeAsValueType == null) ? SizeCalculator.GetForReferenceType(keyType) : null;
 
-					var getValueSizeAsValueType = valueType.IsValueType ? SizeCalculator.GetForValueType(valueType) : null;
+					var getValueSizeAsValueType = valueTypeFlags.Has(TypeFlags.Value) ? SizeCalculator.GetForValueType(valueType) : null;
 					var getValueSizeAsReferenceType = (getValueSizeAsValueType == null) ? SizeCalculator.GetForReferenceType(valueType) : null;
 
 					int size = 0;
