@@ -143,6 +143,9 @@ public static partial class Spark
 
 			values.Enqueue(value);
 
+			if (!m_ignoreDataSizeBlock && (value == instance))
+				return HeaderSize + 1;
+
 			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values);
 		}
 
@@ -151,14 +154,26 @@ public static partial class Spark
 			object value = values.Dequeue();// GetValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			m_dataWriter.Write(value, data, ref startIndex, sizes, values);
+
+			if (!m_ignoreDataSizeBlock && (value == instance))
+				data[startIndex++] = byte.MaxValue;
+			else
+				m_dataWriter.Write(value, data, ref startIndex, sizes, values);
 		}
 
 		public virtual void ReadValue(object instance, byte[] data, ref int startIndex)
 		{
-			object value = readData(m_type, data, ref startIndex);
+			if (data[startIndex] == byte.MaxValue)
+			{
+				startIndex++;
+				SetValue(instance, instance);
+			}
+			else
+			{
+				object value = readData(m_type, data, ref startIndex);
 
-			SetValue(instance, value);
+				SetValue(instance, value);
+			}
 		}
 
 		protected void WriteHeader(byte[] data, ref int startIndex)

@@ -19,7 +19,7 @@ public static partial class Spark
 		private static readonly Dictionary<Type, DataType> s_dataTypes = new Dictionary<Type, DataType>(16);
 		private static readonly object m_mutex = new object();
 		
-		private readonly IDataMember[] m_members = null;
+		private IDataMember[] m_members = null;
 		private readonly ConstructorInfo m_constructor = null;
 		
 		public static DataType Get(Type type)
@@ -32,6 +32,8 @@ public static partial class Spark
 				{
 					dataType = new DataType(type);
 					s_dataTypes[type] = dataType;
+
+					dataType.InitMembers();
 				}
 			}
 
@@ -43,7 +45,12 @@ public static partial class Spark
 			lock (m_mutex)
 			{
 				if (!s_dataTypes.ContainsKey(type))
-					s_dataTypes[type] = new DataType(type);
+				{
+					DataType dataType = new DataType(type);
+					s_dataTypes[type] = dataType;
+
+					dataType.InitMembers();
+				}
 			}
 		}
 
@@ -81,6 +88,14 @@ public static partial class Spark
 
 			if ((m_constructor == null) && (m_assignableTypes == null))
 				throw new ArgumentException(string.Format("Required default constructor for type '{0}'", type));
+		}
+
+		public void InitMembers()
+		{
+			if (m_members != null)
+				throw new System.InvalidOperationException();
+
+			Type type = m_type;
 
 			//
 			List<IDataMember> members = null;
