@@ -20,12 +20,12 @@ public static partial class Spark
 		{
 			public int GetSize(object value)
 			{
-				return 1;
+				return GetSize((byte)value);
 			}
 
 			public int GetSize(byte value)
 			{
-				return 1;
+				return (value == 0) ? 1 : 2;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -35,7 +35,15 @@ public static partial class Spark
 
 			public byte Read(byte[] data, ref int startIndex)
 			{
-				return data[startIndex++];
+				byte dataSize = data[startIndex++];
+
+				if (dataSize == zero)
+					return zero;
+
+				if (dataSize == one)
+					return data[startIndex++];
+
+				throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 			}
 
 			public void WriteObject(object value, byte[] data, ref int startIndex)
@@ -45,7 +53,15 @@ public static partial class Spark
 
 			public void Write(byte value, byte[] data, ref int startIndex)
 			{
-				data[startIndex++] = value;
+				if (value == zero)
+				{
+					data[startIndex++] = zero;
+				}
+				else
+				{
+					data[startIndex++] = one;
+					data[startIndex++] = value;
+				}
 			}
 		}
 	}

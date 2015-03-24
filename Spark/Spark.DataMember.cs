@@ -151,7 +151,7 @@ public static partial class Spark
 
 		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
-			object value = values.Dequeue();// GetValue(instance);
+			object value = values.Dequeue();
 
 			WriteHeader(data, ref startIndex);
 

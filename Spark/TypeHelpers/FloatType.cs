@@ -13,7 +13,7 @@ public static partial class Spark
 			public float value;
 
 			[FieldOffset(0)]
-			public uint uintValue;
+			public int intValue;
 
 			[FieldOffset(0)]
 			public byte byte1;
@@ -40,7 +40,7 @@ public static partial class Spark
 				FloatTypeMapper mapper = new FloatTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.UInt.GetSize(mapper.uintValue);
+				return TypeHelper.IntType.GetSize(mapper.intValue);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -51,7 +51,7 @@ public static partial class Spark
 			public float Read(byte[] data, ref int startIndex)
 			{
 				FloatTypeMapper mapper = new FloatTypeMapper();
-				mapper.uintValue = TypeHelper.UInt.Read(data, ref startIndex);
+				mapper.intValue = TypeHelper.IntType.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
@@ -66,7 +66,7 @@ public static partial class Spark
 				FloatTypeMapper mapper = new FloatTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.UInt.Write(mapper.uintValue, data, ref startIndex);
+				TypeHelper.IntType.Write(mapper.intValue, data, ref startIndex);
 			}
 		}
 	}

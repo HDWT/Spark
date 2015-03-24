@@ -8,17 +8,14 @@ public static partial class Spark
 	{
 		private class BoolType : ITypeHelper<bool>
 		{
-			private static byte zero = 0;
-			private static byte one = 1;
-
 			public int GetSize(object value)
 			{
-				return 1;
+				return GetSize((bool)value);
 			}
 
 			public int GetSize(bool value)
 			{
-				return 1;
+				return (value == false) ? 1 : 2;
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -28,7 +25,15 @@ public static partial class Spark
 
 			public bool Read(byte[] data, ref int startIndex)
 			{
-				return data[startIndex++] != zero;
+				byte dataSize = data[startIndex++];
+
+				if (dataSize == zero)
+					return false;
+
+				if (dataSize == one)
+					return data[startIndex++] != zero;
+
+				throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 			}
 
 			public void WriteObject(object value, byte[] data, ref int startIndex)
@@ -38,7 +43,15 @@ public static partial class Spark
 
 			public void Write(bool value, byte[] data, ref int startIndex)
 			{
-				data[startIndex++] = value ? one : zero;
+				if (value)
+				{
+					data[startIndex++] = one;
+					data[startIndex++] = one;
+				}
+				else
+				{
+					data[startIndex++] = zero;
+				}
 			}
 		}
 	}

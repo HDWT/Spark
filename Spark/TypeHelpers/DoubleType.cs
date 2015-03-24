@@ -13,7 +13,7 @@ public static partial class Spark
 			public double value;
 
 			[FieldOffset(0)]
-			public ulong ulongValue;
+			public long longValue;
 
 			[FieldOffset(0)]
 			public byte byte1;
@@ -52,7 +52,7 @@ public static partial class Spark
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.ULong.GetSize(mapper.ulongValue);
+				return TypeHelper.Long.GetSize(mapper.longValue);
 			}
 
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
@@ -63,7 +63,7 @@ public static partial class Spark
 			public double Read(byte[] data, ref int startIndex)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
-				mapper.ulongValue = TypeHelper.ULong.Read(data, ref startIndex);
+				mapper.longValue = TypeHelper.Long.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
@@ -78,7 +78,7 @@ public static partial class Spark
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.ULong.Write(mapper.ulongValue, data, ref startIndex);
+				TypeHelper.Long.Write(mapper.longValue, data, ref startIndex);
 			}
 		}
 	}

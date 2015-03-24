@@ -17,6 +17,7 @@ public static partial class Spark
 	private static FormatFlags s_formatFlags = FormatFlags.None;// FormatFlags.LZ4Compression;
 
 	public static bool FullAot = true;
+	public static bool SimulateMissingFields = false;
 
 	public static byte[] Serialize(object instance)
 	{

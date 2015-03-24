@@ -278,15 +278,12 @@ public static partial class Spark
 				if (callbacks != null)
 					callbacks.BeforeSetValue(instance, memberId, memberIndex != InvalidMemberIndex);
 
-				if (memberIndex == InvalidMemberIndex)
+				if ((memberIndex == InvalidMemberIndex) || (SimulateMissingFields && DateTime.UtcNow.Ticks % 2 == 0))
 				{
 					byte dataSizeBlock = data[startIndex++];
 
 					// Erase reserved bytes
-					dataSizeBlock = (byte)(dataSizeBlock & ~0x0F);
-
-					//if (dataSizeBlock >= ForwardPaddingMark)
-					//	dataSizeBlock -= ForwardPaddingMark;
+					dataSizeBlock = (byte)(dataSizeBlock & 0x0F);
 
 					if (dataSizeBlock != 0)
 					{

@@ -21,22 +21,52 @@ public static partial class Spark
 
 		private class UShortType : ITypeHelper<ushort>
 		{
+			private const ushort UShortZero = (ushort)0x00;
+
 			public int GetSize(object value)
 			{
-				return 2;
+				return GetSize((ushort)value);
 			}
 
 			public int GetSize(ushort value)
 			{
-				return 2;
+				if (value == UShortZero)
+					return 1;
+
+				UShortTypeMapper mapper = new UShortTypeMapper();
+				mapper.value = value;
+
+				if (mapper.byte2 != zero)
+					return 3;
+
+				if (mapper.byte1 != zero)
+					return 2;
+
+				throw new System.ArgumentException();
 			}
 
 			public ushort Read(byte[] data, ref int startIndex)
 			{
+				int dataSize = data[startIndex++];
+
+				if (dataSize == zero)
+					return UShortZero;
+
 				UShortTypeMapper mapper = new UShortTypeMapper();
 
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
+				if (dataSize == two)
+				{
+					mapper.byte1 = data[startIndex++];
+					mapper.byte2 = data[startIndex++];
+				}
+				else if (dataSize == one)
+				{
+					mapper.byte1 = data[startIndex++];
+				}
+				else
+				{
+					throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
+				}
 
 				return mapper.value;
 			}
@@ -53,11 +83,30 @@ public static partial class Spark
 
 			public void Write(ushort value, byte[] data, ref int startIndex)
 			{
+				if (value == UShortZero)
+				{
+					data[startIndex++] = zero;
+					return;
+				}
+
 				UShortTypeMapper mapper = new UShortTypeMapper();
 				mapper.value = value;
 
-				data[startIndex++] = mapper.byte1;
-				data[startIndex++] = mapper.byte2;
+				if (mapper.byte2 != zero)
+				{
+					data[startIndex++] = two;
+					data[startIndex++] = mapper.byte1;
+					data[startIndex++] = mapper.byte2;
+				}
+				else if (mapper.byte1 != zero)
+				{
+					data[startIndex++] = one;
+					data[startIndex++] = mapper.byte1;
+				}
+				else
+				{
+					throw new System.ArgumentException();
+				}
 			}
 		}
 	}
