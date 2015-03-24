@@ -21,11 +21,19 @@ public static partial class Spark
 					if (dictionary == null)
 						return MinDataSize;
 
-					int dataSize = MinDataSize + GetElementsSize(dictionary, sizes, values);
+					// Get last node before get elements size
+					int sizeIndex = sizes.Count;
+					sizes.Enqueue(0);
 
-					dataSize += 1 + SizeCalculator.GetMinSize(dictionary.Count);
+					int dataSize = MinDataSize + 1 + SizeCalculator.GetMinSize(dictionary.Count);
 
-					return dataSize + SizeCalculator.GetMinSize2(dataSize);
+					dataSize += GetElementsSize(dictionary, sizes, values);
+
+					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
+
+					sizes[sizeIndex] = size;
+
+					return size;
 				}
 
 				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
