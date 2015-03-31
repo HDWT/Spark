@@ -132,10 +132,10 @@ public static partial class Spark
 
 	public interface ICallbacks
 	{
-		void BeforeDeserialize(object instance);
-		void AfterDeserialize(object instance);
+		void BeforeDeserialize();
+		void AfterDeserialize();
 
-		void BeforeSetValue(object instance, ushort memberId, bool validMemberId);
-		void AfterSetValue(object instance, ushort memberId, bool validMemberId);
+		void BeforeSetValue(ushort memberId, bool validMemberId);
+		void AfterSetValue(ushort memberId, bool validMemberId);
 	}
 }

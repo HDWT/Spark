@@ -145,7 +145,7 @@ public static partial class Spark
 
 	private static List<TypeId> TryGetAsAttributeParams(object[] attributes)
 	{
-		List<TypeId> attributeParams = null;
+		List<TypeId> attributeParams = new List<TypeId>();
 
 		for (int i = 0; i < attributes.Length; ++i)
 		{
@@ -153,9 +153,6 @@ public static partial class Spark
 
 			if (attributeType != typeof(AsAttribute))
 				continue;
-
-			if (attributeParams == null)
-				attributeParams = new List<TypeId>();
 
 			byte typeId = AsAttribute.GetId(attributes[i]);
 			System.Type classType = AsAttribute.GetType(attributes[i]);

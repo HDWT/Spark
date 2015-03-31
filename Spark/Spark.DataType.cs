@@ -185,7 +185,7 @@ public static partial class Spark
 				inheritanceDepth++;
 			}
 
-			m_members = members.ToArray();
+			m_members = (members != null) ?  members.ToArray() :  new IDataMember[0];
 		}
 
 		public bool TryCreateInstance(byte typeId, out object instance)
@@ -209,7 +209,7 @@ public static partial class Spark
 			}
 
 			instance = null;
-			return false; // m_constructor.Invoke(null);
+			return false;
 		}
 
 		public object CreateInstance(object parameter)
@@ -229,7 +229,7 @@ public static partial class Spark
 			ICallbacks callbacks = instance as ICallbacks;
 
 			if (callbacks != null)
-				callbacks.BeforeDeserialize(instance);
+				callbacks.BeforeDeserialize();
 
 			byte typeId = data[startIndex++];
 
@@ -238,21 +238,18 @@ public static partial class Spark
 
 			if (typeId != 0)
 			{
-				if (m_assignableTypes != null)
+				for (int i = 0; i < m_assignableTypes.Count; ++i)
 				{
-					for (int i = 0; i < m_assignableTypes.Count; ++i)
-					{
-						if (m_assignableTypes[i].Id != typeId)
-							continue;
+					if (m_assignableTypes[i].Id != typeId)
+						continue;
 
-						int typeIdIndex = --startIndex;
-						data[typeIdIndex] = 0; // Полиморфизм. Читаем поля в другой класс
+					int typeIdIndex = --startIndex;
+					data[typeIdIndex] = 0; // Полиморфизм. Читаем поля в другой класс
 
-						m_assignableTypes[i].GetDataType().ReadValues(instance, data, ref startIndex, endIndex);
+					m_assignableTypes[i].GetDataType().ReadValues(instance, data, ref startIndex, endIndex);
 
-						data[typeIdIndex] = typeId; // Восстанавливаем значение. byte[] data - не должен меняться
-						return;
-					}
+					data[typeIdIndex] = typeId; // Восстанавливаем значение. byte[] data - не должен меняться
+					return;
 				}
 
 				startIndex = endIndex;
@@ -276,7 +273,7 @@ public static partial class Spark
 				int memberIndex = GetMemberIndex(memberId);
 
 				if (callbacks != null)
-					callbacks.BeforeSetValue(instance, memberId, memberIndex != InvalidMemberIndex);
+					callbacks.BeforeSetValue(memberId, memberIndex != InvalidMemberIndex);
 
 				if ((memberIndex == InvalidMemberIndex) || (SimulateMissingFields && DateTime.UtcNow.Ticks % 2 == 0))
 				{
@@ -309,11 +306,11 @@ public static partial class Spark
 				}
 
 				if (callbacks != null)
-					callbacks.AfterSetValue(instance, memberId, memberIndex != InvalidMemberIndex);
+					callbacks.AfterSetValue(memberId, memberIndex != InvalidMemberIndex);
 			}
 
 			if (callbacks != null)
-				callbacks.AfterDeserialize(instance);
+				callbacks.AfterDeserialize();
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
