@@ -65,18 +65,15 @@ public static partial class Spark
 
 			m_assignableTypes = TryGetAsAttributeParams(type.GetCustomAttributes(false));
 
-			if (m_assignableTypes != null)
+			for (int i = 0; i < m_assignableTypes.Count; ++i)
 			{
-				for (int i = 0; i < m_assignableTypes.Count; ++i)
-				{
-					if (!type.IsAssignableFrom(m_assignableTypes[i].Type))
-						throw new ArgumentException(string.Format("Type '{0}' is not assignable from {1}", type, m_assignableTypes[i].Type));
-				}
+				if (!type.IsAssignableFrom(m_assignableTypes[i].Type))
+					throw new ArgumentException(string.Format("Type '{0}' is not assignable from {1}", type, m_assignableTypes[i].Type));
 			}
 
 			TypeFlags typeFlags = GetTypeFlags(type);
 
-			if ((m_assignableTypes == null) && (typeFlags.Is(TypeFlags.List) || typeFlags.Is(TypeFlags.Dictionary)))
+			if ((typeFlags.Is(TypeFlags.List) || typeFlags.Is(TypeFlags.Dictionary)))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);
@@ -86,14 +83,14 @@ public static partial class Spark
 				m_constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
 			}
 
-			if ((m_constructor == null) && (m_assignableTypes == null))
+			if ((m_constructor == null) && (m_assignableTypes.Count == 0))
 				throw new ArgumentException(string.Format("Required default constructor for type '{0}'", type));
 		}
 
 		public void InitMembers()
 		{
 			if (m_members != null)
-				throw new System.InvalidOperationException();
+				return;
 
 			Type type = m_type;
 
@@ -316,7 +313,7 @@ public static partial class Spark
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
 		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
-			if (m_assignableTypes != null)
+			if (m_assignableTypes.Count != 0)
 			{
 				Type instanceType = instance.GetType();
 
@@ -342,7 +339,7 @@ public static partial class Spark
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
 		public int GetDataSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
 		{
-			if (m_assignableTypes != null)
+			if (m_assignableTypes.Count != 0)
 			{
 				Type instanceType = instance.GetType();
 
