@@ -144,18 +144,21 @@ public static partial class Spark
 			private readonly Dictionary<Type, EnumInfo> m_enumsInfo = new Dictionary<Type, EnumInfo>();
 			private static readonly object m_mutex = new object();
 
-			//private ITypeHelper<T> m_typeHelper = null;
-
 			private class EnumInfo
 			{
-				private Array	m_values			= null;
-				private T[]		m_underlyingValues	= null;
-				private int[]	m_sizes				= null;
-				private bool	m_flags				= false;
+				private object[]	m_values			= null;
+				private T[]			m_underlyingValues	= null;
+				private int[]		m_sizes				= null;
+				private bool		m_flags				= false;
 
 				public EnumInfo(Type enumType, GetSizeDelegate getSize)
 				{
-					m_values = Enum.GetValues(enumType);
+					Array enumValues = Enum.GetValues(enumType);
+
+					m_values = new object[enumValues.Length];
+
+					for (int i = 0; i < m_values.Length; ++i)
+						m_values[i] = enumValues.GetValue(i);
 
 					m_underlyingValues = new T[m_values.Length];
 					m_sizes = new int[m_values.Length];
@@ -169,13 +172,10 @@ public static partial class Spark
 						}
 					}
 
-					int index = 0;
-					foreach (T value in m_values)
+					for (int i = 0; i < m_values.Length; ++i)
 					{
-						m_underlyingValues[index] = value;
-						m_sizes[index] = getSize(value);
-
-						index++;
+						m_underlyingValues[i] = (T)m_values[i];
+						m_sizes[i] = getSize(m_values[i]);
 					}
 				}
 
@@ -190,20 +190,18 @@ public static partial class Spark
 						for (int index = 0; index < m_underlyingValues.Length; ++index)
 						{
 							if (m_underlyingValues[index].CompareTo(underlyingValue) == 0)
-								return m_values.GetValue(index);
+								return m_values[index];
 						}
 					}
 
-					return m_values.GetValue(0);
+					return m_values[0];
 				}
 			}
 
 			public Values(GetSizeDelegate getSize, ReadDataDelegate readObject)
 			{
-				//m_typeHelper = typeHelper;
 				m_getSize = getSize;
 				m_readObject = readObject;
-
 			}
 
 			GetSizeDelegate m_getSize = null;
