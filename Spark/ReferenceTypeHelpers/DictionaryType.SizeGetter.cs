@@ -44,10 +44,10 @@ public static partial class Spark
 					Type valueType = dictionary.GetType().GetGenericArguments()[1];
 					TypeFlags valueTypeFlags = GetTypeFlags(valueType);
 
-					var getKeySizeAsValueType = keyTypeFlags.Has(TypeFlags.Value) ? SizeCalculator.GetForValueType(keyType) : null;
+					var getKeySizeAsValueType = HasFlag(keyTypeFlags, TypeFlags.Value) ? SizeCalculator.GetForValueType(keyType) : null;
 					var getKeySizeAsReferenceType = (getKeySizeAsValueType == null) ? SizeCalculator.GetForReferenceType(keyType) : null;
 
-					var getValueSizeAsValueType = valueTypeFlags.Has(TypeFlags.Value) ? SizeCalculator.GetForValueType(valueType) : null;
+					var getValueSizeAsValueType = HasFlag(valueTypeFlags, TypeFlags.Value) ? SizeCalculator.GetForValueType(valueType) : null;
 					var getValueSizeAsReferenceType = (getValueSizeAsValueType == null) ? SizeCalculator.GetForReferenceType(valueType) : null;
 
 					int size = 0;

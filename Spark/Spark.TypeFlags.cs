@@ -87,12 +87,12 @@ public static partial class Spark
 		return typeFlags;
 	}
 
-	private static bool Has(this TypeFlags obj, TypeFlags flag)
+	private static bool HasFlag(TypeFlags obj, TypeFlags flag)
 	{
 		return (obj & flag) == flag;
 	}
 
-	private static bool Is(this TypeFlags obj, TypeFlags flag)
+	private static bool IsFlag(TypeFlags obj, TypeFlags flag)
 	{
 		return obj == flag;
 	}

@@ -66,16 +66,16 @@ public static partial class Spark
 			{
 				TypeFlags typeFlags = GetTypeFlags(type);
 
-				if (typeFlags.Is(TypeFlags.Array))
+				if (IsFlag(typeFlags, TypeFlags.Array))
 					writeDelegate = TypeHelper.Array.GetDataWriter(type).WriteObject;
 
-				else if (typeFlags.Is(TypeFlags.List))
+				else if (IsFlag(typeFlags, TypeFlags.List))
 					writeDelegate = TypeHelper.List.GetDataWriter(type).WriteObject;
 
-				else if (typeFlags.Is(TypeFlags.Dictionary))
+				else if (IsFlag(typeFlags, TypeFlags.Dictionary))
 					writeDelegate = TypeHelper.Dictionary.GetDataWriter(type).WriteObject;
 
-				else if (typeFlags.Is(TypeFlags.Class) || typeFlags.Is(TypeFlags.Abstract) || typeFlags.Is(TypeFlags.Interface))
+				else if (IsFlag(typeFlags, TypeFlags.Class) || IsFlag(typeFlags, TypeFlags.Abstract) || IsFlag(typeFlags, TypeFlags.Interface))
 					writeDelegate = TypeHelper.Object.GetDataWriter(type).WriteObject;
 
 				else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

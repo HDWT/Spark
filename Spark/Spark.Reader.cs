@@ -13,69 +13,69 @@ public static partial class Spark
 		{
 			TypeFlags typeFlags = GetTypeFlags(type);
 
-			if (typeFlags.Has(TypeFlags.Value))
+			if (HasFlag(typeFlags, TypeFlags.Value))
 			{
-				if (typeFlags.Is(TypeFlags.Int))
+				if (IsFlag(typeFlags, TypeFlags.Int))
 					return TypeHelper.IntType.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Float))
+				if (IsFlag(typeFlags, TypeFlags.Float))
 					return TypeHelper.Float.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Bool))
+				if (IsFlag(typeFlags, TypeFlags.Bool))
 					return TypeHelper.Bool.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Enum))
+				if (IsFlag(typeFlags, TypeFlags.Enum))
 					return EnumTypeHelper.Instance.GetReader(type);
 
-				if (typeFlags.Is(TypeFlags.Char))
+				if (IsFlag(typeFlags, TypeFlags.Char))
 					return TypeHelper.Char.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Long))
+				if (IsFlag(typeFlags, TypeFlags.Long))
 					return TypeHelper.Long.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Short))
+				if (IsFlag(typeFlags, TypeFlags.Short))
 					return TypeHelper.Short.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Byte))
+				if (IsFlag(typeFlags, TypeFlags.Byte))
 					return TypeHelper.Byte.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.DateTime))
+				if (IsFlag(typeFlags, TypeFlags.DateTime))
 					return TypeHelper.DateTime.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Double))
+				if (IsFlag(typeFlags, TypeFlags.Double))
 					return TypeHelper.Double.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.UInt))
+				if (IsFlag(typeFlags, TypeFlags.UInt))
 					return TypeHelper.UInt.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.UShort))
+				if (IsFlag(typeFlags, TypeFlags.UShort))
 					return TypeHelper.UShort.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.ULong))
+				if (IsFlag(typeFlags, TypeFlags.ULong))
 					return TypeHelper.ULong.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.SByte))
+				if (IsFlag(typeFlags, TypeFlags.SByte))
 					return TypeHelper.SByte.ReadObject;
 
-				if (typeFlags.Is(TypeFlags.Decimal))
+				if (IsFlag(typeFlags, TypeFlags.Decimal))
 					return TypeHelper.Decimal.ReadObject;
 
 				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}
 
-			if (typeFlags.Is(TypeFlags.String))
+			if (IsFlag(typeFlags, TypeFlags.String))
 				return TypeHelper.String.ReadObject;
 
-			if (typeFlags.Is(TypeFlags.Array))
+			if (IsFlag(typeFlags, TypeFlags.Array))
 				return TypeHelper.Array.ReadObject;
 
-			if (typeFlags.Is(TypeFlags.List))
+			if (IsFlag(typeFlags, TypeFlags.List))
 				return TypeHelper.List.ReadObject;
 
-			if (typeFlags.Is(TypeFlags.Dictionary))
+			if (IsFlag(typeFlags, TypeFlags.Dictionary))
 				return TypeHelper.Dictionary.ReadObject;
 
-			if (typeFlags.Is(TypeFlags.Class) || typeFlags.Is(TypeFlags.Abstract) || typeFlags.Is(TypeFlags.Interface))
+			if (IsFlag(typeFlags, TypeFlags.Class) || IsFlag(typeFlags, TypeFlags.Abstract) || IsFlag(typeFlags, TypeFlags.Interface))
 				return TypeHelper.Object.ReadObject;
 
 			throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));

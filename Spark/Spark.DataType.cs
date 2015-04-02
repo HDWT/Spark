@@ -73,7 +73,7 @@ public static partial class Spark
 
 			TypeFlags typeFlags = GetTypeFlags(type);
 
-			if ((typeFlags.Is(TypeFlags.List) || typeFlags.Is(TypeFlags.Dictionary)))
+			if ((IsFlag(typeFlags, TypeFlags.List) || IsFlag(typeFlags, TypeFlags.Dictionary)))
 			{
 				ConstructorParameterType[0] = typeof(int);
 				m_constructor = type.GetConstructor(ConstructorParameterType);
