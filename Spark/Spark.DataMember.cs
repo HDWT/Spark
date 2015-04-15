@@ -239,7 +239,12 @@ public static partial class Spark
 			ilGenerator.Emit(OpCodes.Ldarg_0);
 			ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
 
-			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetGetMethod(true), null);
+			var getMethod = propertyInfo.GetGetMethod(true);
+
+			if (getMethod == null)
+				throw new System.ArgumentException(string.Format("Could not find a getter for {0} in class {1}", propertyInfo.Name, propertyInfo.DeclaringType.Name));
+
+			ilGenerator.EmitCall(OpCodes.Callvirt, getMethod, null);
 			ilGenerator.Emit(OpCodes.Ret);
 
 			return (DynamicGetValueDelegate)getter.CreateDelegate(typeof(DynamicGetValueDelegate));
@@ -270,7 +275,12 @@ public static partial class Spark
 			ilGenerator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
 			ilGenerator.Emit(OpCodes.Ldarg_1);
 
-			ilGenerator.EmitCall(OpCodes.Callvirt, propertyInfo.GetSetMethod(true), null);
+			var setMethod = propertyInfo.GetSetMethod(true);
+
+			if (setMethod == null)
+				throw new System.ArgumentException(string.Format("Could not find a setter for {0} in class {1}", propertyInfo.Name, propertyInfo.DeclaringType.Name));
+
+			ilGenerator.EmitCall(OpCodes.Callvirt, setMethod, null);
 			ilGenerator.Emit(OpCodes.Ret);
 
 			return (DynamicSetValueDelegate)setter.CreateDelegate(typeof(DynamicSetValueDelegate));

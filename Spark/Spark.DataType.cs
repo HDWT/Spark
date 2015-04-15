@@ -21,7 +21,12 @@ public static partial class Spark
 		
 		private IDataMember[] m_members = null;
 		private readonly ConstructorInfo m_constructor = null;
-		
+		private ICreator m_creator = null;
+
+		private Type m_type = null;
+		private byte m_typeId = 0;
+		private List<TypeId> m_assignableTypes = null;
+
 		public static DataType Get(Type type)
 		{
 			DataType dataType = null;
@@ -54,10 +59,6 @@ public static partial class Spark
 			}
 		}
 
-		private Type m_type = null;
-		private byte m_typeId = 0;
-		private List<TypeId> m_assignableTypes = null;
-
 		public DataType(Type type)
 		{
 			m_type = type;
@@ -81,6 +82,9 @@ public static partial class Spark
 			else
 			{
 				m_constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+
+				if (m_constructor != null && typeof(ICreator).IsAssignableFrom(type))
+					m_creator = (ICreator)m_constructor.Invoke(null);
 			}
 
 			if ((m_constructor == null) && (m_assignableTypes.Count == 0))
@@ -192,10 +196,24 @@ public static partial class Spark
 
 			if (typeId == 0)
 			{
+				if (m_creator != null)
+				{
+					instance = m_creator.CreateInstance();
+
+					if (instance == null)
+						return false;
+
+					if (instance.GetType() != m_type)
+						throw new System.ArgumentException(string.Format("Spark.ICreator.CreateInstance() returns instance of '{0}' type. Expected type '{1}'", instance.GetType(), m_type));
+
+					return true;
+				}
+
 				if (m_constructor == null)
 					throw new ArgumentException(string.Format("Required default constructor for type '{0}'", m_type));
 
 				instance = m_constructor.Invoke(null);
+
 				return true;
 			}
 

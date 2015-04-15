@@ -138,4 +138,10 @@ public static partial class Spark
 		void BeforeSetValue(ushort memberId, bool validMemberId);
 		void AfterSetValue(ushort memberId, bool validMemberId);
 	}
+
+	/// <summary> Custom constructor. Default constructor required </summary>
+	public interface ICreator
+	{
+		object CreateInstance();
+	}
 }
