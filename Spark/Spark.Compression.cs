@@ -2,8 +2,8 @@
 
 public static partial class Spark
 {
-	public static Func<byte[], int, int, byte[]> LZ4EncodeFunc;
-	public static Func<byte[], int, int, int, byte[]> LZ4DecodeFunc;
+	public static Func<byte[], int, int, byte[]> LZ4EncodeFunc = null;//LZ4s.LZ4Codec.Encode32;
+	public static Func<byte[], int, int, int, byte[]> LZ4DecodeFunc = null;//LZ4s.LZ4Codec.Decode32;
 
 	public static bool LZ4Compression
 	{
@@ -13,6 +13,9 @@ public static partial class Spark
 
 	private static byte[] LZ4Encode(byte[] data)
 	{
+		if (LZ4EncodeFunc == null)
+			return data;
+
 		TypeHelper.IntTypeMapper mapper = new TypeHelper.IntTypeMapper();
 		mapper.value = data.Length - HeaderSize;
 
@@ -34,6 +37,9 @@ public static partial class Spark
 
 	private static byte[] LZ4Decode(byte[] data)
 	{
+		if (LZ4DecodeFunc == null)
+			return data;
+
 		TypeHelper.IntTypeMapper mapper = new TypeHelper.IntTypeMapper();
 
 		mapper.byte1 = data[HeaderSize + 0];

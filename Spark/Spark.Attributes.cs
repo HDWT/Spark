@@ -125,14 +125,14 @@ public static partial class Spark
 				if (knownIds == null)
 					knownIds = new HashSet<int>();
 
-				if (knownIds.Contains(typeId))
+				if (knownIds.Contains(typeId) && (currentType != classType))
 					throw new System.ArgumentException(string.Format("Type identifier '{0}' declared more than once for type {1}", typeId, currentType.Name));
 
 				knownIds.Add(typeId);
 
 				if (type == classType)
 				{
-					if (id != 0)
+					if ((id != 0) && (id != typeId))
 						throw new System.ArgumentException(string.Format("Type identifier '{0}' declared more than once for type {1}", classType.Name, currentType.Name));
 
 					id = typeId;

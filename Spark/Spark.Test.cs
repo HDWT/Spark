@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+#pragma warning disable 0649,168
 public static partial class Spark
 {
 	public static class TestLowLevel
@@ -150,9 +150,9 @@ public static partial class Spark
 
 		public static void TestDictionary()
 		{
-			TestDictionary<bool, int>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomByte, () => { return (int)GetRandomDouble(); }));
-			TestDictionary<string, int>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomString, () => { return (int)GetRandomDouble(); }));
-			TestDictionary<decimal, string>(GetDictionaryWithRandomValues(random.Next(10, 100), GetRandomDecimal, GetRandomString));
+			TestDictionary<bool, int>(GetDictionaryWithRandomValues<bool, int>(random.Next(10, 100), GetRandomByte, () => { return (int)GetRandomDouble(); }));
+			TestDictionary<string, int>(GetDictionaryWithRandomValues<string, int>(random.Next(10, 100), GetRandomString, () => { return (int)GetRandomDouble(); }));
+			TestDictionary<decimal, string>(GetDictionaryWithRandomValues<decimal, string>(random.Next(10, 100), GetRandomDecimal, GetRandomString));
 		}
 
 		private static void TestGenericClass()
@@ -740,3 +740,4 @@ public static partial class Spark
 		}
 	}
 }
+#pragma warning restore 0649,168

@@ -14,10 +14,9 @@ public static partial class Spark
 		LZ4Compression = 1 << 0,
 	}
 
-	private static FormatFlags s_formatFlags = FormatFlags.None;// FormatFlags.LZ4Compression;
+	private static FormatFlags s_formatFlags = FormatFlags.None;
 
-	public static bool FullAot = true;
-	public static bool SimulateMissingFields = false;
+	public static bool FullAot = false;
 
 	public static byte[] Serialize(object instance)
 	{
@@ -77,8 +76,19 @@ public static partial class Spark
 
 	public static T Deserialize<T>(byte[] data)
 	{
+		T instance = default(T);
+
+		Deserialize<T>(data, ref instance);
+		return instance;
+	}
+
+	public static void Deserialize<T>(byte[] data, ref T instance)
+	{
 		if (data.Length == 0)
-			return default(T);
+		{
+			instance = default(T);
+			return;
+		}
 
 		Type type = typeof(T);
 		int index = 0;
@@ -99,18 +109,16 @@ public static partial class Spark
 			DataType dataType = DataType.Get(type);
 			object newInstance = null;
 
-			if (dataType.TryCreateInstance(data[index], out newInstance))
-				dataType.ReadValues(newInstance, data, ref index, data.Length);
+			if ((instance == null) && dataType.TryCreateInstance(data[index], out newInstance))
+				instance = (newInstance != null) ? (T)newInstance : default(T);
 
-			if (typeFlags == TypeFlags.Reference)
-				return (newInstance != null) ? (T)newInstance : default(T);
-
-			return (T)newInstance;
+			if (instance != null)
+				dataType.ReadValues(instance, data, ref index, data.Length);
 		}
 		else
 		{
 			var ReadData = Reader.Get(type);
-			return (T)ReadData(type, data, ref index);
+			instance = (T)ReadData(type, data, ref index);
 		}
 	}
 
@@ -137,11 +145,5 @@ public static partial class Spark
 
 		void BeforeSetValue(ushort memberId, bool validMemberId);
 		void AfterSetValue(ushort memberId, bool validMemberId);
-	}
-
-	/// <summary> Custom constructor. Default constructor required </summary>
-	public interface ICreator
-	{
-		object CreateInstance();
 	}
 }

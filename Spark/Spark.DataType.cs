@@ -21,12 +21,7 @@ public static partial class Spark
 		
 		private IDataMember[] m_members = null;
 		private readonly ConstructorInfo m_constructor = null;
-		private ICreator m_creator = null;
-
-		private Type m_type = null;
-		private byte m_typeId = 0;
-		private List<TypeId> m_assignableTypes = null;
-
+		
 		public static DataType Get(Type type)
 		{
 			DataType dataType = null;
@@ -59,17 +54,22 @@ public static partial class Spark
 			}
 		}
 
+		private Type m_type = null;
+		private byte m_typeId = 0;
+		private List<TypeId> m_assignableTypes = null;
+
 		public DataType(Type type)
 		{
 			m_type = type;
 			m_typeId = GetTypeId(type);
 
-			m_assignableTypes = TryGetAsAttributeParams(type.GetCustomAttributes(false));
+			m_assignableTypes = TryGetAsAttributeParams(type.GetCustomAttributes(true));
 
 			for (int i = 0; i < m_assignableTypes.Count; ++i)
 			{
 				if (!type.IsAssignableFrom(m_assignableTypes[i].Type))
-					throw new ArgumentException(string.Format("Type '{0}' is not assignable from {1}", type, m_assignableTypes[i].Type));
+					m_assignableTypes.RemoveAt(i--);
+					//throw new ArgumentException(string.Format("Type '{0}' is not assignable from {1}", type, m_assignableTypes[i].Type));
 			}
 
 			TypeFlags typeFlags = GetTypeFlags(type);
@@ -82,9 +82,6 @@ public static partial class Spark
 			else
 			{
 				m_constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
-
-				if (m_constructor != null && typeof(ICreator).IsAssignableFrom(type))
-					m_creator = (ICreator)m_constructor.Invoke(null);
 			}
 
 			if ((m_constructor == null) && (m_assignableTypes.Count == 0))
@@ -186,7 +183,7 @@ public static partial class Spark
 				inheritanceDepth++;
 			}
 
-			m_members = (members != null) ?  members.ToArray() :  new IDataMember[0];
+			m_members = (members != null) ? members.ToArray() : new IDataMember[0];
 		}
 
 		public bool TryCreateInstance(byte typeId, out object instance)
@@ -196,24 +193,10 @@ public static partial class Spark
 
 			if (typeId == 0)
 			{
-				if (m_creator != null)
-				{
-					instance = m_creator.CreateInstance();
-
-					if (instance == null)
-						return false;
-
-					if (instance.GetType() != m_type)
-						throw new System.ArgumentException(string.Format("Spark.ICreator.CreateInstance() returns instance of '{0}' type. Expected type '{1}'", instance.GetType(), m_type));
-
-					return true;
-				}
-
 				if (m_constructor == null)
 					throw new ArgumentException(string.Format("Required default constructor for type '{0}'", m_type));
 
 				instance = m_constructor.Invoke(null);
-
 				return true;
 			}
 
@@ -290,7 +273,7 @@ public static partial class Spark
 				if (callbacks != null)
 					callbacks.BeforeSetValue(memberId, memberIndex != InvalidMemberIndex);
 
-				if ((memberIndex == InvalidMemberIndex) || (SimulateMissingFields && DateTime.UtcNow.Ticks % 2 == 0))
+				if (memberIndex == InvalidMemberIndex)
 				{
 					byte dataSizeBlock = data[startIndex++];
 
