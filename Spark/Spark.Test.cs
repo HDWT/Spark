@@ -47,6 +47,7 @@ public static partial class Spark
 			TestAbstractClass();
 
 			TestGenericClass();
+			TestAutoAttribute();
 		}
 
 		public static void TestSingle()
@@ -177,6 +178,36 @@ public static partial class Spark
 			}
 
 			Console.WriteLine(v.Value);
+		}
+
+		public static void TestAutoAttribute()
+		{
+			//
+			AutoTest1 auto1 = new AutoTest1(25, 54.4f, "00120");
+
+			byte[] bytes1 = Spark.Serialize(auto1);
+			AutoTest1 result1 = Spark.Deserialize<AutoTest1>(bytes1);
+
+			if (!auto1.IsEqual(result1))
+				throw new System.ArgumentException("AutoAttribute test failed");
+
+			//
+			AutoTest2 auto2 = new AutoTest2(25, 54.4f, "00120");
+
+			byte[] bytes2 = Spark.Serialize(auto2);
+			AutoTest2 result2 = Spark.Deserialize<AutoTest2>(bytes2);
+
+			if (!auto2.IsEqual(result2))
+				throw new System.ArgumentException("AutoAttribute test failed");
+
+			//
+			AutoTest3 auto3 = new AutoTest3(25, 54.4f, "00120");
+
+			byte[] bytes3 = Spark.Serialize(auto3);
+			AutoTest3 result3 = Spark.Deserialize<AutoTest3>(bytes3);
+
+			if (!auto3.IsEqual(result3))
+				throw new System.ArgumentException("AutoAttribute test failed");
 		}
 
 		private class GenericValue<T>
@@ -736,6 +767,122 @@ public static partial class Spark
 					return true;
 
 				return something.IsEqual(thisClass.something);
+			}
+		}
+
+		[Spark.Auto(AutoMode.All)]
+		private class AutoTest1
+		{
+			public AutoTest1()
+			{
+			}
+
+			public AutoTest1(int i, float f, string s)
+			{
+				i1 = i;
+				f1 = f;
+				s1 = s;
+			}
+
+			public int i1;
+			private float f1;
+
+			private string s1
+			{
+				get;
+				set;
+			}
+
+			protected int i2
+			{
+				get { throw new System.FieldAccessException(); }
+			}
+
+			public float f2
+			{
+				set { throw new System.FieldAccessException(); }
+			}
+
+			public bool IsEqual(AutoTest1 other)
+			{
+				return (i1 == other.i1) && (f1 == other.f1) && (string.Compare(s1, other.s1) == 0);
+			}
+		}
+
+		[Spark.Auto(AutoMode.Fields)]
+		private class AutoTest2
+		{
+			public AutoTest2()
+			{
+			}
+
+			public AutoTest2(int i, float f, string s)
+			{
+				i1 = i;
+				f1 = f;
+			}
+
+			public int i1;
+			private float f1;
+
+			private string s1
+			{
+				get { throw new System.FieldAccessException(); }
+				set { throw new System.FieldAccessException(); }
+			}
+
+			protected int i2
+			{
+				get { throw new System.FieldAccessException(); }
+			}
+
+			public float f2
+			{
+				set { throw new System.FieldAccessException(); }
+			}
+
+			public bool IsEqual(AutoTest2 other)
+			{
+				return (i1 == other.i1) && (f1 == other.f1);
+			}
+		}
+
+		[Spark.Auto(AutoMode.Properties)]
+		private class AutoTest3
+		{
+			public AutoTest3()
+			{
+			}
+
+			public AutoTest3(int i, float f, string s)
+			{
+				i1 = i;
+				f1 = f;
+				s1 = s;
+			}
+
+			public int i1;
+			private float f1;
+
+			private string s1
+			{
+				get;
+				set;
+			}
+
+			protected int i2
+			{
+				get { throw new System.FieldAccessException(); }
+			}
+
+			public float f2
+			{
+				set { throw new System.FieldAccessException(); }
+			}
+
+			public bool IsEqual(AutoTest3 other)
+			{
+				return string.Compare(s1, other.s1) == 0;
 			}
 		}
 	}

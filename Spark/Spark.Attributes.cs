@@ -71,6 +71,30 @@ public static partial class Spark
 		}
 	}
 
+	[System.Flags]
+	public enum AutoMode
+	{
+		Fields		= 1,
+		Properties	= 2,
+		All			= Fields | Properties,
+	}
+
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+	public class AutoAttribute : Attribute
+	{
+		private AutoMode m_mode = AutoMode.Fields;
+
+		public AutoAttribute(AutoMode mode)
+		{
+			m_mode = mode;
+		}
+
+		public bool Has(AutoMode mode)
+		{
+			return ((m_mode & mode) == mode);
+		}
+	}
+
 	private class TypeId
 	{
 		public byte Id { get; private set; }

@@ -99,7 +99,7 @@ public static partial class Spark
 			List<IDataMember> members = null;
 			int inheritanceDepth = 0;
 
-			while (type != null && type != typeof(System.Object))
+			while ((type != null) && (type != typeof(System.Object)))
 			{
 				if (inheritanceDepth > MaxInheritanceDepth)
 					throw new System.ArgumentException(string.Format("Max inheritance depth = {0}", MaxInheritanceDepth));
@@ -110,13 +110,33 @@ public static partial class Spark
 				if (members == null)
 					members = new List<IDataMember>(fields.Length + properties.Length);
 
-				ushort memberId = 0;
-				int firstMemberOfThisType = members.Count;
+				AutoAttribute autoAttribute = null;
+				object[] classAttributes = type.GetCustomAttributes(false);
 
+				for (int i = 0; i < classAttributes.Length; ++i)
+				{
+					if (classAttributes[i] is AutoAttribute)
+					{
+						autoAttribute = classAttributes[i] as AutoAttribute;
+						break;
+					}
+				}
+
+				ushort memberId = 0;
+				ushort autoMemberId = 1;
+				int firstMemberOfThisType = members.Count;
+				
 				foreach (var field in fields)
 				{
-					if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
-						continue;
+					if ((autoAttribute != null) && autoAttribute.Has(AutoMode.Fields))
+					{
+						memberId = autoMemberId++;
+					}
+					else
+					{
+						if (!TryGetMemberAttributeId(field.GetCustomAttributes(false), out memberId))
+							continue;
+					}
 
 					memberId += (ushort)(inheritanceDepth * MaxMemberId);
 
@@ -148,8 +168,18 @@ public static partial class Spark
 
 				foreach (var property in properties)
 				{
-					if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
-						continue;
+					if ((autoAttribute != null) && autoAttribute.Has(AutoMode.Properties))
+					{
+						if ((property.GetGetMethod(true) == null) || (property.GetSetMethod(true) == null))
+							continue;
+
+						memberId = autoMemberId++;
+					}
+					else
+					{
+						if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
+							continue;
+					}
 
 					memberId += (ushort)(inheritanceDepth * 1024);
 
