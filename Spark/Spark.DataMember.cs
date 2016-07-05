@@ -72,6 +72,7 @@ public static partial class Spark
 
 		private Type m_type = null;
 		private TypeFlags m_typeFlags;
+		private bool m_isClass = false;
 
 		protected FieldInfo m_fieldInfo = null;
 		protected PropertyInfo m_propertyInfo = null;
@@ -86,16 +87,21 @@ public static partial class Spark
 		protected readonly DataWriter m_dataWriter = null;
 		protected readonly SizeGetter m_sizeGetter = null;
 
-		public DataMember(ushort id, FieldInfo fieldInfo)
+		private int m_fieldOffset = -1;
+
+		public DataMember(ushort id, FieldInfo fieldInfo, int fieldOffset)
 			: this(id, fieldInfo.FieldType)
 		{
 			m_fieldInfo = fieldInfo;
+			m_fieldOffset = fieldOffset;
+			m_isClass = fieldInfo.FieldType.IsClass || fieldInfo.FieldType.IsInterface;
 		}
 
 		public DataMember(ushort id, PropertyInfo propertyInfo)
 			: this(id, propertyInfo.PropertyType)
 		{
 			m_propertyInfo = propertyInfo;
+			m_isClass = m_propertyInfo.PropertyType.IsClass || m_propertyInfo.PropertyType.IsInterface;
 		}
 
 		private DataMember(ushort id, Type type)
@@ -124,7 +130,40 @@ public static partial class Spark
 
 		private object GetValue(object instance)
 		{
-			return IsField ? m_fieldInfo.GetValue(instance) : m_propertyInfo.GetValue(instance, null); // Indexer ??
+			if (m_fieldOffset == -1)
+				return IsField ? m_fieldInfo.GetValue(instance) : m_propertyInfo.GetValue(instance, null); // Indexer ??
+
+			if (IsField)
+			{
+				if (m_isClass)
+				{
+					if (IntPtr.Size == 4)
+					{
+						ReferenceFieldAccessor32 referenceFieldAccessor = new ReferenceFieldAccessor32();
+						referenceFieldAccessor.instance = instance;
+
+						return referenceFieldAccessor.Get(m_fieldOffset);
+					}
+					else
+					{
+						ReferenceFieldAccessor64 referenceFieldAccessor = new ReferenceFieldAccessor64();
+						referenceFieldAccessor.instance = instance;
+
+						return referenceFieldAccessor.Get(m_fieldOffset);
+					}
+				}
+				else
+				{
+					ValueFieldAccessor valueTypeAccessor = new ValueFieldAccessor();
+					valueTypeAccessor.instance = instance;
+
+					return valueTypeAccessor.Get(m_fieldInfo.FieldType, m_fieldOffset);
+				}
+			}
+			else
+			{
+				return m_propertyInfo.GetValue(instance, null); // Indexer ??
+			}
 		}
 
 		public virtual void SetValue(object instance, object value)
@@ -203,7 +242,7 @@ public static partial class Spark
 		private DynamicSetValueDelegate m_setValue = null;
 
 		public DataMember(ushort id, FieldInfo fieldInfo)
-			: base(id, fieldInfo)
+			: base(id, fieldInfo, -1)
 		{
 			m_getValue = CreateGetMethod(fieldInfo);
 			m_setValue = CreateSetMethod(fieldInfo);

@@ -18,6 +18,11 @@ public static partial class Spark
 				return (value == false) ? 1 : 2;
 			}
 
+			public bool FromBytes(byte[] data, int startIndex)
+			{
+				return data[startIndex++] != 0;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

@@ -55,6 +55,14 @@ public static partial class Spark
 				return TypeHelper.Long.GetSize(mapper.longValue);
 			}
 
+			public double FromBytes(byte[] data, int startIndex)
+			{
+				DoubleTypeMapper mapper = new DoubleTypeMapper();
+				mapper.longValue = TypeHelper.Long.FromBytes(data, startIndex);
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

@@ -54,8 +54,11 @@
     <Compile Include="Spark.DataType.cs" />
     <Compile Include="ReferenceTypeHelpers\ArrayType.SizeGetter.cs" />
     <Compile Include="ReferenceTypeHelpers\ArrayType.Writer.cs" />
+    <Compile Include="Spark.FieldOrder.cs" />
     <Compile Include="Spark.QueueWithIndexer.cs" />
+    <Compile Include="Spark.ReferenceFieldAccessor.cs" />
     <Compile Include="Spark.TypeFlags.cs" />
+    <Compile Include="Spark.ValueFieldAccessor.cs" />
     <Compile Include="TypeHelpers\EnumType.cs" />
     <Compile Include="Spark.SizeCalculator.cs" />
     <Compile Include="Spark.Test.cs" />

@@ -43,6 +43,18 @@ public static partial class Spark
 				return TypeHelper.IntType.GetSize(mapper.intValue);
 			}
 
+			public uint FromBytes(byte[] data, int startIndex)
+			{
+				UIntTypeMapper mapper = new UIntTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+				mapper.byte3 = data[startIndex++];
+				mapper.byte4 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

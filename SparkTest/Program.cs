@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace SparkTest
 {
@@ -46,7 +47,16 @@ namespace SparkTest
 			//Console.ReadKey();
 			//return;
 
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+
 			Spark.TestLowLevel.Run();
+
+			sw.Stop();
+			Console.WriteLine("MS: " + sw.ElapsedMilliseconds);
+
+			//Spark.TestLowLevel.TestPolymorphism();
+			//Spark.TestLowLevel.TestAbstractClass();
 
 			//Spark.TestBasicValues.Run(10000);
 			//return;

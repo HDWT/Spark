@@ -43,6 +43,14 @@ public static partial class Spark
 				return TypeHelper.IntType.GetSize(mapper.intValue);
 			}
 
+			public float FromBytes(byte[] data, int startIndex)
+			{
+				FloatTypeMapper mapper = new FloatTypeMapper();
+				mapper.intValue = TypeHelper.IntType.FromBytes(data, startIndex);
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

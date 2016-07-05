@@ -18,6 +18,13 @@ public static partial class Spark
 				return TypeHelper.Long.GetSize(value.Ticks);
 			}
 
+			public DateTime FromBytes(byte[] data, int startIndex)
+			{
+				long ticks = TypeHelper.Long.FromBytes(data, startIndex);
+
+				return new DateTime(ticks);
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

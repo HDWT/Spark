@@ -45,6 +45,16 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
+			public ushort FromBytes(byte[] data, int startIndex)
+			{
+				UShortTypeMapper mapper = new UShortTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public ushort Read(byte[] data, ref int startIndex)
 			{
 				int dataSize = data[startIndex++];

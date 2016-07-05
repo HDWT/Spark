@@ -5,8 +5,18 @@ using System.Reflection;
 
 public static partial class Spark
 {
+	public static bool FullAot = true;
+	public static bool ExperimentalMagic = true; // Be prepared!
+
+	private static readonly bool Is64Bit = false;
+
 	private const byte Version = 1;
 	private const int HeaderSize = 2;
+
+	static Spark()
+	{
+		Is64Bit = (IntPtr.Size == 8);
+	}
 
 	[System.Flags]
 	private enum FormatFlags : byte
@@ -16,8 +26,6 @@ public static partial class Spark
 	}
 
 	private static FormatFlags s_formatFlags = FormatFlags.None;
-
-	public static bool FullAot = false;
 
 	public static byte[] Serialize(object instance)
 	{

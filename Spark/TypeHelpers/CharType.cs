@@ -45,6 +45,16 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
+			public char FromBytes(byte[] data, int startIndex)
+			{
+				CharMapper mapper = new CharMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

@@ -60,6 +60,18 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
+			public static int FromBytes(byte[] data, int startIndex)
+			{
+				IntTypeMapper mapper = new IntTypeMapper();
+
+				mapper.byte1 = data[startIndex++];
+				mapper.byte2 = data[startIndex++];
+				mapper.byte3 = data[startIndex++];
+				mapper.byte4 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

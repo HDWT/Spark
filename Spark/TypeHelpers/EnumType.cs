@@ -22,6 +22,11 @@ public static partial class Spark
 		private static readonly Dictionary<Type, WriteValueDelegate> s_writeDataDelegatesByEnumType = new Dictionary<Type, WriteValueDelegate>(16);
 		private static readonly Dictionary<Type, ReadDataDelegate> s_readDataDelegatesByEnumType = new Dictionary<Type, ReadDataDelegate>(16);
 
+		public bool TryGetUnderlyingType(Type enumType, out Type underlyingType)
+		{
+			return s_underlyingTypesByEnumType.TryGetValue(enumType, out underlyingType);
+		}
+
 		public void Register(Type enumType)
 		{
 			Type underlyingType = GetUnderlyingType(enumType);
@@ -123,7 +128,7 @@ public static partial class Spark
 			return reader;
 		}
 
-		private static Type GetUnderlyingType(Type enumType)
+		public static Type GetUnderlyingType(Type enumType)
 		{
 			Type underlyingType = null;
 

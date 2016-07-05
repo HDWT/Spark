@@ -30,6 +30,14 @@ public static partial class Spark
 				return (value == SByteZero) ? 1 : 2;
 			}
 
+			public sbyte FromBytes(byte[] data, int startIndex)
+			{
+				SByteTypeMapper mapper = new SByteTypeMapper();
+				mapper.byte1 = data[startIndex++];
+
+				return mapper.value;
+			}
+
 			public object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);

@@ -156,7 +156,7 @@ public static partial class Spark
 			TestDictionary<decimal, string>(GetDictionaryWithRandomValues<decimal, string>(random.Next(10, 100), GetRandomDecimal, GetRandomString));
 		}
 
-		private static void TestGenericClass()
+		public static void TestGenericClass()
 		{
 			byte[] data = Serialize(new GenericValue<int>(10));
 			var v = Deserialize<GenericValue<int>>(data);
@@ -570,7 +570,7 @@ public static partial class Spark
 			}
 		}
 
-		private static void TestPolymorphism()
+		public static void TestPolymorphism()
 		{
 			ISomething s1 = new OneThing();
 			s1.secondThing = "1:one";
@@ -657,7 +657,7 @@ public static partial class Spark
 				throw new System.ArgumentException("Polymorphism not working!");
 		}
 
-		private static void TestAbstractClass()
+		public static void TestAbstractClass()
 		{
 			OneThing oneThing = new OneThing();
 			oneThing.secondThing = "2:second";
