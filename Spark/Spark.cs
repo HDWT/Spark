@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 public static partial class Spark
 {
@@ -119,6 +120,60 @@ public static partial class Spark
 		{
 			var ReadData = Reader.Get(type);
 			instance = (T)ReadData(type, data, ref index);
+		}
+	}
+
+	public static void ValidateTypes(Assembly assembly)
+	{
+		if (assembly == null)
+			return;
+
+		foreach (var type in assembly.GetTypes())
+		{
+			System.Threading.ThreadPool.QueueUserWorkItem((state) =>
+			{
+				FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+				bool validate = false;
+
+				for (int i = 0; (i < fields.Length) && !validate; ++i)
+				{
+					var sparkMemberAtributes = fields[i].GetCustomAttributes(typeof(Spark.MemberAttribute), true);
+
+					if ((sparkMemberAtributes != null) && (sparkMemberAtributes.Length != 0))
+						validate = true;
+				}
+
+				for (int i = 0; (i < properties.Length) && !validate; ++i)
+				{
+					var sparkMemberAtributes = properties[i].GetCustomAttributes(typeof(Spark.MemberAttribute), true);
+
+					if ((sparkMemberAtributes != null) && (sparkMemberAtributes.Length != 0))
+						validate = true;
+				}
+
+				if (validate)
+				{
+					Spark.DataType dataType = Spark.DataType.Get(type);
+					object instance = null;
+
+					if (type.IsAbstract || type.IsInterface || type.ContainsGenericParameters)
+					{
+					}
+					else if (IsGenericList(type) || IsGenericDictionary(type))
+					{
+						dataType.CreateInstance(1); // collection count
+					}
+					else
+					{
+						dataType.TryCreateInstance(0, out instance);
+					}
+
+					if (instance != null)
+						Serialize(instance);
+				}
+			});
 		}
 	}
 

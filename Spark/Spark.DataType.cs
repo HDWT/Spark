@@ -26,9 +26,9 @@ public static partial class Spark
 		{
 			DataType dataType = null;
 
-			if (!s_dataTypes.TryGetValue(type, out dataType))
+			lock (m_mutex)
 			{
-				lock (m_mutex)
+				if (!s_dataTypes.TryGetValue(type, out dataType))
 				{
 					dataType = new DataType(type);
 					s_dataTypes[type] = dataType;
@@ -138,6 +138,9 @@ public static partial class Spark
 							continue;
 					}
 
+					if (field.FieldType.ContainsGenericParameters)
+						continue; //throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} has generic params", type, memberId % MaxMemberId));
+
 					memberId += (ushort)(inheritanceDepth * MaxMemberId);
 
 					for (int i = firstMemberOfThisType; i < members.Count; ++i)
@@ -180,6 +183,9 @@ public static partial class Spark
 						if (!TryGetMemberAttributeId(property.GetCustomAttributes(false), out memberId))
 							continue;
 					}
+
+					if (property.PropertyType.ContainsGenericParameters)
+						continue; //throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} has generic params", type, memberId % MaxMemberId));
 
 					memberId += (ushort)(inheritanceDepth * 1024);
 
