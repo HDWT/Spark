@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -28,53 +27,45 @@ public static partial class Spark
 			public byte byte4;
 		}
 
-		private class FloatType : ITypeHelper<float>
+		public static class FloatType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((float)value);
 			}
 
-			public int GetSize(float value)
+			public static int GetSize(float value)
 			{
 				FloatTypeMapper mapper = new FloatTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.IntType.GetSize(mapper.intValue);
+				return IntType.GetSize(mapper.intValue);
 			}
 
-			public float FromBytes(byte[] data, int startIndex)
-			{
-				FloatTypeMapper mapper = new FloatTypeMapper();
-				mapper.intValue = TypeHelper.IntType.FromBytes(data, startIndex);
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public float Read(byte[] data, ref int startIndex)
+			public static float Read(byte[] data, ref int startIndex)
 			{
 				FloatTypeMapper mapper = new FloatTypeMapper();
-				mapper.intValue = TypeHelper.IntType.Read(data, ref startIndex);
+				mapper.intValue = IntType.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((float)value, data, ref startIndex);
 			}
 
-			public void Write(float value, byte[] data, ref int startIndex)
+			public static void Write(float value, byte[] data, ref int startIndex)
 			{
 				FloatTypeMapper mapper = new FloatTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.IntType.Write(mapper.intValue, data, ref startIndex);
+				IntType.Write(mapper.intValue, data, ref startIndex);
 			}
 		}
 	}

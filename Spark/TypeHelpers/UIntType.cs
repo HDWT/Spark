@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -28,57 +27,45 @@ public static partial class Spark
 			public byte byte4;
 		}
 
-		private class UIntType : ITypeHelper<uint>
+		public static class UIntType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((uint)value);
 			}
 
-			public int GetSize(uint value)
+			public static int GetSize(uint value)
 			{
 				UIntTypeMapper mapper = new UIntTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.IntType.GetSize(mapper.intValue);
+				return IntType.GetSize(mapper.intValue);
 			}
 
-			public uint FromBytes(byte[] data, int startIndex)
-			{
-				UIntTypeMapper mapper = new UIntTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-				mapper.byte3 = data[startIndex++];
-				mapper.byte4 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public uint Read(byte[] data, ref int startIndex)
+			public static uint Read(byte[] data, ref int startIndex)
 			{
 				UIntTypeMapper mapper = new UIntTypeMapper();
-				mapper.intValue = TypeHelper.IntType.Read(data, ref startIndex);
+				mapper.intValue = IntType.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((uint)value, data, ref startIndex);
 			}
 
-			public void Write(uint value, byte[] data, ref int startIndex)
+			public static void Write(uint value, byte[] data, ref int startIndex)
 			{
 				UIntTypeMapper mapper = new UIntTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.IntType.Write(mapper.intValue, data, ref startIndex);
+				IntType.Write(mapper.intValue, data, ref startIndex);
 			}
 		}
 	}

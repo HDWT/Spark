@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -19,16 +18,16 @@ public static partial class Spark
 			public byte byte2;
 		}
 
-		private class UShortType : ITypeHelper<ushort>
+		public static class UShortType
 		{
 			private const ushort UShortZero = (ushort)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((ushort)value);
 			}
 
-			public int GetSize(ushort value)
+			public static int GetSize(ushort value)
 			{
 				if (value == UShortZero)
 					return 1;
@@ -45,17 +44,7 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
-			public ushort FromBytes(byte[] data, int startIndex)
-			{
-				UShortTypeMapper mapper = new UShortTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public ushort Read(byte[] data, ref int startIndex)
+			public static ushort Read(byte[] data, ref int startIndex)
 			{
 				int dataSize = data[startIndex++];
 
@@ -81,17 +70,17 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((ushort)value, data, ref startIndex);
 			}
 
-			public void Write(ushort value, byte[] data, ref int startIndex)
+			public static void Write(ushort value, byte[] data, ref int startIndex)
 			{
 				if (value == UShortZero)
 				{

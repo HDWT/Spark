@@ -9,8 +9,8 @@ public static partial class Spark
 		ushort Id { get; }
 		System.Type Type { get; }
 
-		int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
-		void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+		int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
+		void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 		void ReadValue(object instance, byte[] data, ref int startIndex);
 		void SetValue(object instance, object value);
 	}
@@ -32,9 +32,9 @@ public static partial class Spark
 			m_getReferenceTypeSize = getReferenceTypeSize;
 		}
 
-		public int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
-			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes, values);
+			return (m_getValueTypeSize != null) ? m_getValueTypeSize(instance) : m_getReferenceTypeSize(instance, sizes, values, context);
 		}
 	}
 
@@ -53,12 +53,12 @@ public static partial class Spark
 			m_writeReferenceType = writeReferenceType;
 		}
 
-		public void Write(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public void Write(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
 			if (m_writeValueType != null)
 				m_writeValueType(value, data, ref startIndex);
 			else
-				m_writeReferenceType(value, data, ref startIndex, sizes, values);
+				m_writeReferenceType(value, data, ref startIndex, sizes, values, context);
 		}
 	}
 
@@ -128,7 +128,7 @@ public static partial class Spark
 			readData = Reader.Get(m_type);
 		}
 
-		private object GetValue(object instance)
+		private object GetValue(object instance, Context context)
 		{
 			if (m_fieldOffset == -1)
 				return IsField ? m_fieldInfo.GetValue(instance) : m_propertyInfo.GetValue(instance, null); // Indexer ??
@@ -137,7 +137,7 @@ public static partial class Spark
 			{
 				FieldAccessor valueTypeAccessor = new FieldAccessor();
 
-				valueTypeAccessor.wObject = FieldAccessor.ObjectWrapperPool.Get();
+				valueTypeAccessor.wObject = context.objectWrapper;
 				valueTypeAccessor.wObject.instance = instance;
 
 				if (Is64Bit)
@@ -146,7 +146,7 @@ public static partial class Spark
 					valueTypeAccessor.wAddress.address32 += m_fieldOffset;
 
 				object result = valueTypeAccessor.Get(m_fieldInfo.FieldType, m_isClass);
-				
+
 				/*
 				object reflectionResult = m_fieldInfo.GetValue(instance);
 
@@ -157,7 +157,8 @@ public static partial class Spark
 					throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
 				*/
 
-				FieldAccessor.ObjectWrapperPool.Return(valueTypeAccessor.wObject);
+				valueTypeAccessor.wObject.instance = null;
+				//FieldAccessor.ObjectWrapperPool.Return(valueTypeAccessor.wObject);
 
 				return result;	
 			}
@@ -176,28 +177,189 @@ public static partial class Spark
 				m_propertyInfo.SetValue(instance, value, null); // Indexer ??
 		}
 
-		public virtual int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public virtual int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
-			object value = GetValue(instance);
+			if (IsField && (m_fieldOffset != -1))
+			{
+				FieldAccessor valueTypeAccessor = new FieldAccessor();
 
-			values.Enqueue(value);
+				valueTypeAccessor.wObject = context.objectWrapper;
+				valueTypeAccessor.wObject.instance = instance;
 
-			if (!m_ignoreDataSizeBlock && (value == instance))
-				return HeaderSize + 1;
+				if (Is64Bit)
+					valueTypeAccessor.wAddress.address64 += m_fieldOffset;
+				else
+					valueTypeAccessor.wAddress.address32 += m_fieldOffset;
 
-			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values);
+				int size = 0;
+
+				if (m_isClass)
+				{
+					object value = valueTypeAccessor.wObject.referenceFields.Object;
+
+					// Self reference ?
+					size = (!m_ignoreDataSizeBlock && (value == instance)) ? (1) : m_sizeGetter.GetSize(value, sizes, values, context);
+				}
+				else
+				{
+					System.Type fieldType = m_type;
+					System.Type enumUnderlyingType = null;
+
+					if (IsFlag(m_typeFlags, TypeFlags.Enum) && EnumTypeHelper.Instance.TryGetUnderlyingType(m_type, out enumUnderlyingType))
+						fieldType = enumUnderlyingType;
+
+					if (fieldType == typeof(int))
+						size = TypeHelper.IntType.GetSize(valueTypeAccessor.wObject.fields.Int);
+
+					else if (fieldType == typeof(float))
+						size = TypeHelper.FloatType.GetSize(valueTypeAccessor.wObject.fields.Float);
+
+					else if (fieldType == typeof(bool))
+						size = TypeHelper.BoolType.GetSize(valueTypeAccessor.wObject.fields.Bool);
+
+					else if (fieldType == typeof(char))
+						size = TypeHelper.CharType.GetSize(valueTypeAccessor.wObject.fields.Char);
+
+					else if (fieldType == typeof(long))
+						size = TypeHelper.LongType.GetSize(valueTypeAccessor.wObject.fields.Long);
+
+					else if (fieldType == typeof(short))
+						size = TypeHelper.ShortType.GetSize(valueTypeAccessor.wObject.fields.Short);
+
+					else if (fieldType == typeof(byte))
+						size = TypeHelper.ByteType.GetSize(valueTypeAccessor.wObject.fields.Byte);
+
+					else if (fieldType == typeof(DateTime))
+						size = TypeHelper.DateTimeType.GetSize(new DateTime(valueTypeAccessor.wObject.fields.Long));
+
+					else if (fieldType == typeof(double))
+						size = TypeHelper.DoubleType.GetSize(valueTypeAccessor.wObject.fields.Double);
+
+					else if (fieldType == typeof(uint))
+						size = TypeHelper.UIntType.GetSize(valueTypeAccessor.wObject.fields.UInt);
+
+					else if (fieldType == typeof(ushort))
+						size = TypeHelper.UShortType.GetSize(valueTypeAccessor.wObject.fields.UShort);
+
+					else if (fieldType == typeof(ulong))
+						size = TypeHelper.ULongType.GetSize(valueTypeAccessor.wObject.fields.ULong);
+
+					else if (fieldType == typeof(sbyte))
+						size = TypeHelper.SByteType.GetSize(valueTypeAccessor.wObject.fields.SByte);
+
+					else if (fieldType == typeof(decimal))
+						size = TypeHelper.DecimalType.GetSize(valueTypeAccessor.wObject.fields.Decimal);
+
+					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
+				}
+
+				valueTypeAccessor.wObject.instance = null;
+
+				return HeaderSize + size;
+			}
+			else
+			{
+				object value = GetValue(instance, context);
+
+				values.Enqueue(value);
+
+				if (!m_ignoreDataSizeBlock && (value == instance))
+					return HeaderSize + 1;
+
+				return HeaderSize + m_sizeGetter.GetSize(value, sizes, values, context);
+			}
 		}
 
-		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public virtual void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
-			object value = values.Dequeue();
-
 			WriteHeader(data, ref startIndex);
 
-			if (!m_ignoreDataSizeBlock && (value == instance))
-				data[startIndex++] = byte.MaxValue;
+			if (IsField && (m_fieldOffset != -1))
+			{
+				FieldAccessor valueTypeAccessor = new FieldAccessor();
+
+				valueTypeAccessor.wObject = context.objectWrapper;
+				valueTypeAccessor.wObject.instance = instance;
+
+				if (Is64Bit)
+					valueTypeAccessor.wAddress.address64 += m_fieldOffset;
+				else
+					valueTypeAccessor.wAddress.address32 += m_fieldOffset;
+
+				if (m_isClass)
+				{
+					object value = valueTypeAccessor.wObject.referenceFields.Object;
+
+					// Self reference ?
+					if (!m_ignoreDataSizeBlock && (value == instance))
+						data[startIndex++] = byte.MaxValue;
+					else
+						m_dataWriter.Write(value, data, ref startIndex, sizes, values, context);
+				}
+				else
+				{
+					System.Type fieldType = m_type;
+					System.Type enumUnderlyingType = null;
+
+					if (IsFlag(m_typeFlags, TypeFlags.Enum) && EnumTypeHelper.Instance.TryGetUnderlyingType(m_type, out enumUnderlyingType))
+						fieldType = enumUnderlyingType;
+
+					if (fieldType == typeof(int))
+						TypeHelper.IntType.Write(valueTypeAccessor.wObject.fields.Int, data, ref startIndex);
+
+					else if (fieldType == typeof(float))
+						TypeHelper.FloatType.Write(valueTypeAccessor.wObject.fields.Float, data, ref startIndex);
+
+					else if (fieldType == typeof(bool))
+						TypeHelper.BoolType.Write(valueTypeAccessor.wObject.fields.Bool, data, ref startIndex);
+
+					else if (fieldType == typeof(char))
+						TypeHelper.CharType.Write(valueTypeAccessor.wObject.fields.Char, data, ref startIndex);
+
+					else if (fieldType == typeof(long))
+						TypeHelper.LongType.Write(valueTypeAccessor.wObject.fields.Long, data, ref startIndex);
+
+					else if (fieldType == typeof(short))
+						TypeHelper.ShortType.Write(valueTypeAccessor.wObject.fields.Short, data, ref startIndex);
+
+					else if (fieldType == typeof(byte))
+						TypeHelper.ByteType.Write(valueTypeAccessor.wObject.fields.Byte, data, ref startIndex);
+
+					else if (fieldType == typeof(DateTime))
+						TypeHelper.DateTimeType.Write(new DateTime(valueTypeAccessor.wObject.fields.Long), data, ref startIndex);
+
+					else if (fieldType == typeof(double))
+						TypeHelper.DoubleType.Write(valueTypeAccessor.wObject.fields.Double, data, ref startIndex);
+
+					else if (fieldType == typeof(uint))
+						TypeHelper.UIntType.Write(valueTypeAccessor.wObject.fields.UInt, data, ref startIndex);
+
+					else if (fieldType == typeof(ushort))
+						TypeHelper.UShortType.Write(valueTypeAccessor.wObject.fields.UShort, data, ref startIndex);
+
+					else if (fieldType == typeof(ulong))
+						TypeHelper.ULongType.Write(valueTypeAccessor.wObject.fields.ULong, data, ref startIndex);
+
+					else if (fieldType == typeof(sbyte))
+						TypeHelper.SByteType.Write(valueTypeAccessor.wObject.fields.SByte, data, ref startIndex);
+
+					else if (fieldType == typeof(decimal))
+						TypeHelper.DecimalType.Write(valueTypeAccessor.wObject.fields.Decimal, data, ref startIndex);
+
+					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
+				}
+
+				valueTypeAccessor.wObject.instance = null;
+			}
 			else
-				m_dataWriter.Write(value, data, ref startIndex, sizes, values);
+			{
+				object value = values.Dequeue();
+
+				if (!m_ignoreDataSizeBlock && (value == instance))
+					data[startIndex++] = byte.MaxValue;
+				else
+					m_dataWriter.Write(value, data, ref startIndex, sizes, values, context);
+			}
 		}
 
 		public virtual void ReadValue(object instance, byte[] data, ref int startIndex)
@@ -315,11 +477,11 @@ public static partial class Spark
 			return (DynamicSetValueDelegate)setter.CreateDelegate(typeof(DynamicSetValueDelegate));
 		}
 
-		public override int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public override int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
 			T value = m_getValue(instance);
 
-			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values);
+			return HeaderSize + m_sizeGetter.GetSize(value, sizes, values, context);
 		}
 
 		public override void SetValue(object instance, object value)
@@ -330,12 +492,12 @@ public static partial class Spark
 				m_setValue(instance, (T)value);
 		}
 
-		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public override void WriteValue(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
 			T value = m_getValue(instance);
 
 			WriteHeader(data, ref startIndex);
-			m_dataWriter.Write(value, data, ref startIndex, sizes, values);
+			m_dataWriter.Write(value, data, ref startIndex, sizes, values, context);
 		}
 	}
 }

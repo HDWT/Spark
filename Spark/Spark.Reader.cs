@@ -19,46 +19,46 @@ public static partial class Spark
 					return TypeHelper.IntType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Float))
-					return TypeHelper.Float.ReadObject;
+					return TypeHelper.FloatType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Bool))
-					return TypeHelper.Bool.ReadObject;
+					return TypeHelper.BoolType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Enum))
 					return EnumTypeHelper.Instance.GetReader(type);
 
 				if (IsFlag(typeFlags, TypeFlags.Char))
-					return TypeHelper.Char.ReadObject;
+					return TypeHelper.CharType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Long))
-					return TypeHelper.Long.ReadObject;
+					return TypeHelper.LongType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Short))
-					return TypeHelper.Short.ReadObject;
+					return TypeHelper.ShortType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Byte))
-					return TypeHelper.Byte.ReadObject;
+					return TypeHelper.ByteType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.DateTime))
-					return TypeHelper.DateTime.ReadObject;
+					return TypeHelper.DateTimeType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Double))
-					return TypeHelper.Double.ReadObject;
+					return TypeHelper.DoubleType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.UInt))
-					return TypeHelper.UInt.ReadObject;
+					return TypeHelper.UIntType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.UShort))
-					return TypeHelper.UShort.ReadObject;
+					return TypeHelper.UShortType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.ULong))
-					return TypeHelper.ULong.ReadObject;
+					return TypeHelper.ULongType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.SByte))
-					return TypeHelper.SByte.ReadObject;
+					return TypeHelper.SByteType.ReadObject;
 
 				if (IsFlag(typeFlags, TypeFlags.Decimal))
-					return TypeHelper.Decimal.ReadObject;
+					return TypeHelper.DecimalType.ReadObject;
 
 				throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", type));
 			}

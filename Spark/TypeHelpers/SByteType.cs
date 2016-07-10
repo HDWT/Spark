@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -16,34 +15,26 @@ public static partial class Spark
 			public byte byte1;
 		}
 
-		private class SByteType : ITypeHelper<sbyte>
+		public static class SByteType
 		{
 			private const sbyte SByteZero = (sbyte)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((sbyte)value);
 			}
 
-			public int GetSize(sbyte value)
+			public static int GetSize(sbyte value)
 			{
 				return (value == SByteZero) ? 1 : 2;
 			}
 
-			public sbyte FromBytes(byte[] data, int startIndex)
-			{
-				SByteTypeMapper mapper = new SByteTypeMapper();
-				mapper.byte1 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public sbyte Read(byte[] data, ref int startIndex)
+			public static sbyte Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -61,12 +52,12 @@ public static partial class Spark
 				throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((sbyte)value, data, ref startIndex);
 			}
 
-			public void Write(sbyte value, byte[] data, ref int startIndex)
+			public static void Write(sbyte value, byte[] data, ref int startIndex)
 			{
 				if (value == SByteZero)
 				{

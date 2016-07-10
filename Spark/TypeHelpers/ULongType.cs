@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -40,61 +39,45 @@ public static partial class Spark
 			public byte byte8;
 		}
 
-		private class ULongType : ITypeHelper<ulong>
+		public static class ULongType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((ulong)value);
 			}
 
-			public int GetSize(ulong value)
+			public static int GetSize(ulong value)
 			{
 				ULongTypeMapper mapper = new ULongTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.Long.GetSize(mapper.longValue);
+				return LongType.GetSize(mapper.longValue);
 			}
 
-			public ulong FromBytes(byte[] data, int startIndex)
-			{
-				ULongTypeMapper mapper = new ULongTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-				mapper.byte3 = data[startIndex++];
-				mapper.byte4 = data[startIndex++];
-				mapper.byte5 = data[startIndex++];
-				mapper.byte6 = data[startIndex++];
-				mapper.byte7 = data[startIndex++];
-				mapper.byte8 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public ulong Read(byte[] data, ref int startIndex)
+			public static ulong Read(byte[] data, ref int startIndex)
 			{
 				ULongTypeMapper mapper = new ULongTypeMapper();
-				mapper.longValue = TypeHelper.Long.Read(data, ref startIndex);
+				mapper.longValue = LongType.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((ulong)value, data, ref startIndex);
 			}
 
-			public void Write(ulong value, byte[] data, ref int startIndex)
+			public static void Write(ulong value, byte[] data, ref int startIndex)
 			{
 				ULongTypeMapper mapper = new ULongTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.Long.Write(mapper.longValue, data, ref startIndex);
+				LongType.Write(mapper.longValue, data, ref startIndex);
 			}
 		}
 	}

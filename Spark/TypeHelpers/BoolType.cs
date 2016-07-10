@@ -1,34 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
 {
 	private static partial class TypeHelper
 	{
-		private class BoolType : ITypeHelper<bool>
+		public static class BoolType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((bool)value);
 			}
 
-			public int GetSize(bool value)
+			public static int GetSize(bool value)
 			{
 				return (value == false) ? 1 : 2;
 			}
 
-			public bool FromBytes(byte[] data, int startIndex)
-			{
-				return data[startIndex++] != 0;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public bool Read(byte[] data, ref int startIndex)
+			public static bool Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -41,12 +35,12 @@ public static partial class Spark
 				throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((bool)value, data, ref startIndex);
 			}
 
-			public void Write(bool value, byte[] data, ref int startIndex)
+			public static void Write(bool value, byte[] data, ref int startIndex)
 			{
 				if (value)
 				{

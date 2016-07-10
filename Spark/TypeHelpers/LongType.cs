@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -37,16 +36,16 @@ public static partial class Spark
 			public byte byte8;
 		}
 
-		private class LongType : ITypeHelper<long>
+		public static class LongType
 		{
 			private const long LongZero = (long)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((long)value);
 			}
 
-			public int GetSize(long value)
+			public static int GetSize(long value)
 			{
 				if (value == LongZero)
 					return 1;
@@ -81,30 +80,12 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
-			public long FromBytes(byte[] data, int startIndex)
-			{
-				LongTypeMapper mapper = new LongTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-				mapper.byte3 = data[startIndex++];
-				mapper.byte4 = data[startIndex++];
-				mapper.byte5 = data[startIndex++];
-				mapper.byte6 = data[startIndex++];
-				mapper.byte7 = data[startIndex++];
-				mapper.byte8 = data[startIndex++];
-
-				//mapper.ulongValue = TypeHelper.ULong.FromBytes(data, startIndex);
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public long Read(byte[] data, ref int startIndex)
+			public static long Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -181,12 +162,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((long)value, data, ref startIndex);
 			}
 
-			public void Write(long value, byte[] data, ref int startIndex)
+			public static void Write(long value, byte[] data, ref int startIndex)
 			{
 				if (value == LongZero)
 				{

@@ -12,27 +12,27 @@ public static partial class Spark
 	private delegate int GetValueSizeDelegate(object instance);
 	private delegate int GetValueSizeDelegate<T>(T instance);
 
-	private delegate int GetReferenceSizeDelegate(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
-	private delegate int GetReferenceSizeDelegate<T>(T instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+	private delegate int GetReferenceSizeDelegate(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
+	private delegate int GetReferenceSizeDelegate<T>(T instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 
 	private static class SizeCalculator
 	{
 		private static readonly Dictionary<Type, GetValueSizeDelegate> s_getValueSizeDelegates = new Dictionary<Type,GetValueSizeDelegate>(16)
 		{
-			{ typeof(bool),		TypeHelper.Bool.GetSize },
-			{ typeof(byte),		TypeHelper.Byte.GetSize },
-			{ typeof(sbyte),	TypeHelper.SByte.GetSize },
-			{ typeof(char),		TypeHelper.Char.GetSize },
-			{ typeof(short),	TypeHelper.Short.GetSize },
-			{ typeof(ushort),	TypeHelper.UShort.GetSize },
+			{ typeof(bool),		TypeHelper.BoolType.GetSize },
+			{ typeof(byte),		TypeHelper.ByteType.GetSize },
+			{ typeof(sbyte),	TypeHelper.SByteType.GetSize },
+			{ typeof(char),		TypeHelper.CharType.GetSize },
+			{ typeof(short),	TypeHelper.ShortType.GetSize },
+			{ typeof(ushort),	TypeHelper.UShortType.GetSize },
 			{ typeof(int),		TypeHelper.IntType.GetSize },
-			{ typeof(uint),		TypeHelper.UInt.GetSize },
-			{ typeof(float),	TypeHelper.Float.GetSize },
-			{ typeof(double),	TypeHelper.Double.GetSize },
-			{ typeof(long),		TypeHelper.Long.GetSize },
-			{ typeof(ulong),	TypeHelper.ULong.GetSize },
-			{ typeof(decimal),	TypeHelper.Decimal.GetSize },
-			{ typeof(DateTime), TypeHelper.DateTime.GetSize },
+			{ typeof(uint),		TypeHelper.UIntType.GetSize },
+			{ typeof(float),	TypeHelper.FloatType.GetSize },
+			{ typeof(double),	TypeHelper.DoubleType.GetSize },
+			{ typeof(long),		TypeHelper.LongType.GetSize },
+			{ typeof(ulong),	TypeHelper.ULongType.GetSize },
+			{ typeof(decimal),	TypeHelper.DecimalType.GetSize },
+			{ typeof(DateTime), TypeHelper.DateTimeType.GetSize },
 		};
 
 		private static readonly Dictionary<Type, GetReferenceSizeDelegate> s_getReferenceSizeDelegates = new Dictionary<Type, GetReferenceSizeDelegate>(16)

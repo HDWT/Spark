@@ -18,7 +18,7 @@ public static partial class Spark
 					m_dataType = DataType.Get(type);
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					if (instance == null)
 					{
@@ -40,12 +40,12 @@ public static partial class Spark
 					}
 
 					// Записываем все поля класса
-					m_dataType.WriteValues(instance, data, ref startIndex, sizes, values);
+					m_dataType.WriteValues(instance, data, ref startIndex, sizes, values, context);
 				}
 
-				public void Write(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void Write(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
-					WriteObject(instance, data, ref startIndex, sizes, values);
+					WriteObject(instance, data, ref startIndex, sizes, values, context);
 				}
 			}
 		}

@@ -8,28 +8,28 @@ public static partial class Spark
 	private delegate void WriteValueDelegate(object value, byte[] data, ref int startIndex);
 	private delegate void WriteValueDelegate<T>(T value, byte[] data, ref int startIndex);
 
-	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
-	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+	private delegate void WriteReferenceDelegate(object value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
+	private delegate void WriteReferenceDelegate<T>(T value, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 
 	private static class Writer
 	{
 		private static readonly Dictionary<Type, WriteValueDelegate> s_writeValueDelegates = new Dictionary<Type, WriteValueDelegate>(16)
 		{
-			{ typeof(bool),		TypeHelper.Bool.WriteObject },
-			{ typeof(byte),		TypeHelper.Byte.WriteObject },
-			{ typeof(sbyte),	TypeHelper.SByte.WriteObject },
-			{ typeof(char),		TypeHelper.Char.WriteObject },
-			{ typeof(short),	TypeHelper.Short.WriteObject },
-			{ typeof(ushort),	TypeHelper.UShort.WriteObject },
+			{ typeof(bool),		TypeHelper.BoolType.WriteObject },
+			{ typeof(byte),		TypeHelper.ByteType.WriteObject },
+			{ typeof(sbyte),	TypeHelper.SByteType.WriteObject },
+			{ typeof(char),		TypeHelper.CharType.WriteObject },
+			{ typeof(short),	TypeHelper.ShortType.WriteObject },
+			{ typeof(ushort),	TypeHelper.UShortType.WriteObject },
 			{ typeof(int),		TypeHelper.IntType.WriteObject },
-			{ typeof(uint),		TypeHelper.UInt.WriteObject },
-			{ typeof(float),	TypeHelper.Float.WriteObject },
-			{ typeof(double),	TypeHelper.Double.WriteObject },
-			{ typeof(long),		TypeHelper.Long.WriteObject },
-			{ typeof(ulong),	TypeHelper.ULong.WriteObject },
-			{ typeof(decimal),	TypeHelper.Decimal.WriteObject },
+			{ typeof(uint),		TypeHelper.UIntType.WriteObject },
+			{ typeof(float),	TypeHelper.FloatType.WriteObject },
+			{ typeof(double),	TypeHelper.DoubleType.WriteObject },
+			{ typeof(long),		TypeHelper.LongType.WriteObject },
+			{ typeof(ulong),	TypeHelper.ULongType.WriteObject },
+			{ typeof(decimal),	TypeHelper.DecimalType.WriteObject },
 			
-			{ typeof(DateTime), TypeHelper.DateTime.WriteObject },
+			{ typeof(DateTime), TypeHelper.DateTimeType.WriteObject },
 			
 		};
 

@@ -10,20 +10,20 @@ public static partial class Spark
 		{
 			private static readonly Dictionary<Type, IDataWriter<IList>> s_dataWritersByListType = new Dictionary<Type, IDataWriter<IList>>(20)
 			{
-				{ typeof(List<bool>),		new DataWriter<bool>	(TypeHelper.Bool.Write) },
-				{ typeof(List<byte>),		new DataWriter<byte>	(TypeHelper.Byte.Write) },
-				{ typeof(List<sbyte>),		new DataWriter<sbyte>	(TypeHelper.SByte.Write) },
-				{ typeof(List<char>),		new DataWriter<char>	(TypeHelper.Char.Write) },
-				{ typeof(List<short>),		new DataWriter<short>	(TypeHelper.Short.Write) },
-				{ typeof(List<ushort>),		new DataWriter<ushort>	(TypeHelper.UShort.Write) },
+				{ typeof(List<bool>),		new DataWriter<bool>	(BoolType.Write) },
+				{ typeof(List<byte>),		new DataWriter<byte>	(ByteType.Write) },
+				{ typeof(List<sbyte>),		new DataWriter<sbyte>	(SByteType.Write) },
+				{ typeof(List<char>),		new DataWriter<char>	(CharType.Write) },
+				{ typeof(List<short>),		new DataWriter<short>	(ShortType.Write) },
+				{ typeof(List<ushort>),		new DataWriter<ushort>	(UShortType.Write) },
 				{ typeof(List<int>),		new DataWriter<int>		(IntType.Write) },
-				{ typeof(List<uint>),		new DataWriter<uint>	(TypeHelper.UInt.Write) },
-				{ typeof(List<float>),		new DataWriter<float>	(TypeHelper.Float.Write) },
-				{ typeof(List<double>),		new DataWriter<double>	(TypeHelper.Double.Write) },
-				{ typeof(List<long>),		new DataWriter<long>	(TypeHelper.Long.Write) },
-				{ typeof(List<ulong>),		new DataWriter<ulong>	(TypeHelper.ULong.Write) },
-				{ typeof(List<decimal>),	new DataWriter<decimal>	(TypeHelper.Decimal.Write) },
-				{ typeof(List<DateTime>),	new DataWriter<DateTime>(TypeHelper.DateTime.Write) },
+				{ typeof(List<uint>),		new DataWriter<uint>	(UIntType.Write) },
+				{ typeof(List<float>),		new DataWriter<float>	(FloatType.Write) },
+				{ typeof(List<double>),		new DataWriter<double>	(DoubleType.Write) },
+				{ typeof(List<long>),		new DataWriter<long>	(LongType.Write) },
+				{ typeof(List<ulong>),		new DataWriter<ulong>	(ULongType.Write) },
+				{ typeof(List<decimal>),	new DataWriter<decimal>	(DecimalType.Write) },
+				{ typeof(List<DateTime>),	new DataWriter<DateTime>(DateTimeType.Write) },
 
 				{ typeof(List<string>),		new DataWriter<string>	(TypeHelper.String.GetDataWriter(null).Write) },
 			};
@@ -38,12 +38,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
-					Write(instance as IList, data, ref startIndex, sizes, values);
+					Write(instance as IList, data, ref startIndex, sizes, values, context);
 				}
 
-				public void Write(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void Write(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					if (list == null)
 					{
@@ -80,11 +80,11 @@ public static partial class Spark
 					if (m_isValueType)
 						WriteValue(list, data, ref startIndex);
 					else
-						WriteReference(list, data, ref startIndex, sizes, values);
+						WriteReference(list, data, ref startIndex, sizes, values, context);
 				}
 
 				protected abstract void WriteValue(IList list, byte[] data, ref int startIndex);
-				protected abstract void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+				protected abstract void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 			}
 
 			//
@@ -111,10 +111,10 @@ public static partial class Spark
 						m_writeValue(list[i], data, ref startIndex);
 				}
 
-				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					for (int i = 0; i < list.Count; ++i)
-						m_writeReference(list[i], data, ref startIndex, sizes, values);
+						m_writeReference(list[i], data, ref startIndex, sizes, values, context);
 				}
 			}
 
@@ -144,12 +144,12 @@ public static partial class Spark
 						m_writeValue(theList[i], data, ref startIndex);
 				}
 
-				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override void WriteReference(IList list, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					List<T> theList = (List<T>)list;
 
 					for (int i = 0; i < theList.Count; ++i)
-						m_writeReference(theList[i], data, ref startIndex, sizes, values);
+						m_writeReference(theList[i], data, ref startIndex, sizes, values, context);
 				}
 			}
 		}

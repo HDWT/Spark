@@ -6,8 +6,6 @@ public static partial class Spark
 	[StructLayout(LayoutKind.Explicit)]
 	private struct FieldAccessor
 	{
-		public static readonly ObjectPool<ObjectWrapper> ObjectWrapperPool = new ObjectPool<ObjectWrapper>();
-
 		[FieldOffset(0)]
 		public ObjectWrapper wObject;
 

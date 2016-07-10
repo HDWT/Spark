@@ -11,22 +11,22 @@ public static partial class Spark
 		{
 			private static readonly Dictionary<Type, ISizeGetter<IList>> s_sizeGettersByListType = new Dictionary<Type, ISizeGetter<IList>>(20)
 			{
-				{ typeof(List<bool>),		new SizeGetter<bool>	(TypeHelper.Bool.GetSize) },
-				{ typeof(List<byte>),		new SizeGetter<byte>	(TypeHelper.Byte.GetSize) },
-				{ typeof(List<sbyte>),		new SizeGetter<sbyte>	(TypeHelper.SByte.GetSize) },
-				{ typeof(List<char>),		new SizeGetter<char>	(TypeHelper.Char.GetSize) },
-				{ typeof(List<short>),		new SizeGetter<short>	(TypeHelper.Short.GetSize) },
-				{ typeof(List<ushort>),		new SizeGetter<ushort>	(TypeHelper.UShort.GetSize) },
+				{ typeof(List<bool>),		new SizeGetter<bool>	(BoolType.GetSize) },
+				{ typeof(List<byte>),		new SizeGetter<byte>	(ByteType.GetSize) },
+				{ typeof(List<sbyte>),		new SizeGetter<sbyte>	(SByteType.GetSize) },
+				{ typeof(List<char>),		new SizeGetter<char>	(CharType.GetSize) },
+				{ typeof(List<short>),		new SizeGetter<short>	(ShortType.GetSize) },
+				{ typeof(List<ushort>),		new SizeGetter<ushort>	(UShortType.GetSize) },
 				{ typeof(List<int>),		new SizeGetter<int>		(IntType.GetSize) },
-				{ typeof(List<uint>),		new SizeGetter<uint>	(TypeHelper.UInt.GetSize) },
-				{ typeof(List<float>),		new SizeGetter<float>	(TypeHelper.Float.GetSize) },
-				{ typeof(List<double>),		new SizeGetter<double>	(TypeHelper.Double.GetSize) },
-				{ typeof(List<long>),		new SizeGetter<long>	(TypeHelper.Long.GetSize) },
-				{ typeof(List<ulong>),		new SizeGetter<ulong>	(TypeHelper.ULong.GetSize) },
-				{ typeof(List<decimal>),	new SizeGetter<decimal>	(TypeHelper.Decimal.GetSize) },
-				{ typeof(List<DateTime>),	new SizeGetter<DateTime>(TypeHelper.DateTime.GetSize) },
+				{ typeof(List<uint>),		new SizeGetter<uint>	(UIntType.GetSize) },
+				{ typeof(List<float>),		new SizeGetter<float>	(FloatType.GetSize) },
+				{ typeof(List<double>),		new SizeGetter<double>	(DoubleType.GetSize) },
+				{ typeof(List<long>),		new SizeGetter<long>	(LongType.GetSize) },
+				{ typeof(List<ulong>),		new SizeGetter<ulong>	(ULongType.GetSize) },
+				{ typeof(List<decimal>),	new SizeGetter<decimal>	(DecimalType.GetSize) },
+				{ typeof(List<DateTime>),	new SizeGetter<DateTime>(DateTimeType.GetSize) },
 
-				{ typeof(List<string>),		new SizeGetter<string>	(TypeHelper.String.GetSizeGetter(null).GetSize) },
+				//{ typeof(List<string>),		new SizeGetter<string>	(TypeHelper.String.GetSizeGetter(null).GetSize) },
 			};
 
 			//
@@ -39,12 +39,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public int GetObjectSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
-					return GetSize(instance as IList, sizes, values);
+					return GetSize(instance as IList, sizes, values, context);
 				}
 
-				public int GetSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public int GetSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					if (list == null)
 						return MinDataSize;
@@ -57,7 +57,7 @@ public static partial class Spark
 
 					dataSize += (m_isValueType)
 						? GetElementsSize(list)
-						: GetElementsSize(list, sizes, values);
+						: GetElementsSize(list, sizes, values, context);
 
 					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
@@ -67,7 +67,7 @@ public static partial class Spark
 				}
 
 				protected abstract int GetElementsSize(IList list);
-				protected abstract int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+				protected abstract int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 			}
 
 			//
@@ -98,12 +98,12 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					int size = 0;
 
 					for (int i = 0; i < list.Count; ++i)
-						size += m_getReferenceSize(list[i], sizes, values);
+						size += m_getReferenceSize(list[i], sizes, values, context);
 
 					return size;
 				}
@@ -138,13 +138,13 @@ public static partial class Spark
 					return size;
 				}
 
-				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override int GetElementsSize(IList list, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					List<T> aList = (List<T>)list;
 					int size = 0;
 
 					for (int i = 0; i < aList.Count; ++i)
-						size += m_getReferenceSize(aList[i], sizes, values);
+						size += m_getReferenceSize(aList[i], sizes, values, context);
 
 					return size;
 				}

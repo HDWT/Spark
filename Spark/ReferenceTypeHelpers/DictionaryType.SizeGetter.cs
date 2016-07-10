@@ -11,12 +11,12 @@ public static partial class Spark
 		{
 			private class SizeGetter : ISizeGetter<IDictionary>
 			{
-				public int GetObjectSize(object dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public int GetObjectSize(object dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
-					return GetSize(dictionary as IDictionary, sizes, values);
+					return GetSize(dictionary as IDictionary, sizes, values, context);
 				}
 
-				public int GetSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public int GetSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					if (dictionary == null)
 						return MinDataSize;
@@ -27,7 +27,7 @@ public static partial class Spark
 
 					int dataSize = MinDataSize + 1 + SizeCalculator.GetMinSize(dictionary.Count);
 
-					dataSize += GetElementsSize(dictionary, sizes, values);
+					dataSize += GetElementsSize(dictionary, sizes, values, context);
 
 					int size = dataSize + SizeCalculator.GetMinSize2(dataSize);
 
@@ -36,7 +36,7 @@ public static partial class Spark
 					return size;
 				}
 
-				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				private static int GetElementsSize(IDictionary dictionary, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					Type keyType = dictionary.GetType().GetGenericArguments()[0];
 					TypeFlags keyTypeFlags = GetTypeFlags(keyType);
@@ -54,8 +54,8 @@ public static partial class Spark
 
 					foreach (DictionaryEntry pair in dictionary)
 					{
-						size += (getKeySizeAsValueType != null) ? getKeySizeAsValueType(pair.Key) : getKeySizeAsReferenceType(pair.Key, sizes, values);
-						size += (getValueSizeAsValueType != null) ? getValueSizeAsValueType(pair.Value) : getValueSizeAsReferenceType(pair.Value, sizes, values);
+						size += (getKeySizeAsValueType != null) ? getKeySizeAsValueType(pair.Key) : getKeySizeAsReferenceType(pair.Key, sizes, values, context);
+						size += (getValueSizeAsValueType != null) ? getValueSizeAsValueType(pair.Value) : getValueSizeAsReferenceType(pair.Value, sizes, values, context);
 					}
 
 					return size;

@@ -4,8 +4,8 @@ using System.Reflection;
 
 public static partial class Spark
 {
-	public static bool FullAot = true;
-	public static bool ExperimentalMagic = false; // Be prepared!
+	public const bool FullAot = true;
+	public const bool ExperimentalMagic = true; // Be prepared!
 
 	private const byte Version = 1;
 	private const int HeaderSize = 2;
@@ -26,6 +26,11 @@ public static partial class Spark
 		Is64Bit = (IntPtr.Size == 8);
 	}
 
+	private class Context
+	{
+		public FieldAccessor.ObjectWrapper objectWrapper = new FieldAccessor.ObjectWrapper();
+	}
+
 	public static byte[] Serialize(object instance)
 	{
 		if (instance == null)
@@ -40,14 +45,15 @@ public static partial class Spark
 		{
 			DataType dataType = DataType.Get(type);
 
+			Context context = new Context();
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
-			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
+			QueueWithIndexer<object> values = FullAot && !ExperimentalMagic ? new QueueWithIndexer<object>() : null;
 
-			int dataSize = HeaderSize + dataType.GetDataSize(instance, sizes, values);
+			int dataSize = HeaderSize + dataType.GetDataSize(instance, sizes, values, context);
 			byte[] data = new byte[dataSize];
 
 			WriteHeader(data, ref index);
-			dataType.WriteValues(instance, data, ref index, sizes, values);
+			dataType.WriteValues(instance, data, ref index, sizes, values, context);
 
 			if (LZ4Compression)
 				data = LZ4Encode(data);
@@ -56,15 +62,16 @@ public static partial class Spark
 		}
 		else
 		{
+			Context context = new Context();
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
-			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
+			QueueWithIndexer<object> values = FullAot && !ExperimentalMagic ? new QueueWithIndexer<object>() : null;
 
 			bool isValueType = ((typeFlags & TypeFlags.Value) == TypeFlags.Value);
 
 			int dataSize = HeaderSize;
 			dataSize += (isValueType)
 				? SizeCalculator.GetForValueType(type)(instance)
-				: SizeCalculator.GetForReferenceType(type)(instance, sizes, values);
+				: SizeCalculator.GetForReferenceType(type)(instance, sizes, values, context);
 
 			byte[] data = new byte[dataSize];
 
@@ -73,7 +80,7 @@ public static partial class Spark
 			if (isValueType)
 				Writer.GetDelegateForValueType(type)(instance, data, ref index);
 			else
-				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes, values);
+				Writer.GetDelegateForReferenceType(type)(instance, data, ref index, sizes, values, context);
 
 			if (LZ4Compression)
 				data = LZ4Encode(data);

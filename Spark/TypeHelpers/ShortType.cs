@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -19,16 +18,16 @@ public static partial class Spark
 			public byte byte2;
 		}
 
-		private class ShortType : ITypeHelper<short>
+		public static class ShortType
 		{
 			private const short ShortZero = (short)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((short)value);
 			}
 
-			public int GetSize(short value)
+			public static int GetSize(short value)
 			{
 				if (value == ShortZero)
 					return 1;
@@ -45,22 +44,12 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
-			public short FromBytes(byte[] data, int startIndex)
-			{
-				ShortTypeMapper mapper = new ShortTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public short Read(byte[] data, ref int startIndex)
+			public static short Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -86,12 +75,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((short)value, data, ref startIndex);
 			}
 
-			public void Write(short value, byte[] data, ref int startIndex)
+			public static void Write(short value, byte[] data, ref int startIndex)
 			{
 				if (value == ShortZero)
 				{

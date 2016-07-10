@@ -9,20 +9,20 @@ public static partial class Spark
 		{
 			private static readonly Dictionary<Type, IDataWriter<Array>> s_dataWritersByArrayType = new Dictionary<Type, IDataWriter<Array>>(20)
 			{
-				{ typeof(bool[]),		new DataWriter<bool>	(TypeHelper.Bool.Write) },
-				{ typeof(byte[]),		new DataWriter<byte>	(TypeHelper.Byte.Write) },
-				{ typeof(sbyte[]),		new DataWriter<sbyte>	(TypeHelper.SByte.Write) },
-				{ typeof(char[]),		new DataWriter<char>	(TypeHelper.Char.Write) },
-				{ typeof(short[]),		new DataWriter<short>	(TypeHelper.Short.Write) },
-				{ typeof(ushort[]),		new DataWriter<ushort>	(TypeHelper.UShort.Write) },
+				{ typeof(bool[]),		new DataWriter<bool>	(BoolType.Write) },
+				{ typeof(byte[]),		new DataWriter<byte>	(ByteType.Write) },
+				{ typeof(sbyte[]),		new DataWriter<sbyte>	(SByteType.Write) },
+				{ typeof(char[]),		new DataWriter<char>	(CharType.Write) },
+				{ typeof(short[]),		new DataWriter<short>	(ShortType.Write) },
+				{ typeof(ushort[]),		new DataWriter<ushort>	(UShortType.Write) },
 				{ typeof(int[]),		new DataWriter<int>		(IntType.Write) },
-				{ typeof(uint[]),		new DataWriter<uint>	(TypeHelper.UInt.Write) },
-				{ typeof(float[]),		new DataWriter<float>	(TypeHelper.Float.Write) },
-				{ typeof(double[]),		new DataWriter<double>	(TypeHelper.Double.Write) },
-				{ typeof(long[]),		new DataWriter<long>	(TypeHelper.Long.Write) },
-				{ typeof(ulong[]),		new DataWriter<ulong>	(TypeHelper.ULong.Write) },
-				{ typeof(decimal[]),	new DataWriter<decimal>	(TypeHelper.Decimal.Write) },
-				{ typeof(DateTime[]),	new DataWriter<DateTime>(TypeHelper.DateTime.Write) },
+				{ typeof(uint[]),		new DataWriter<uint>	(UIntType.Write) },
+				{ typeof(float[]),		new DataWriter<float>	(FloatType.Write) },
+				{ typeof(double[]),		new DataWriter<double>	(DoubleType.Write) },
+				{ typeof(long[]),		new DataWriter<long>	(LongType.Write) },
+				{ typeof(ulong[]),		new DataWriter<ulong>	(ULongType.Write) },
+				{ typeof(decimal[]),	new DataWriter<decimal>	(DecimalType.Write) },
+				{ typeof(DateTime[]),	new DataWriter<DateTime>(DateTimeType.Write) },
 
 				{ typeof(string[]),		new DataWriter<string>	(TypeHelper.String.GetDataWriter(null).Write) },
 			};
@@ -37,12 +37,12 @@ public static partial class Spark
 					m_isValueType = isValueType;
 				}
 
-				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void WriteObject(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
-					Write(instance as Array, data, ref startIndex, sizes, values);
+					Write(instance as Array, data, ref startIndex, sizes, values, context);
 				}
 
-				public void Write(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				public void Write(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					if (array == null)
 					{
@@ -84,11 +84,11 @@ public static partial class Spark
 					if (m_isValueType)
 						WriteValue(array, data, ref startIndex);
 					else
-						WriteReference(array, data, ref startIndex, sizes, values);
+						WriteReference(array, data, ref startIndex, sizes, values, context);
 				}
 
 				protected abstract void WriteValue(Array array, byte[] data, ref int startIndex);
-				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values);
+				protected abstract void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context);
 			}
 
 			//
@@ -115,10 +115,10 @@ public static partial class Spark
 						m_writeValue(item, data, ref startIndex);
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					foreach (var item in array)
-						m_writeReference(item, data, ref startIndex, sizes, values);
+						m_writeReference(item, data, ref startIndex, sizes, values, context);
 				}
 			}
 
@@ -169,28 +169,28 @@ public static partial class Spark
 					}
 				}
 
-				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+				protected override void WriteReference(Array array, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 				{
 					switch (array.Rank)
 					{
 						case 1:
 							foreach (var item in (T[])array)
-								m_writeReference(item, data, ref startIndex, sizes, values);
+								m_writeReference(item, data, ref startIndex, sizes, values, context);
 							break;
 
 						case 2:
 							foreach (var item in (T[,])array)
-								m_writeReference(item, data, ref startIndex, sizes, values);
+								m_writeReference(item, data, ref startIndex, sizes, values, context);
 							break;
 
 						case 3:
 							foreach (var item in (T[, ,])array)
-								m_writeReference(item, data, ref startIndex, sizes, values);
+								m_writeReference(item, data, ref startIndex, sizes, values, context);
 							break;
 
 						case 4:
 							foreach (var item in (T[, , ,])array)
-								m_writeReference(item, data, ref startIndex, sizes, values);
+								m_writeReference(item, data, ref startIndex, sizes, values, context);
 							break;
 
 						default:

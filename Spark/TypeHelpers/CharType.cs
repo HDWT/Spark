@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -19,16 +18,16 @@ public static partial class Spark
 			public byte byte2;
 		}
 
-		private class CharType : ITypeHelper<char>
+		public static class CharType
 		{
 			private const char CharZero = (char)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((char)value);
 			}
 
-			public int GetSize(char value)
+			public static int GetSize(char value)
 			{
 				if (value == CharZero)
 					return 1;
@@ -45,22 +44,12 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
-			public char FromBytes(byte[] data, int startIndex)
-			{
-				CharMapper mapper = new CharMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public char Read(byte[] data, ref int startIndex)
+			public static char Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -86,12 +75,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((char)value, data, ref startIndex);
 			}
 
-			public void Write(char value, byte[] data, ref int startIndex)
+			public static void Write(char value, byte[] data, ref int startIndex)
 			{
 				if (value == CharZero)
 				{

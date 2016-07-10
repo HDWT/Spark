@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -16,29 +15,24 @@ public static partial class Spark
 			public char[] charArray;
 		}
 
-		private class ByteType : ITypeHelper<byte>
+		public static class ByteType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((byte)value);
 			}
 
-			public int GetSize(byte value)
+			public static int GetSize(byte value)
 			{
 				return (value == 0) ? 1 : 2;
 			}
 
-			public byte FromBytes(byte[] data, int startIndex)
-			{
-				return data[startIndex++];
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public byte Read(byte[] data, ref int startIndex)
+			public static byte Read(byte[] data, ref int startIndex)
 			{
 				byte dataSize = data[startIndex++];
 
@@ -51,12 +45,12 @@ public static partial class Spark
 				throw new System.ArgumentException(string.Format("Spark.Read - Invalid data size = {0}", dataSize));
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((byte)value, data, ref startIndex);
 			}
 
-			public void Write(byte value, byte[] data, ref int startIndex)
+			public static void Write(byte value, byte[] data, ref int startIndex)
 			{
 				if (value == zero)
 				{

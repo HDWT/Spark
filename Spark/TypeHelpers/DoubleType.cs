@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -40,53 +39,45 @@ public static partial class Spark
 			public byte byte8;
 		}
 
-		private class DoubleType : ITypeHelper<double>
+		public static class DoubleType
 		{
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((double)value);
 			}
 
-			public int GetSize(double value)
+			public static int GetSize(double value)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				return TypeHelper.Long.GetSize(mapper.longValue);
+				return LongType.GetSize(mapper.longValue);
 			}
 
-			public double FromBytes(byte[] data, int startIndex)
-			{
-				DoubleTypeMapper mapper = new DoubleTypeMapper();
-				mapper.longValue = TypeHelper.Long.FromBytes(data, startIndex);
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public double Read(byte[] data, ref int startIndex)
+			public static double Read(byte[] data, ref int startIndex)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
-				mapper.longValue = TypeHelper.Long.Read(data, ref startIndex);
+				mapper.longValue = LongType.Read(data, ref startIndex);
 
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((double)value, data, ref startIndex);
 			}
 
-			public void Write(double value, byte[] data, ref int startIndex)
+			public static void Write(double value, byte[] data, ref int startIndex)
 			{
 				DoubleTypeMapper mapper = new DoubleTypeMapper();
 				mapper.value = value;
 
-				TypeHelper.Long.Write(mapper.longValue, data, ref startIndex);
+				LongType.Write(mapper.longValue, data, ref startIndex);
 			}
 		}
 	}

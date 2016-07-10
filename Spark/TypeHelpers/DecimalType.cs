@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -61,16 +60,16 @@ public static partial class Spark
 			public byte byte16;
 		}
 
-		private class DecimalType : ITypeHelper<decimal>
+		public static class DecimalType
 		{
 			private const decimal DecimalZero = (decimal)0x00;
 
-			public int GetSize(object value)
+			public static int GetSize(object value)
 			{
 				return GetSize((decimal)value);
 			}
 
-			public int GetSize(decimal value)
+			public static int GetSize(decimal value)
 			{
 				if (value == DecimalZero)
 					return 1;
@@ -129,37 +128,12 @@ public static partial class Spark
 				throw new System.ArgumentException();
 			}
 
-			public decimal FromBytes(byte[] data, int startIndex)
-			{
-				DecimalTypeMapper mapper = new DecimalTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-				mapper.byte3 = data[startIndex++];
-				mapper.byte4 = data[startIndex++];
-				mapper.byte5 = data[startIndex++];
-				mapper.byte6 = data[startIndex++];
-				mapper.byte7 = data[startIndex++];
-				mapper.byte8 = data[startIndex++];
-				mapper.byte9 = data[startIndex++];
-
-				mapper.byte10 = data[startIndex++];
-				mapper.byte11 = data[startIndex++];
-				mapper.byte12 = data[startIndex++];
-				mapper.byte13 = data[startIndex++];
-				mapper.byte14 = data[startIndex++];
-				mapper.byte15 = data[startIndex++];
-				mapper.byte16 = data[startIndex++];
-
-				return mapper.value;
-			}
-
-			public object ReadObject(Type type, byte[] data, ref int startIndex)
+			public static object ReadObject(Type type, byte[] data, ref int startIndex)
 			{
 				return Read(data, ref startIndex);
 			}
 
-			public decimal Read(byte[] data, ref int startIndex)
+			public static decimal Read(byte[] data, ref int startIndex)
 			{
 				DecimalTypeMapper mapper = new DecimalTypeMapper();
 
@@ -244,12 +218,12 @@ public static partial class Spark
 				return mapper.value;
 			}
 
-			public void WriteObject(object value, byte[] data, ref int startIndex)
+			public static void WriteObject(object value, byte[] data, ref int startIndex)
 			{
 				Write((decimal)value, data, ref startIndex);
 			}
 
-			public void Write(decimal value, byte[] data, ref int startIndex)
+			public static void Write(decimal value, byte[] data, ref int startIndex)
 			{
 				DecimalTypeMapper mapper = new DecimalTypeMapper();
 				mapper.value = value;

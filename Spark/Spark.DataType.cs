@@ -412,7 +412,7 @@ public static partial class Spark
 		}
 
 		/// <summary> Записывает все поля {instance} в массив байт {data} начиная с индекса {startInder} </summary>
-		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public void WriteValues(object instance, byte[] data, ref int startIndex, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
 			if (m_assignableTypes.Count != 0)
 			{
@@ -425,7 +425,7 @@ public static partial class Spark
 						if (m_assignableTypes[i].Type != instanceType)
 							continue;
 
-						m_assignableTypes[i].GetDataType().WriteValues(instance, data, ref startIndex, sizes, values);
+						m_assignableTypes[i].GetDataType().WriteValues(instance, data, ref startIndex, sizes, values, context);
 						return;
 					}
 				}
@@ -434,11 +434,11 @@ public static partial class Spark
 			data[startIndex++] = m_typeId;
 
 			for (int i = 0; i < m_members.Length; ++i)
-				m_members[i].WriteValue(instance, data, ref startIndex, sizes, values);
+				m_members[i].WriteValue(instance, data, ref startIndex, sizes, values, context);
 		}
 
 		/// <summary> Возвращает количество байт, которое потребуется для записи {instance} </summary>
-		public int GetDataSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values)
+		public int GetDataSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
 			if (m_assignableTypes.Count != 0)
 			{
@@ -451,7 +451,7 @@ public static partial class Spark
 						if (m_assignableTypes[i].Type != instanceType)
 							continue;
 
-						return m_assignableTypes[i].GetDataType().GetDataSize(instance, sizes, values);
+						return m_assignableTypes[i].GetDataType().GetDataSize(instance, sizes, values, context);
 					}
 				}
 			}
@@ -459,7 +459,7 @@ public static partial class Spark
 			int size = sizeof(byte); // Один байт для опредения полиморфизма
 
 			for (int i = 0; i < m_members.Length; ++i)
-				size += m_members[i].GetSize(instance, sizes, values);
+				size += m_members[i].GetSize(instance, sizes, values, context);
 
 			return size;
 		}

@@ -7,14 +7,14 @@ public static partial class Spark
 	{
 		public static readonly EnumTypeHelper Instance = new EnumTypeHelper();
 
-		private readonly Values<byte>	m_byteValues	= new Values<byte>(TypeHelper.Byte.GetSize, TypeHelper.Byte.ReadObject);
-		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>(TypeHelper.SByte.GetSize, TypeHelper.SByte.ReadObject);
-		private readonly Values<short>	m_shortValues	= new Values<short>(TypeHelper.Short.GetSize, TypeHelper.Short.ReadObject);
-		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(TypeHelper.UShort.GetSize, TypeHelper.UShort.ReadObject);
+		private readonly Values<byte>	m_byteValues	= new Values<byte>(TypeHelper.ByteType.GetSize, TypeHelper.ByteType.ReadObject);
+		private readonly Values<sbyte>	m_sbyteValues	= new Values<sbyte>(TypeHelper.SByteType.GetSize, TypeHelper.SByteType.ReadObject);
+		private readonly Values<short>	m_shortValues	= new Values<short>(TypeHelper.ShortType.GetSize, TypeHelper.ShortType.ReadObject);
+		private readonly Values<ushort> m_ushortValues	= new Values<ushort>(TypeHelper.UShortType.GetSize, TypeHelper.UShortType.ReadObject);
 		private readonly Values<int>	m_intValues		= new Values<int>(TypeHelper.IntType.GetSize, TypeHelper.IntType.ReadObject);
-		private readonly Values<uint>	m_uintValues	= new Values<uint>(TypeHelper.UInt.GetSize, TypeHelper.UInt.ReadObject);
-		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.Long.GetSize, TypeHelper.Long.ReadObject);
-		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULong.GetSize, TypeHelper.ULong.ReadObject);
+		private readonly Values<uint>	m_uintValues	= new Values<uint>(TypeHelper.UIntType.GetSize, TypeHelper.UIntType.ReadObject);
+		private readonly Values<long>	m_longValues	= new Values<long>(TypeHelper.LongType.GetSize, TypeHelper.LongType.ReadObject);
+		private readonly Values<ulong>	m_ulongValues	= new Values<ulong>(TypeHelper.ULongType.GetSize, TypeHelper.ULongType.ReadObject);
 
 		private static readonly Dictionary<Type, Type> s_underlyingTypesByEnumType = new Dictionary<Type, Type>(16);
 

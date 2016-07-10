@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
@@ -11,9 +10,6 @@ public static partial class Spark
 		{
 			[FieldOffset(0)]
 			public int value;
-
-			[FieldOffset(0)]
-			public uint uintValue;
 
 			[FieldOffset(0)]
 			public byte byte1;
@@ -28,7 +24,7 @@ public static partial class Spark
 			public byte byte4;
 		}
 
-		public class IntType //: ITypeHelper<int>
+		public static class IntType
 		{
 			private const int IntZero = (int)0x00;
 
@@ -58,18 +54,6 @@ public static partial class Spark
 					return 2;
 
 				throw new System.ArgumentException();
-			}
-
-			public static int FromBytes(byte[] data, int startIndex)
-			{
-				IntTypeMapper mapper = new IntTypeMapper();
-
-				mapper.byte1 = data[startIndex++];
-				mapper.byte2 = data[startIndex++];
-				mapper.byte3 = data[startIndex++];
-				mapper.byte4 = data[startIndex++];
-
-				return mapper.value;
 			}
 
 			public static object ReadObject(Type type, byte[] data, ref int startIndex)
