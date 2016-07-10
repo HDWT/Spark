@@ -135,30 +135,31 @@ public static partial class Spark
 
 			if (IsField)
 			{
-				if (m_isClass)
-				{
-					if (IntPtr.Size == 4)
-					{
-						ReferenceFieldAccessor32 referenceFieldAccessor = new ReferenceFieldAccessor32();
-						referenceFieldAccessor.instance = instance;
+				FieldAccessor valueTypeAccessor = new FieldAccessor();
 
-						return referenceFieldAccessor.Get(m_fieldOffset);
-					}
-					else
-					{
-						ReferenceFieldAccessor64 referenceFieldAccessor = new ReferenceFieldAccessor64();
-						referenceFieldAccessor.instance = instance;
+				valueTypeAccessor.wObject = FieldAccessor.ObjectWrapperPool.Get();
+				valueTypeAccessor.wObject.instance = instance;
 
-						return referenceFieldAccessor.Get(m_fieldOffset);
-					}
-				}
+				if (Is64Bit)
+					valueTypeAccessor.wAddress.address64 += m_fieldOffset;
 				else
-				{
-					ValueFieldAccessor valueTypeAccessor = new ValueFieldAccessor();
-					valueTypeAccessor.instance = instance;
+					valueTypeAccessor.wAddress.address32 += m_fieldOffset;
 
-					return valueTypeAccessor.Get(m_fieldInfo.FieldType, m_fieldOffset);
-				}
+				object result = valueTypeAccessor.Get(m_fieldInfo.FieldType, m_isClass);
+				
+				/*
+				object reflectionResult = m_fieldInfo.GetValue(instance);
+
+				if ((result == null && reflectionResult != null) || (result != null && reflectionResult == null))
+					throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+
+				if (result != null && !result.Equals(m_fieldInfo.GetValue(instance)))
+					throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+				*/
+
+				FieldAccessor.ObjectWrapperPool.Return(valueTypeAccessor.wObject);
+
+				return result;	
 			}
 			else
 			{

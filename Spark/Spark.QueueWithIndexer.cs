@@ -39,7 +39,7 @@ public static partial class Spark
 
 		public int Capacity
 		{
-			get { return m_capacity; }// m_list.Count* ArraySize; }
+			get { return m_capacity; }
 		}
 
 		public T this[int index]
@@ -92,6 +92,31 @@ public static partial class Spark
 			m_count--;
 
 			return value;
+		}
+	}
+
+	private class ObjectPool<T> where T : class, new()
+	{
+		private QueueWithIndexer<T> m_objects = new QueueWithIndexer<T>();
+
+		public T Get()
+		{
+			lock (m_objects)
+			{
+				if (m_objects.Count == 0)
+					m_objects.Enqueue(new T());
+
+				return m_objects.Dequeue();
+			}
+		}
+
+		public void Return(T obj)
+		{
+			lock (m_objects)
+			{
+				if (obj != null)
+					m_objects.Enqueue(obj);
+			}
 		}
 	}
 }

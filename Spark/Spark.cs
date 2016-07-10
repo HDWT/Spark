@@ -1,31 +1,30 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
 public static partial class Spark
 {
 	public static bool FullAot = true;
-	public static bool ExperimentalMagic = true; // Be prepared!
-
-	private static readonly bool Is64Bit = false;
+	public static bool ExperimentalMagic = false; // Be prepared!
 
 	private const byte Version = 1;
 	private const int HeaderSize = 2;
 
-	static Spark()
-	{
-		Is64Bit = (IntPtr.Size == 8);
-	}
+	private static EFormatFlags FormatFlags = EFormatFlags.None;
 
 	[System.Flags]
-	private enum FormatFlags : byte
+	private enum EFormatFlags : byte
 	{
 		None = 0,
 		LZ4Compression = 1 << 0,
 	}
 
-	private static FormatFlags s_formatFlags = FormatFlags.None;
+	private static readonly bool Is64Bit = false;
+
+	static Spark()
+	{
+		Is64Bit = (IntPtr.Size == 8);
+	}
 
 	public static byte[] Serialize(object instance)
 	{
@@ -103,12 +102,12 @@ public static partial class Spark
 		int index = 0;
 
 		byte version = data[index++];
-		FormatFlags formatFlags = (FormatFlags)data[index++];
+		EFormatFlags formatFlags = (EFormatFlags)data[index++];
 
 		if (version != 1)
 			throw new System.ArgumentException("Invalid version " + version);
 
-		if ((formatFlags & FormatFlags.LZ4Compression) == FormatFlags.LZ4Compression)
+		if ((formatFlags & EFormatFlags.LZ4Compression) == EFormatFlags.LZ4Compression)
 			data = LZ4Decode(data);
 
 		TypeFlags typeFlags = GetTypeFlags(type);
@@ -188,7 +187,7 @@ public static partial class Spark
 	private static void WriteHeader(byte[] data, ref int index)
 	{
 		data[index++] = Version;
-		data[index++] = (byte)s_formatFlags;
+		data[index++] = (byte)FormatFlags;
 	}
 
 	private static bool IsGenericList(Type type)

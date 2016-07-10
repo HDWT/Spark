@@ -7,8 +7,8 @@ public static partial class Spark
 
 	public static bool LZ4Compression
 	{
-		get { return (s_formatFlags & FormatFlags.LZ4Compression) == FormatFlags.LZ4Compression; }
-		set { s_formatFlags = (value) ? (s_formatFlags | FormatFlags.LZ4Compression) : (s_formatFlags & ~FormatFlags.LZ4Compression); }
+		get { return (FormatFlags & EFormatFlags.LZ4Compression) == EFormatFlags.LZ4Compression; }
+		set { FormatFlags = (value) ? (FormatFlags | EFormatFlags.LZ4Compression) : (FormatFlags & ~EFormatFlags.LZ4Compression); }
 	}
 
 	private static byte[] LZ4Encode(byte[] data)

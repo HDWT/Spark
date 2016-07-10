@@ -163,10 +163,10 @@ public static partial class Spark
 					// align decimal
 					if (field.FieldType == typeof(decimal))
 					{
-						int overhead = valueFieldOffset % 4;
+						int overhead = valueFieldOffset % IntPtr.Size;
 
 						if (overhead != 0)
-							valueFieldOffset += 4 - overhead;
+							valueFieldOffset += IntPtr.Size - overhead;
 					}
 
 					// aligin reference in 64 bit
@@ -210,7 +210,7 @@ public static partial class Spark
 							if ((type.BaseType != null) && (type.BaseType != typeof(System.Object)))
 								members.Add(new DataMember(memberId, field, -1));
 							else
-								members.Add(new DataMember(memberId, field, currentTypeIsClassOrInterface ? referenceFieldOffset : valueFieldOffset));
+								members.Add(new DataMember(memberId, field, valueFieldOffset));
 						}
 						else
 						{
