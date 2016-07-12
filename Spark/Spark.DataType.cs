@@ -129,8 +129,7 @@ public static partial class Spark
 				System.Type previousFieldType = null;
 				bool previousTypeIsClassOrInterface = false;
 
-				int valueFieldOffset = 0;
-				int referenceFieldOffset = 0;
+				int fieldOffset = 0;
 
 				foreach (var field in fields)
 				{
@@ -142,41 +141,38 @@ public static partial class Spark
 							previousFieldType = EnumTypeHelper.GetUnderlyingType(previousFieldType);
 
 						if (previousTypeIsClassOrInterface)
-							valueFieldOffset += IntPtr.Size;
+							fieldOffset += IntPtr.Size;
 						else if (previousFieldType == typeof(int) || previousFieldType == typeof(uint) || previousFieldType == typeof(float))
-							valueFieldOffset += 4;
+							fieldOffset += 4;
 						else if (previousFieldType == typeof(short) || previousFieldType == typeof(ushort) || previousFieldType == typeof(char))
-							valueFieldOffset += 2;
+							fieldOffset += 2;
 						else if (previousFieldType == typeof(byte) || previousFieldType == typeof(sbyte) || previousFieldType == typeof(bool))
-							valueFieldOffset += 1;
+							fieldOffset += 1;
 						else if (previousFieldType == typeof(long) || previousFieldType == typeof(ulong) || previousFieldType == typeof(double) || previousFieldType == typeof(DateTime))
-							valueFieldOffset += 8;
+							fieldOffset += 8;
 						else if (previousFieldType == typeof(decimal))
-							valueFieldOffset += 16;
-
+							fieldOffset += 16;
 						else
 							throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", previousFieldType));
-
-						referenceFieldOffset = valueFieldOffset / IntPtr.Size;
 					}
 
 					// align decimal
-					if (field.FieldType == typeof(decimal))
+					if (field.FieldType == typeof(decimal) || field.FieldType == typeof(DateTime))
 					{
-						int overhead = valueFieldOffset % IntPtr.Size;
+						int overhead = fieldOffset % IntPtr.Size;
 
 						if (overhead != 0)
-							valueFieldOffset += IntPtr.Size - overhead;
+							fieldOffset += IntPtr.Size - overhead;
 					}
 
 					// aligin reference in 64 bit
 					if (Is64Bit && (previousFieldType != null) && !currentTypeIsClassOrInterface && previousTypeIsClassOrInterface)
 					{
 						int d = (field.FieldType == typeof(long) || field.FieldType == typeof(ulong) || field.FieldType == typeof(double)) ? 8 : 4;
-						int overhead = valueFieldOffset % d;
+						int overhead = fieldOffset % d;
 
 						if (overhead != 0)
-							valueFieldOffset += d - overhead;
+							fieldOffset += d - overhead;
 					}
 
 					previousFieldType = field.FieldType;
@@ -210,7 +206,7 @@ public static partial class Spark
 							if ((type.BaseType != null) && (type.BaseType != typeof(System.Object)))
 								members.Add(new DataMember(memberId, field, -1));
 							else
-								members.Add(new DataMember(memberId, field, valueFieldOffset));
+								members.Add(new DataMember(memberId, field, fieldOffset));
 						}
 						else
 						{

@@ -7,7 +7,7 @@ public static partial class Spark
 	private static class FieldOrder
 	{
 		private static readonly Dictionary<System.Type, int> s_ordersByType = new Dictionary<Type, int>();
-		private static readonly List<FieldInfo>[] s_fieldsByOrder = new List<FieldInfo>[7]; // 7 orders now
+		private static readonly List<FieldInfo>[] s_fieldsByOrder = new List<FieldInfo>[6]; // 6 orders now
 
 		static FieldOrder()
 		{
@@ -32,7 +32,7 @@ public static partial class Spark
 			s_ordersByType.Add(typeof(byte),		4);
 
 			s_ordersByType.Add(typeof(decimal),		5);
-			s_ordersByType.Add(typeof(DateTime),	6);
+			s_ordersByType.Add(typeof(DateTime),	5);
 
 			//
 			for (int i = 0; i < s_fieldsByOrder.Length; ++i)

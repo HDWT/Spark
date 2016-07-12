@@ -4,11 +4,11 @@ using System.Reflection;
 
 public static partial class Spark
 {
-	public const bool FullAot = true;
-	public const bool ExperimentalMagic = true; // Be prepared!
+	public static readonly bool FullAot = true;
+	public static readonly bool ExperimentalMagic = true; // Be prepared!
 
-	private const byte Version = 1;
-	private const int HeaderSize = 2;
+	private static readonly byte Version = 1;
+	private static readonly int HeaderSize = 2;
 
 	private static EFormatFlags FormatFlags = EFormatFlags.None;
 
