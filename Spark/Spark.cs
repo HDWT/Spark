@@ -7,6 +7,8 @@ public static partial class Spark
 	public static readonly bool FullAot = true;
 	public static readonly bool ExperimentalMagic = true; // Be prepared!
 
+	private static readonly bool DoubleCheckingMode = false; // For testing only
+
 	private static readonly byte Version = 1;
 	private static readonly int HeaderSize = 2;
 

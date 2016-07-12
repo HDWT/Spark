@@ -25,6 +25,7 @@ namespace SparkTest
 			typeof(double),
 			typeof(decimal),
 			typeof(DateTime),
+			typeof(string),
 		};
 
 		public static void Make(int classCount, int fieldCount)
@@ -181,22 +182,40 @@ namespace SparkTest
 
 			if (type == typeof(decimal))
 			{
-				decimal v = 0;
-
-				if (s_random.Next(2) == 0)
-				{
-					v = long.MinValue - s_random.Next(0, int.MaxValue);
-				}
-				else
-				{
-					v = long.MaxValue + s_random.Next(0, int.MaxValue);
-				}
+				decimal v = (s_random.Next(2) == 0)
+					?  long.MinValue - s_random.Next(0, int.MaxValue)
+					: long.MaxValue + s_random.Next(0, int.MaxValue);
 
 				return v.ToString();
 			}
 
 			if (type == typeof(DateTime))
 				return string.Format("new DateTime({0}, {1}, {2})", s_random.Next(1987, 2016), s_random.Next(1, 13), s_random.Next(1, 29));
+
+			if (type == typeof(string))
+			{
+				int stringLength = s_random.Next(40);
+
+				if (stringLength < 5)
+					return "null";
+
+				if (stringLength < 10)
+					return "string.Empty";
+
+				string v = string.Empty;
+
+				while (stringLength-- > 0)
+				{
+					char ch = (char)(s_random.Next(32, 126));
+
+					if ((ch == '\'') || (ch == '\"') || (ch == '\\'))
+						v += '\\';
+
+					v += ch;
+				}
+
+				return string.Format("\"{0}\"", v);
+			}
 
 			throw new System.ArgumentException("Not supported type " + type);
 		}

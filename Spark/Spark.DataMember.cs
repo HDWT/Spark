@@ -157,9 +157,6 @@ public static partial class Spark
 					throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
 				*/
 
-				valueTypeAccessor.wObject.instance = null;
-				//FieldAccessor.ObjectWrapperPool.Return(valueTypeAccessor.wObject);
-
 				return result;	
 			}
 			else
@@ -190,6 +187,18 @@ public static partial class Spark
 					valueTypeAccessor.wAddress.address64 += m_fieldOffset;
 				else
 					valueTypeAccessor.wAddress.address32 += m_fieldOffset;
+
+				if (DoubleCheckingMode)
+				{
+					object result = valueTypeAccessor.Get(m_fieldInfo.FieldType, m_isClass);
+					object reflectionResult = m_fieldInfo.GetValue(instance);
+
+					if ((result == null && reflectionResult != null) || (result != null && reflectionResult == null))
+						throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+
+					if (result != null && !result.Equals(m_fieldInfo.GetValue(instance)))
+						throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+				}
 
 				int size = 0;
 
@@ -252,8 +261,6 @@ public static partial class Spark
 
 					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 				}
-
-				valueTypeAccessor.wObject.instance = null;
 
 				return HeaderSize + size;
 			}
@@ -348,8 +355,6 @@ public static partial class Spark
 
 					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 				}
-
-				valueTypeAccessor.wObject.instance = null;
 			}
 			else
 			{
