@@ -156,13 +156,57 @@ public static partial class Spark
 							throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", previousFieldType));
 					}
 
-					// align decimal
-					if (field.FieldType == typeof(decimal) || field.FieldType == typeof(DateTime))
+					if (IsMono)
 					{
-						int overhead = fieldOffset % IntPtr.Size;
+						if (previousFieldType == typeof(DateTime))
+							fieldOffset += 8;
 
-						if (overhead != 0)
-							fieldOffset += IntPtr.Size - overhead;
+						if (field.FieldType == typeof(short) || field.FieldType == typeof(ushort) || field.FieldType == typeof(char))
+						{
+							int overhead = fieldOffset % 2;
+
+							if (overhead != 0)
+								fieldOffset += 2 - overhead;
+						}
+						else if (field.FieldType == typeof(int) || field.FieldType == typeof(uint) || field.FieldType == typeof(float))
+						{
+							int overhead = fieldOffset % 4;
+
+							if (overhead != 0)
+								fieldOffset += 4 - overhead;
+						}
+						else if (field.FieldType == typeof(long) || field.FieldType == typeof(ulong) || field.FieldType == typeof(double))
+						{
+							int overhead = fieldOffset % 8;
+
+							if (overhead != 0)
+								fieldOffset += 8 - overhead;
+						}
+						else if (field.FieldType == typeof(decimal))
+						{
+							int overhead = fieldOffset % 4;
+
+							if (overhead != 0)
+								fieldOffset += 4 - overhead;
+						}
+						else if (field.FieldType == typeof(DateTime))
+						{
+							int overhead = fieldOffset % 8;
+
+							if (overhead != 0)
+								fieldOffset += 8 - overhead;
+						}
+					}
+					else
+					{
+						// align decimal
+						if (field.FieldType == typeof(decimal) || field.FieldType == typeof(DateTime))
+						{
+							int overhead = fieldOffset % IntPtr.Size;
+
+							if (overhead != 0)
+								fieldOffset += IntPtr.Size - overhead;
+						}
 					}
 
 					// aligin reference in 64 bit

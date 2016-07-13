@@ -11,28 +11,56 @@ public static partial class Spark
 
 		static FieldOrder()
 		{
-			// Reference if 64-bit
+			if (IsMono)
+			{
+				// Reference if 64-bit
 
-			s_ordersByType.Add(typeof(long),	Is64Bit ? 1 : 0);
-			s_ordersByType.Add(typeof(double),	Is64Bit ? 1 : 0);
-			s_ordersByType.Add(typeof(ulong),	Is64Bit ? 1 : 0);
+				s_ordersByType.Add(typeof(long),		1);
+				s_ordersByType.Add(typeof(double),		1);
+				s_ordersByType.Add(typeof(ulong),		1);
 
-			// Reference if 32-bit
+				// Reference if 32-bit
 
-			s_ordersByType.Add(typeof(int),			2);
-			s_ordersByType.Add(typeof(uint),		2);
-			s_ordersByType.Add(typeof(float),		2);
+				s_ordersByType.Add(typeof(int),			1);
+				s_ordersByType.Add(typeof(uint),		1);
+				s_ordersByType.Add(typeof(float),		1);
 
-			s_ordersByType.Add(typeof(short),		3);
-			s_ordersByType.Add(typeof(ushort),		3);
-			s_ordersByType.Add(typeof(char),		3);
+				s_ordersByType.Add(typeof(short),		1);
+				s_ordersByType.Add(typeof(ushort),		1);
+				s_ordersByType.Add(typeof(char),		1);
 
-			s_ordersByType.Add(typeof(bool),		4);
-			s_ordersByType.Add(typeof(sbyte),		4);
-			s_ordersByType.Add(typeof(byte),		4);
+				s_ordersByType.Add(typeof(bool),		1);
+				s_ordersByType.Add(typeof(sbyte),		1);
+				s_ordersByType.Add(typeof(byte),		1);
 
-			s_ordersByType.Add(typeof(decimal),		5);
-			s_ordersByType.Add(typeof(DateTime),	5);
+				s_ordersByType.Add(typeof(decimal),		1);
+				s_ordersByType.Add(typeof(DateTime),	1);
+			}
+			else
+			{
+				// Reference if 64-bit
+
+				s_ordersByType.Add(typeof(long),	Is64Bit ? 1 : 0);
+				s_ordersByType.Add(typeof(double),	Is64Bit ? 1 : 0);
+				s_ordersByType.Add(typeof(ulong),	Is64Bit ? 1 : 0);
+
+				// Reference if 32-bit
+
+				s_ordersByType.Add(typeof(int),			2);
+				s_ordersByType.Add(typeof(uint),		2);
+				s_ordersByType.Add(typeof(float),		2);
+
+				s_ordersByType.Add(typeof(short),		3);
+				s_ordersByType.Add(typeof(ushort),		3);
+				s_ordersByType.Add(typeof(char),		3);
+
+				s_ordersByType.Add(typeof(bool),		4);
+				s_ordersByType.Add(typeof(sbyte),		4);
+				s_ordersByType.Add(typeof(byte),		4);
+
+				s_ordersByType.Add(typeof(decimal),		5);
+				s_ordersByType.Add(typeof(DateTime),	5);
+			}
 
 			//
 			for (int i = 0; i < s_fieldsByOrder.Length; ++i)
@@ -45,7 +73,7 @@ public static partial class Spark
 			System.Type fieldType = field.FieldType;
 
 			if (fieldType.IsClass || fieldType.IsInterface)
-				return Is64Bit ? 0 : 1;
+				return IsMono /* !! check mono x86 */ || Is64Bit ? 0 : 1;
 
 			if (fieldType.IsEnum)
 				fieldType = EnumTypeHelper.GetUnderlyingType(fieldType);

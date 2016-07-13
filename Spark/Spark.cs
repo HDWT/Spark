@@ -4,15 +4,11 @@ using System.Reflection;
 
 public static partial class Spark
 {
-	public static readonly bool FullAot = true;
-	public static readonly bool ExperimentalMagic = true; // Be prepared!
+	private static readonly bool	FullAot				= true;
+	private static readonly bool	ExperimentalMagic	= true; // Be prepared!
+	private static EFormatFlags		FormatFlags			= EFormatFlags.None;
 
-	private static readonly bool DoubleCheckingMode = false; // For testing only
-
-	private static readonly byte Version = 1;
-	private static readonly int HeaderSize = 2;
-
-	private static EFormatFlags FormatFlags = EFormatFlags.None;
+	private static readonly bool	DoubleCheckingMode	= false; // For testing only
 
 	[System.Flags]
 	private enum EFormatFlags : byte
@@ -22,6 +18,10 @@ public static partial class Spark
 	}
 
 	private static readonly bool Is64Bit = false;
+	private static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
+
+	private static readonly byte Version = 1;
+	private static readonly int HeaderSize = 2;
 
 	static Spark()
 	{

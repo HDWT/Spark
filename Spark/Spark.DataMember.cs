@@ -193,11 +193,14 @@ public static partial class Spark
 					object result = valueTypeAccessor.Get(m_fieldInfo.FieldType, m_isClass);
 					object reflectionResult = m_fieldInfo.GetValue(instance);
 
-					if ((result == null && reflectionResult != null) || (result != null && reflectionResult == null))
-						throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+					if (IsFlag(m_typeFlags, TypeFlags.Enum))
+						reflectionResult = Convert.ChangeType(reflectionResult, EnumTypeHelper.GetUnderlyingType(m_type));
 
-					if (result != null && !result.Equals(m_fieldInfo.GetValue(instance)))
-						throw new System.ArgumentException("Something wrong: " + result + " | " + reflectionResult + ".");
+					if ((result == null && reflectionResult != null) || (result != null && reflectionResult == null))
+						throw new System.ArgumentException(string.Format("Something wrong: {0} | {1}", result, reflectionResult));
+
+					if ((result != null) && !result.Equals(reflectionResult))
+						throw new System.ArgumentException(string.Format("Something wrong: {0} | {1}", result, reflectionResult));
 				}
 
 				int size = 0;
