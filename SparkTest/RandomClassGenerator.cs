@@ -30,6 +30,9 @@ namespace SparkTest
 
 		public static void Make(int classCount, int fieldCount)
 		{
+			if (classCount < 4)
+				classCount = 4;
+
 			List<string> sourceCode = new List<string>();
 			StringBuilder stringBuilder = new StringBuilder();
 
@@ -45,7 +48,6 @@ namespace SparkTest
 					stringBuilder.Append('\t');
 
 				stringBuilder.Append(line);
-				//stringBuilder.Append("\r\n");
 
 				sourceCode.Add(stringBuilder.ToString());
 			};
@@ -65,7 +67,12 @@ namespace SparkTest
 
 				for (int classNumber = 1; classNumber <= classCount; ++classNumber)
 				{
-					addLine(string.Format("private class Class_N{0}", classNumber));
+					string parent = string.Empty;
+
+					if (classNumber % 2 == 0)
+						parent = string.Format(" : Class_N{0}", classNumber - 1);
+
+					addLine(string.Format("private class Class_N{0}{1}", classNumber, parent));
 					addLine("{");
 					{
 						currentIndent++;
@@ -74,16 +81,81 @@ namespace SparkTest
 						{
 							addLine(string.Format("[Spark.Member({0})]", fieldNumber));
 
-							int randomFieldIndex = s_random.Next(0, s_types.Count);
-							System.Type randomType = s_types[randomFieldIndex];
+							string randomTypeName = string.Empty;
+							string randomValue = string.Empty;
 
-							string randomValue = GetRandomValueAsString(randomType);
+							int randomFieldIndex = s_random.Next(0, s_types.Count + 1);
 
-							addLine(string.Format("private {0} m_field{1} = {2};", randomType.Name, fieldNumber, randomValue));
+							if (randomFieldIndex == s_types.Count)
+							{
+								int randomClassNumber = classNumber + 2;
 
-							if (fieldNumber != fieldCount)
-								addLine(string.Empty);
+								// Any base random type
+								if (randomClassNumber > classCount)
+								{
+									randomFieldIndex = s_random.Next(0, s_types.Count);
+
+									System.Type randomType = s_types[randomFieldIndex];
+
+									randomTypeName = randomType.Name;
+									randomValue = GetRandomValueAsString(randomType);
+								}
+								else // Random class
+								{
+									randomTypeName = string.Format("Class_N{0}", randomClassNumber);
+									randomValue = (s_random.Next(10) > 3)
+										? randomValue = string.Format("new Class_N{0}()", randomClassNumber)
+										: "null";
+								}
+							}
+							else
+							{
+								System.Type randomType = s_types[randomFieldIndex];
+
+								randomTypeName = randomType.Name;
+								randomValue = GetRandomValueAsString(randomType);
+							}
+
+							string randomAccessType = GetRandomAccessType();
+
+							addLine(string.Format("{0} {1} m_field{2}_{3} = {4};", randomAccessType, randomTypeName, classNumber, fieldNumber, randomValue));
+							addLine(string.Empty);
 						}
+
+						addLine("public override bool Equals(object obj)");
+						addLine("{");
+						{
+							currentIndent++;
+
+							addLine(string.Format("Class_N{0} other = obj as Class_N{0};", classNumber));
+							addLine(string.Empty);
+
+							if (fieldCount == 0)
+								addLine("return base.Equals(obj);");
+							else
+								addLine(string.Format("return object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+
+							for (int fieldNumber = 2; fieldNumber <= fieldCount; ++fieldNumber)
+								addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, fieldNumber));
+
+							addLine(";");
+
+							currentIndent--;
+						}
+						addLine("}");
+
+						addLine(string.Empty);
+
+						addLine("public override int GetHashCode()");
+						addLine("{");
+						{
+							currentIndent++;
+
+							addLine("return base.GetHashCode();");
+
+							currentIndent--;
+						}
+						addLine("}");
 
 						currentIndent--;
 					}
@@ -97,7 +169,21 @@ namespace SparkTest
 					currentIndent++;
 
 					for (int classNumber = 1; classNumber <= classCount; ++classNumber)
-						addLine(string.Format("Spark.Serialize(new Class_N{0}());", classNumber));
+					{
+						if (classNumber > 1)
+							addLine("//");
+
+						addLine(string.Format("Class_N{0} sN{0} = new Class_N{0}();", classNumber));
+						addLine(string.Format("byte[] bN{0} = Spark.Serialize(sN{0});", classNumber));
+						addLine(string.Format("Class_N{0} dN{0} = Spark.Deserialize<Class_N{0}>(bN{0});", classNumber));
+
+						addLine(string.Empty);
+						addLine(string.Format("if (!sN{0}.Equals(dN{0}))", classNumber));
+						addLine(string.Format("\tthrow new System.ArgumentException(\"Class_N{0} not equal after deserialization\");", classNumber));
+
+						if (classNumber < classCount)
+							addLine(string.Empty);
+					}
 
 					currentIndent--;
 				}
@@ -112,6 +198,16 @@ namespace SparkTest
 
 			File.WriteAllLines("../../../GeneratedClasses.auto.cs", sourceCode.ToArray());
 			File.Copy("../../../GeneratedClasses.auto.cs", "../../../GeneratedClasses.auto.cs.tmp", true);
+		}
+
+		private static string GetRandomAccessType()
+		{
+			int index = s_random.Next(3);
+
+			if (index == 0)
+				return "protected";
+
+			return (index == 1) ? "private" : "public";
 		}
 
 		private static string GetRandomValueAsString(System.Type type)

@@ -49,7 +49,7 @@ public static partial class Spark
 
 			Context context = new Context();
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
-			QueueWithIndexer<object> values = FullAot && !ExperimentalMagic ? new QueueWithIndexer<object>() : null;
+			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
 
 			int dataSize = HeaderSize + dataType.GetDataSize(instance, sizes, values, context);
 			byte[] data = new byte[dataSize];
@@ -66,7 +66,7 @@ public static partial class Spark
 		{
 			Context context = new Context();
 			QueueWithIndexer<int> sizes = new QueueWithIndexer<int>();
-			QueueWithIndexer<object> values = FullAot && !ExperimentalMagic ? new QueueWithIndexer<object>() : null;
+			QueueWithIndexer<object> values = FullAot ? new QueueWithIndexer<object>() : null;
 
 			bool isValueType = ((typeFlags & TypeFlags.Value) == TypeFlags.Value);
 
