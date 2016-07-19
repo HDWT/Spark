@@ -65,8 +65,12 @@ namespace SparkTest
 			{
 				currentIndent++;
 
+				List<string> randomFieldValues = new List<string>();
+
 				for (int classNumber = 1; classNumber <= classCount; ++classNumber)
 				{
+					randomFieldValues.Clear();
+
 					string parent = string.Empty;
 
 					if (classNumber % 2 == 0)
@@ -116,12 +120,37 @@ namespace SparkTest
 								randomValue = GetRandomValueAsString(randomType);
 							}
 
+							randomFieldValues.Add(randomValue);
+
 							string randomAccessType = GetRandomAccessType();
 
-							addLine(string.Format("{0} {1} m_field{2}_{3} = {4};", randomAccessType, randomTypeName, classNumber, fieldNumber, randomValue));
+							addLine(string.Format("{0} {1} m_field{2}_{3};", randomAccessType, randomTypeName, classNumber, fieldNumber));
 							addLine(string.Empty);
 						}
 
+						addLine(string.Format("public Class_N{0}()", classNumber));
+						addLine("{ }");
+						addLine(string.Empty);
+
+						//
+						addLine(string.Format("public Class_N{0}(bool anything)", classNumber));
+
+						if (parent != string.Empty)
+							addLine("\t: base(anything)");
+
+						addLine("{");
+						{
+							currentIndent++;
+
+							for (int fieldNumber = 1; fieldNumber <= fieldCount; ++fieldNumber)
+								addLine(string.Format("m_field{0}_{1} = {2};", classNumber, fieldNumber, randomFieldValues[fieldNumber - 1]));
+
+							currentIndent--;
+						}
+						addLine("}");
+						addLine(string.Empty);
+
+						//
 						addLine("public override bool Equals(object obj)");
 						addLine("{");
 						{
@@ -143,9 +172,9 @@ namespace SparkTest
 							currentIndent--;
 						}
 						addLine("}");
-
 						addLine(string.Empty);
 
+						//
 						addLine("public override int GetHashCode()");
 						addLine("{");
 						{
@@ -173,7 +202,7 @@ namespace SparkTest
 						if (classNumber > 1)
 							addLine("//");
 
-						addLine(string.Format("Class_N{0} sN{0} = new Class_N{0}();", classNumber));
+						addLine(string.Format("Class_N{0} sN{0} = new Class_N{0}(true);", classNumber));
 						addLine(string.Format("byte[] bN{0} = Spark.Serialize(sN{0});", classNumber));
 						addLine(string.Format("Class_N{0} dN{0} = Spark.Deserialize<Class_N{0}>(bN{0});", classNumber));
 
