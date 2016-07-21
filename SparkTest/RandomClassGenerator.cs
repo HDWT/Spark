@@ -159,10 +159,19 @@ namespace SparkTest
 							addLine(string.Format("Class_N{0} other = obj as Class_N{0};", classNumber));
 							addLine(string.Empty);
 
-							if (fieldCount == 0)
-								addLine("return base.Equals(obj);");
+							if (parent != string.Empty)
+							{
+								addLine("return base.Equals(obj)");
+								addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+							}
+							else if (fieldCount == 0)
+							{
+								addLine("return true");
+							}
 							else
+							{
 								addLine(string.Format("return object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+							}
 
 							for (int fieldNumber = 2; fieldNumber <= fieldCount; ++fieldNumber)
 								addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, fieldNumber));

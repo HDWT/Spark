@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 public static partial class Spark
 {
+	private static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
+
 	[StructLayout(LayoutKind.Explicit)]
 	private struct FieldAccessor
 	{
@@ -29,10 +32,10 @@ public static partial class Spark
 		public class AddressWrapper
 		{
 			[FieldOffset(0)]
-			public long address64;
+			public ulong address64;
 
 			[FieldOffset(0)]
-			public int address32;
+			public uint address32;
 		}
 
 		[StructLayout(LayoutKind.Explicit)]
@@ -40,6 +43,9 @@ public static partial class Spark
 		{
 			[FieldOffset(0)]
 			public object Object;
+
+			[FieldOffset(0)]
+			public string String;
 		}
 
 		[StructLayout(LayoutKind.Explicit)]
@@ -132,6 +138,42 @@ public static partial class Spark
 
 			[FieldOffset(15)]
 			public byte Byte16;
+		}
+
+		public uint GetOffset(FieldInfo fieldInfo)
+		{
+			wObject.instance = fieldInfo.FieldHandle;
+
+			if (IntPtr.Size == 8)
+			{
+				wAddress.address64 = wObject.fields.ULong;
+
+				if (IsMono)
+				{
+					wAddress.address64 += 8;
+					return (uint)(wObject.fields.UShort - IntPtr.Size * 2);
+				}
+				else
+				{
+					wAddress.address64 += 4;
+					return wObject.fields.UShort;
+				}
+			}
+			else
+			{
+				wAddress.address32 = wObject.fields.UInt;
+
+				if (IsMono)
+				{
+					wAddress.address32 += 8;
+					return (uint)(wObject.fields.UShort - IntPtr.Size * 2);
+				}
+				else
+				{
+					wAddress.address32 += 4;
+					return wObject.fields.UShort;
+				}
+			}
 		}
 
 		public object Get(Type fieldType, bool isReferenceType)

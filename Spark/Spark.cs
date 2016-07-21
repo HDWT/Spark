@@ -18,7 +18,6 @@ public static partial class Spark
 	}
 
 	private static readonly bool Is64Bit = false;
-	private static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
 
 	private static readonly byte Version = 1;
 	private static readonly int HeaderSize = 2;

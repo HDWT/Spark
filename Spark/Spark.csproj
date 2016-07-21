@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,7 +55,6 @@
     <Compile Include="Spark.DataType.cs" />
     <Compile Include="ReferenceTypeHelpers\ArrayType.SizeGetter.cs" />
     <Compile Include="ReferenceTypeHelpers\ArrayType.Writer.cs" />
-    <Compile Include="Spark.FieldOrder.cs" />
     <Compile Include="Spark.QueueWithIndexer.cs" />
     <Compile Include="Spark.TypeFlags.cs" />
     <Compile Include="Spark.FieldAccessor.cs" />

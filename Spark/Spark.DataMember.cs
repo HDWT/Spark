@@ -87,9 +87,9 @@ public static partial class Spark
 		protected readonly DataWriter m_dataWriter = null;
 		protected readonly SizeGetter m_sizeGetter = null;
 
-		private int m_fieldOffset = -1;
+		private uint m_fieldOffset = int.MaxValue;
 
-		public DataMember(ushort id, FieldInfo fieldInfo, int fieldOffset)
+		public DataMember(ushort id, FieldInfo fieldInfo, uint fieldOffset)
 			: this(id, fieldInfo.FieldType)
 		{
 			m_fieldInfo = fieldInfo;
@@ -130,7 +130,7 @@ public static partial class Spark
 
 		private object GetValue(object instance, Context context)
 		{
-			if (m_fieldOffset == -1)
+			if (m_fieldOffset == int.MaxValue)
 				return IsField ? m_fieldInfo.GetValue(instance) : m_propertyInfo.GetValue(instance, null); // Indexer ??
 
 			if (IsField)
@@ -176,7 +176,7 @@ public static partial class Spark
 
 		public virtual int GetSize(object instance, QueueWithIndexer<int> sizes, QueueWithIndexer<object> values, Context context)
 		{
-			if (IsField && (m_fieldOffset != -1))
+			if (IsField && (m_fieldOffset != int.MaxValue))
 			{
 				FieldAccessor valueTypeAccessor = new FieldAccessor();
 
@@ -284,7 +284,7 @@ public static partial class Spark
 		{
 			WriteHeader(data, ref startIndex);
 
-			if (IsField && (m_fieldOffset != -1))
+			if (IsField && (m_fieldOffset != int.MaxValue))
 			{
 				FieldAccessor valueTypeAccessor = new FieldAccessor();
 
@@ -413,7 +413,7 @@ public static partial class Spark
 		private DynamicSetValueDelegate m_setValue = null;
 
 		public DataMember(ushort id, FieldInfo fieldInfo)
-			: base(id, fieldInfo, -1)
+			: base(id, fieldInfo, int.MaxValue)
 		{
 			m_getValue = CreateGetMethod(fieldInfo);
 			m_setValue = CreateSetMethod(fieldInfo);

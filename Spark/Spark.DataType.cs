@@ -97,14 +97,25 @@ public static partial class Spark
 
 			//
 			List<IDataMember> members = null;
-			int inheritanceDepth = 0;
+			List<Type> typeHierarhy = new List<Type>();
 
 			while ((type != null) && (type != typeof(System.Object)))
 			{
+				typeHierarhy.Add(type);
+				type = type.BaseType;
+			}
+
+			FieldAccessor fieldAccessor = new FieldAccessor();
+			fieldAccessor.wObject = new FieldAccessor.ObjectWrapper();
+
+			for (int inheritanceDepth = typeHierarhy.Count - 1; inheritanceDepth >= 0; --inheritanceDepth)
+			{
+				type = typeHierarhy[inheritanceDepth];
+
 				if (inheritanceDepth > MaxInheritanceDepth)
 					throw new System.ArgumentException(string.Format("Max inheritance depth = {0}", MaxInheritanceDepth));
 
-				FieldInfo[] fields = FieldOrder.GetSortedFields(type);// type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 				PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
 				if (members == null)
@@ -126,101 +137,9 @@ public static partial class Spark
 				ushort autoMemberId = 1;
 				int firstMemberOfThisType = members.Count;
 
-				System.Type previousFieldType = null;
-				bool previousTypeIsClassOrInterface = false;
-
-				int fieldOffset = 0;
-
 				foreach (var field in fields)
 				{
-					bool currentTypeIsClassOrInterface = field.FieldType.IsClass || field.FieldType.IsInterface;
-
-					if (previousFieldType != null)
-					{
-						if (previousFieldType.IsEnum)
-							previousFieldType = EnumTypeHelper.GetUnderlyingType(previousFieldType);
-
-						if (previousTypeIsClassOrInterface)
-							fieldOffset += IntPtr.Size;
-						else if (previousFieldType == typeof(int) || previousFieldType == typeof(uint) || previousFieldType == typeof(float))
-							fieldOffset += 4;
-						else if (previousFieldType == typeof(short) || previousFieldType == typeof(ushort) || previousFieldType == typeof(char))
-							fieldOffset += 2;
-						else if (previousFieldType == typeof(byte) || previousFieldType == typeof(sbyte) || previousFieldType == typeof(bool))
-							fieldOffset += 1;
-						else if (previousFieldType == typeof(long) || previousFieldType == typeof(ulong) || previousFieldType == typeof(double) || previousFieldType == typeof(DateTime))
-							fieldOffset += 8;
-						else if (previousFieldType == typeof(decimal))
-							fieldOffset += 16;
-						else
-							throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", previousFieldType));
-					}
-
-					if (IsMono)
-					{
-						if (previousFieldType == typeof(DateTime))
-							fieldOffset += 8;
-
-						if (field.FieldType == typeof(short) || field.FieldType == typeof(ushort) || field.FieldType == typeof(char))
-						{
-							int overhead = fieldOffset % 2;
-
-							if (overhead != 0)
-								fieldOffset += 2 - overhead;
-						}
-						else if (field.FieldType == typeof(int) || field.FieldType == typeof(uint) || field.FieldType == typeof(float))
-						{
-							int overhead = fieldOffset % 4;
-
-							if (overhead != 0)
-								fieldOffset += 4 - overhead;
-						}
-						else if (field.FieldType == typeof(long) || field.FieldType == typeof(ulong) || field.FieldType == typeof(double))
-						{
-							int overhead = fieldOffset % 8;
-
-							if (overhead != 0)
-								fieldOffset += 8 - overhead;
-						}
-						else if (field.FieldType == typeof(decimal))
-						{
-							int overhead = fieldOffset % 4;
-
-							if (overhead != 0)
-								fieldOffset += 4 - overhead;
-						}
-						else if (field.FieldType == typeof(DateTime))
-						{
-							int overhead = fieldOffset % 8;
-
-							if (overhead != 0)
-								fieldOffset += 8 - overhead;
-						}
-					}
-					else
-					{
-						// align decimal
-						if (field.FieldType == typeof(decimal) || field.FieldType == typeof(DateTime))
-						{
-							int overhead = fieldOffset % IntPtr.Size;
-
-							if (overhead != 0)
-								fieldOffset += IntPtr.Size - overhead;
-						}
-					}
-
-					// aligin reference in 64 bit
-					if (Is64Bit && (previousFieldType != null) && !currentTypeIsClassOrInterface && previousTypeIsClassOrInterface)
-					{
-						int d = (field.FieldType == typeof(long) || field.FieldType == typeof(ulong) || field.FieldType == typeof(double)) ? 8 : 4;
-						int overhead = fieldOffset % d;
-
-						if (overhead != 0)
-							fieldOffset += d - overhead;
-					}
-
-					previousFieldType = field.FieldType;
-					previousTypeIsClassOrInterface = currentTypeIsClassOrInterface;
+					uint fieldOffset = fieldAccessor.GetOffset(field);
 
 					if ((autoAttribute != null) && autoAttribute.Has(AutoMode.Fields))
 					{
@@ -235,6 +154,7 @@ public static partial class Spark
 					if (field.FieldType.ContainsGenericParameters)
 						continue; //throw new System.ArgumentException(string.Format("Member of '{0}' with identifier {1} has generic params", type, memberId % MaxMemberId));
 
+					// The BUG: if yout change inheritanceDepth then everything is blow up!!
 					memberId += (ushort)(inheritanceDepth * MaxMemberId);
 
 					for (int i = firstMemberOfThisType; i < members.Count; ++i)
@@ -247,14 +167,11 @@ public static partial class Spark
 					{
 						if (ExperimentalMagic)
 						{
-							if ((type.BaseType != null) && (type.BaseType != typeof(System.Object)))
-								members.Add(new DataMember(memberId, field, -1));
-							else
-								members.Add(new DataMember(memberId, field, fieldOffset));
+							members.Add(new DataMember(memberId, field, fieldOffset));
 						}
 						else
 						{
-							members.Add(new DataMember(memberId, field, -1));
+							members.Add(new DataMember(memberId, field, int.MaxValue));
 						}
 					}
 					else
@@ -320,7 +237,6 @@ public static partial class Spark
 				}
 
 				type = type.BaseType;
-				inheritanceDepth++;
 			}
 
 			m_members = (members != null) ? members.ToArray() : new IDataMember[0];
