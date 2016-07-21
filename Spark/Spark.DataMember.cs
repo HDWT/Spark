@@ -207,7 +207,7 @@ public static partial class Spark
 
 				if (m_isClass)
 				{
-					object value = valueTypeAccessor.wObject.referenceFields.Object;
+					object value = valueTypeAccessor.wObject.references.Object;
 
 					// Self reference ?
 					size = (!m_ignoreDataSizeBlock && (value == instance)) ? (1) : m_sizeGetter.GetSize(value, sizes, values, context);
@@ -221,46 +221,46 @@ public static partial class Spark
 						fieldType = enumUnderlyingType;
 
 					if (fieldType == typeof(int))
-						size = TypeHelper.IntType.GetSize(valueTypeAccessor.wObject.fields.Int);
+						size = TypeHelper.IntType.GetSize(valueTypeAccessor.wObject.values.Int);
 
 					else if (fieldType == typeof(float))
-						size = TypeHelper.FloatType.GetSize(valueTypeAccessor.wObject.fields.Float);
+						size = TypeHelper.FloatType.GetSize(valueTypeAccessor.wObject.values.Float);
 
 					else if (fieldType == typeof(bool))
-						size = TypeHelper.BoolType.GetSize(valueTypeAccessor.wObject.fields.Bool);
+						size = TypeHelper.BoolType.GetSize(valueTypeAccessor.wObject.values.Bool);
 
 					else if (fieldType == typeof(char))
-						size = TypeHelper.CharType.GetSize(valueTypeAccessor.wObject.fields.Char);
+						size = TypeHelper.CharType.GetSize(valueTypeAccessor.wObject.values.Char);
 
 					else if (fieldType == typeof(long))
-						size = TypeHelper.LongType.GetSize(valueTypeAccessor.wObject.fields.Long);
+						size = TypeHelper.LongType.GetSize(valueTypeAccessor.wObject.values.Long);
 
 					else if (fieldType == typeof(short))
-						size = TypeHelper.ShortType.GetSize(valueTypeAccessor.wObject.fields.Short);
+						size = TypeHelper.ShortType.GetSize(valueTypeAccessor.wObject.values.Short);
 
 					else if (fieldType == typeof(byte))
-						size = TypeHelper.ByteType.GetSize(valueTypeAccessor.wObject.fields.Byte);
+						size = TypeHelper.ByteType.GetSize(valueTypeAccessor.wObject.values.Byte);
 
 					else if (fieldType == typeof(DateTime))
-						size = TypeHelper.DateTimeType.GetSize(new DateTime(valueTypeAccessor.wObject.fields.Long));
+						size = TypeHelper.DateTimeType.GetSize(new DateTime(valueTypeAccessor.wObject.values.Long));
 
 					else if (fieldType == typeof(double))
-						size = TypeHelper.DoubleType.GetSize(valueTypeAccessor.wObject.fields.Double);
+						size = TypeHelper.DoubleType.GetSize(valueTypeAccessor.wObject.values.Double);
 
 					else if (fieldType == typeof(uint))
-						size = TypeHelper.UIntType.GetSize(valueTypeAccessor.wObject.fields.UInt);
+						size = TypeHelper.UIntType.GetSize(valueTypeAccessor.wObject.values.UInt);
 
 					else if (fieldType == typeof(ushort))
-						size = TypeHelper.UShortType.GetSize(valueTypeAccessor.wObject.fields.UShort);
+						size = TypeHelper.UShortType.GetSize(valueTypeAccessor.wObject.values.UShort);
 
 					else if (fieldType == typeof(ulong))
-						size = TypeHelper.ULongType.GetSize(valueTypeAccessor.wObject.fields.ULong);
+						size = TypeHelper.ULongType.GetSize(valueTypeAccessor.wObject.values.ULong);
 
 					else if (fieldType == typeof(sbyte))
-						size = TypeHelper.SByteType.GetSize(valueTypeAccessor.wObject.fields.SByte);
+						size = TypeHelper.SByteType.GetSize(valueTypeAccessor.wObject.values.SByte);
 
 					else if (fieldType == typeof(decimal))
-						size = TypeHelper.DecimalType.GetSize(valueTypeAccessor.wObject.fields.Decimal);
+						size = TypeHelper.DecimalType.GetSize(valueTypeAccessor.wObject.values.Decimal);
 
 					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 				}
@@ -298,7 +298,7 @@ public static partial class Spark
 
 				if (m_isClass)
 				{
-					object value = valueTypeAccessor.wObject.referenceFields.Object;
+					object value = valueTypeAccessor.wObject.references.Object;
 
 					// Self reference ?
 					if (!m_ignoreDataSizeBlock && (value == instance))
@@ -315,46 +315,46 @@ public static partial class Spark
 						fieldType = enumUnderlyingType;
 
 					if (fieldType == typeof(int))
-						TypeHelper.IntType.Write(valueTypeAccessor.wObject.fields.Int, data, ref startIndex);
+						TypeHelper.IntType.Write(valueTypeAccessor.wObject.values.Int, data, ref startIndex);
 
 					else if (fieldType == typeof(float))
-						TypeHelper.FloatType.Write(valueTypeAccessor.wObject.fields.Float, data, ref startIndex);
+						TypeHelper.FloatType.Write(valueTypeAccessor.wObject.values.Float, data, ref startIndex);
 
 					else if (fieldType == typeof(bool))
-						TypeHelper.BoolType.Write(valueTypeAccessor.wObject.fields.Bool, data, ref startIndex);
+						TypeHelper.BoolType.Write(valueTypeAccessor.wObject.values.Bool, data, ref startIndex);
 
 					else if (fieldType == typeof(char))
-						TypeHelper.CharType.Write(valueTypeAccessor.wObject.fields.Char, data, ref startIndex);
+						TypeHelper.CharType.Write(valueTypeAccessor.wObject.values.Char, data, ref startIndex);
 
 					else if (fieldType == typeof(long))
-						TypeHelper.LongType.Write(valueTypeAccessor.wObject.fields.Long, data, ref startIndex);
+						TypeHelper.LongType.Write(valueTypeAccessor.wObject.values.Long, data, ref startIndex);
 
 					else if (fieldType == typeof(short))
-						TypeHelper.ShortType.Write(valueTypeAccessor.wObject.fields.Short, data, ref startIndex);
+						TypeHelper.ShortType.Write(valueTypeAccessor.wObject.values.Short, data, ref startIndex);
 
 					else if (fieldType == typeof(byte))
-						TypeHelper.ByteType.Write(valueTypeAccessor.wObject.fields.Byte, data, ref startIndex);
+						TypeHelper.ByteType.Write(valueTypeAccessor.wObject.values.Byte, data, ref startIndex);
 
 					else if (fieldType == typeof(DateTime))
-						TypeHelper.DateTimeType.Write(new DateTime(valueTypeAccessor.wObject.fields.Long), data, ref startIndex);
+						TypeHelper.DateTimeType.Write(new DateTime(valueTypeAccessor.wObject.values.Long), data, ref startIndex);
 
 					else if (fieldType == typeof(double))
-						TypeHelper.DoubleType.Write(valueTypeAccessor.wObject.fields.Double, data, ref startIndex);
+						TypeHelper.DoubleType.Write(valueTypeAccessor.wObject.values.Double, data, ref startIndex);
 
 					else if (fieldType == typeof(uint))
-						TypeHelper.UIntType.Write(valueTypeAccessor.wObject.fields.UInt, data, ref startIndex);
+						TypeHelper.UIntType.Write(valueTypeAccessor.wObject.values.UInt, data, ref startIndex);
 
 					else if (fieldType == typeof(ushort))
-						TypeHelper.UShortType.Write(valueTypeAccessor.wObject.fields.UShort, data, ref startIndex);
+						TypeHelper.UShortType.Write(valueTypeAccessor.wObject.values.UShort, data, ref startIndex);
 
 					else if (fieldType == typeof(ulong))
-						TypeHelper.ULongType.Write(valueTypeAccessor.wObject.fields.ULong, data, ref startIndex);
+						TypeHelper.ULongType.Write(valueTypeAccessor.wObject.values.ULong, data, ref startIndex);
 
 					else if (fieldType == typeof(sbyte))
-						TypeHelper.SByteType.Write(valueTypeAccessor.wObject.fields.SByte, data, ref startIndex);
+						TypeHelper.SByteType.Write(valueTypeAccessor.wObject.values.SByte, data, ref startIndex);
 
 					else if (fieldType == typeof(decimal))
-						TypeHelper.DecimalType.Write(valueTypeAccessor.wObject.fields.Decimal, data, ref startIndex);
+						TypeHelper.DecimalType.Write(valueTypeAccessor.wObject.values.Decimal, data, ref startIndex);
 
 					else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 				}

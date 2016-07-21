@@ -22,10 +22,10 @@ public static partial class Spark
 			public object instance;
 
 			[FieldOffset(0)]
-			public ValueFields fields;
+			public ValueFields values;
 
 			[FieldOffset(0)]
-			public ReferenceFields referenceFields;
+			public ReferenceFields references;
 		}
 
 		[StructLayout(LayoutKind.Explicit)]
@@ -146,32 +146,32 @@ public static partial class Spark
 
 			if (IntPtr.Size == 8)
 			{
-				wAddress.address64 = wObject.fields.ULong;
+				wAddress.address64 = wObject.values.ULong;
 
 				if (IsMono)
 				{
 					wAddress.address64 += 8;
-					return (uint)(wObject.fields.UShort - IntPtr.Size * 2);
+					return (uint)(wObject.values.UShort - IntPtr.Size * 2);
 				}
 				else
 				{
 					wAddress.address64 += 4;
-					return wObject.fields.UShort;
+					return wObject.values.UShort;
 				}
 			}
 			else
 			{
-				wAddress.address32 = wObject.fields.UInt;
+				wAddress.address32 = wObject.values.UInt;
 
 				if (IsMono)
 				{
 					wAddress.address32 += 8;
-					return (uint)(wObject.fields.UShort - IntPtr.Size * 2);
+					return (uint)(wObject.values.UShort - IntPtr.Size * 2);
 				}
 				else
 				{
 					wAddress.address32 += 4;
-					return wObject.fields.UShort;
+					return wObject.values.UShort;
 				}
 			}
 		}
@@ -179,7 +179,7 @@ public static partial class Spark
 		public object Get(Type fieldType, bool isReferenceType)
 		{
 			if (isReferenceType)
-				return wObject.referenceFields.Object;
+				return wObject.references.Object;
 
 			System.Type enumUnderlyingType = null;
 			object toRet = null;
@@ -188,46 +188,46 @@ public static partial class Spark
 				fieldType = enumUnderlyingType;
 
 			if (fieldType == typeof(int))
-				toRet = wObject.fields.Int;
+				toRet = wObject.values.Int;
 
 			else if (fieldType == typeof(float))
-				toRet = wObject.fields.Float;
+				toRet = wObject.values.Float;
 
 			else if (fieldType == typeof(bool))
-				toRet = wObject.fields.Bool;
+				toRet = wObject.values.Bool;
 
 			else if (fieldType == typeof(char))
-				toRet = wObject.fields.Char;
+				toRet = wObject.values.Char;
 
 			else if (fieldType == typeof(long))
-				toRet = wObject.fields.Long;
+				toRet = wObject.values.Long;
 
 			else if (fieldType == typeof(short))
-				toRet = wObject.fields.Short;
+				toRet = wObject.values.Short;
 
 			else if (fieldType == typeof(byte))
-				toRet = wObject.fields.Byte;
+				toRet = wObject.values.Byte;
 
 			else if (fieldType == typeof(DateTime))
-				toRet = new DateTime(wObject.fields.Long);
+				toRet = new DateTime(wObject.values.Long);
 
 			else if (fieldType == typeof(double))
-				toRet = wObject.fields.Double;
+				toRet = wObject.values.Double;
 
 			else if (fieldType == typeof(uint))
-				toRet = wObject.fields.UInt;
+				toRet = wObject.values.UInt;
 
 			else if (fieldType == typeof(ushort))
-				toRet = wObject.fields.UShort;
+				toRet = wObject.values.UShort;
 
 			else if (fieldType == typeof(ulong))
-				toRet = wObject.fields.ULong;
+				toRet = wObject.values.ULong;
 
 			else if (fieldType == typeof(sbyte))
-				toRet = wObject.fields.SByte;
+				toRet = wObject.values.SByte;
 
 			else if (fieldType == typeof(decimal))
-				toRet = wObject.fields.Decimal;
+				toRet = wObject.values.Decimal;
 
 			else throw new ArgumentException(string.Format("Type '{0}' is not suppoerted", fieldType));
 			

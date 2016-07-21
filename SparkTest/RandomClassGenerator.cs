@@ -66,10 +66,12 @@ namespace SparkTest
 				currentIndent++;
 
 				List<string> randomFieldValues = new List<string>();
+				List<bool> isArrayField = new List<bool>();
 
 				for (int classNumber = 1; classNumber <= classCount; ++classNumber)
 				{
 					randomFieldValues.Clear();
+					isArrayField.Clear();
 
 					string parent = string.Empty;
 
@@ -83,6 +85,10 @@ namespace SparkTest
 
 						for (int fieldNumber = 1; fieldNumber <= fieldCount; ++fieldNumber)
 						{
+							bool isArray = (s_random.Next(0, 10) > 7);
+
+							isArrayField.Add(isArray);
+
 							addLine(string.Format("[Spark.Member({0})]", fieldNumber));
 
 							string randomTypeName = string.Empty;
@@ -100,24 +106,126 @@ namespace SparkTest
 									randomFieldIndex = s_random.Next(0, s_types.Count);
 
 									System.Type randomType = s_types[randomFieldIndex];
-
 									randomTypeName = randomType.Name;
-									randomValue = GetRandomValueAsString(randomType);
+
+									if (isArray)
+									{
+										int arrayLength = s_random.Next(-1, 10);
+
+										if (arrayLength == -1)
+										{
+											randomValue = "null";
+										}
+										else
+										{
+											randomValue = string.Format("new {0}[{1}]", randomType, arrayLength);
+
+											if (arrayLength > 0)
+											{
+												randomValue += " { ";
+
+												for (int arrayElement = 0; arrayElement < arrayLength; ++arrayElement)
+												{
+													if (arrayElement != 0)
+														randomValue += ", ";
+
+													randomValue += GetRandomValueAsString(randomType);
+												}
+
+												randomValue += " }";
+											}
+										}
+
+										randomTypeName += "[]";
+									}
+									else
+									{
+										randomValue = GetRandomValueAsString(randomType);
+									}
 								}
 								else // Random class
 								{
 									randomTypeName = string.Format("Class_N{0}", randomClassNumber);
-									randomValue = (s_random.Next(10) > 3)
-										? randomValue = string.Format("new Class_N{0}()", randomClassNumber)
-										: "null";
+
+									if (isArray)
+									{
+										int arrayLength = s_random.Next(-1, 10);
+
+										if (arrayLength == -1)
+										{
+											randomValue = "null";
+										}
+										else
+										{
+											randomValue = string.Format("new Class_N{0}[{1}]", randomClassNumber, arrayLength);
+
+											if (arrayLength > 0)
+											{
+												randomValue += " { ";
+
+												for (int arrayElement = 0; arrayElement < arrayLength; ++arrayElement)
+												{
+													if (arrayElement != 0)
+														randomValue += ", ";
+
+													randomValue += (s_random.Next(10) > 3)
+														? randomValue = string.Format("new Class_N{0}(true)", randomClassNumber)
+														: "null";
+												}
+
+												randomValue += " }";
+											}
+										}
+
+										randomTypeName += "[]";
+									}
+									else
+									{
+										randomValue = (s_random.Next(10) > 3)
+											? randomValue = string.Format("new Class_N{0}(true)", randomClassNumber)
+											: "null";
+									}
 								}
 							}
 							else
 							{
 								System.Type randomType = s_types[randomFieldIndex];
-
 								randomTypeName = randomType.Name;
-								randomValue = GetRandomValueAsString(randomType);
+
+								if (isArray)
+								{
+									int arrayLength = s_random.Next(-1, 10);
+
+									if (arrayLength == -1)
+									{
+										randomValue = "null";
+									}
+									else
+									{
+										randomValue = string.Format("new {0}[{1}]", randomType, arrayLength);
+
+										if (arrayLength > 0)
+										{
+											randomValue += " { ";
+
+											for (int arrayElement = 0; arrayElement < arrayLength; ++arrayElement)
+											{
+												if (arrayElement != 0)
+													randomValue += ", ";
+
+												randomValue += GetRandomValueAsString(randomType);
+											}
+
+											randomValue += " }";
+										}
+									}
+
+									randomTypeName += "[]";
+								}
+								else
+								{
+									randomValue = GetRandomValueAsString(randomType);
+								}
 							}
 
 							randomFieldValues.Add(randomValue);
@@ -162,7 +270,11 @@ namespace SparkTest
 							if (parent != string.Empty)
 							{
 								addLine("return base.Equals(obj)");
-								addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+
+								if (isArrayField[0])
+									addLine(string.Format("\t&& ArraysEqual(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+								else
+									addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
 							}
 							else if (fieldCount == 0)
 							{
@@ -170,11 +282,19 @@ namespace SparkTest
 							}
 							else
 							{
-								addLine(string.Format("return object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+								if (isArrayField[0])
+									addLine(string.Format("return ArraysEqual(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
+								else
+									addLine(string.Format("return object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, 1));
 							}
 
 							for (int fieldNumber = 2; fieldNumber <= fieldCount; ++fieldNumber)
-								addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, fieldNumber));
+							{
+								if (isArrayField[fieldNumber - 1])
+									addLine(string.Format("\t&& ArraysEqual(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, fieldNumber));
+								else
+									addLine(string.Format("\t&& object.Equals(m_field{0}_{1}, other.m_field{0}_{1})", classNumber, fieldNumber));
+							}
 
 							addLine(";");
 
@@ -222,6 +342,46 @@ namespace SparkTest
 						if (classNumber < classCount)
 							addLine(string.Empty);
 					}
+
+					currentIndent--;
+				}
+				addLine("}");
+				addLine(string.Empty);
+
+				addLine("public static bool ArraysEqual<T>(T[] a1, T[] a2)");
+				addLine("{");
+				{
+					currentIndent++;
+
+					addLine("if (ReferenceEquals(a1, a2))");
+					addLine("\treturn true;");
+					addLine(string.Empty);
+
+					addLine("if (a1 == null || a2 == null)");
+					addLine("\treturn false;");
+					addLine(string.Empty);
+
+					addLine("if (a1.Length != a2.Length)");
+					addLine("\treturn false;");
+					addLine(string.Empty);
+
+					addLine("EqualityComparer<T> comparer = EqualityComparer<T>.Default;");
+					addLine(string.Empty);
+
+					addLine("for (int i = 0; i < a1.Length; i++)");
+					addLine("{");
+					{
+						currentIndent++;
+
+						addLine("if (!comparer.Equals(a1[i], a2[i]))");
+						addLine("\treturn false;");
+
+						currentIndent--;
+					}
+					addLine("}");
+
+					addLine(string.Empty);
+					addLine("return true;");
 
 					currentIndent--;
 				}
